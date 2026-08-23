@@ -174,23 +174,41 @@ const defaultFilters: FilterOptions = {
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Helper to normalize URL paths consistently across development & production hosts like Netlify
+  const normalizePath = (path: string): string => {
+    if (!path) return '/';
+    const clean = path.split('?')[0].split('#')[0].trim();
+    if (clean === '' || clean === '/') return '/';
+    return clean.replace(/\/+$/, '') || '/';
+  };
+
   // Sync route with window.location
   const [currentPath, setCurrentPath] = useState<string>(() => {
-    return window.location.pathname || '/';
+    if (typeof window !== 'undefined' && window.location) {
+      return normalizePath(window.location.pathname);
+    }
+    return '/';
   });
 
   useEffect(() => {
     const handlePopState = () => {
-      setCurrentPath(window.location.pathname || '/');
+      if (typeof window !== 'undefined' && window.location) {
+        setCurrentPath(normalizePath(window.location.pathname));
+      }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   const navigate = (path: string) => {
-    window.history.pushState({}, '', path);
-    setCurrentPath(path);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const target = normalizePath(path);
+    if (typeof window !== 'undefined' && window.history) {
+      window.history.pushState({}, '', target);
+    }
+    setCurrentPath(target);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   // Products (Updated with 3D product renders)
@@ -309,6 +327,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return null;
     }
   });
+
+  useEffect(() => {
+    if (adminUser) {
+      localStorage.setItem('lunova_admin_v1', JSON.stringify(adminUser));
+    } else {
+      localStorage.removeItem('lunova_admin_v1');
+    }
+  }, [adminUser]);
 
   // Customer / Client Auth (Customer section only)
   const [customerUser, setCustomerUser] = useState<Customer | null>(() => {
@@ -816,24 +842,53 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Admin Auth (Strictly Authorized Administrators & Custom Configurable Admin Credentials)
-  const INITIAL_AUTHORIZED_ADMINS: Record<string, { name: string; role: AdminUser['role']; pass: string }> = {
-    'admin@lunova.luxury': { name: 'Julian Thorne', role: 'Super Admin', pass: 'lunova2026' },
-    'julian@lunova.luxury': { name: 'Julian Thorne', role: 'Super Admin', pass: 'lunova2026' },
-    'operations@lunova.luxury': { name: 'Elena Vance', role: 'Store Manager', pass: 'lunova2026' },
-    'admin@lunovahome.com': { name: 'Store Master', role: 'Super Admin', pass: 'lunova2026' }
+  const getInitialAuthorizedAdmins = (): Record<string, { name: string; role: AdminUser['role']; pass: string }> => {
+    const base: Record<string, { name: string; role: AdminUser['role']; pass: string }> = {
+      'admin@lunova.luxury': { name: 'Julian Thorne', role: 'Super Admin', pass: 'lunova2026' },
+      'julian@lunova.luxury': { name: 'Julian Thorne', role: 'Super Admin', pass: 'lunova2026' },
+      'operations@lunova.luxury': { name: 'Elena Vance', role: 'Store Manager', pass: 'lunova2026' },
+      'admin@lunovahome.com': { name: 'Store Master', role: 'Super Admin', pass: 'lunova2026' },
+      'workp7384@gmail.com': { name: 'Store Principal', role: 'Super Admin', pass: 'lunova2026' }
+    };
+
+    // Integrate Netlify / Vite Production Environment Variables if provided
+    try {
+      const envEmail = typeof import.meta !== 'undefined' && import.meta.env?.VITE_ADMIN_EMAIL
+        ? String(import.meta.env.VITE_ADMIN_EMAIL).trim().toLowerCase()
+        : '';
+      const envPass = typeof import.meta !== 'undefined' && (import.meta.env?.VITE_ADMIN_PASSWORD || import.meta.env?.VITE_ADMIN_PASSKEY)
+        ? String(import.meta.env.VITE_ADMIN_PASSWORD || import.meta.env.VITE_ADMIN_PASSKEY).trim()
+        : '';
+      const envName = typeof import.meta !== 'undefined' && import.meta.env?.VITE_ADMIN_NAME
+        ? String(import.meta.env.VITE_ADMIN_NAME).trim()
+        : 'Executive Director';
+
+      if (envEmail && envPass) {
+        base[envEmail] = {
+          name: envName || 'Master Administrator',
+          role: 'Super Admin',
+          pass: envPass
+        };
+      }
+    } catch {
+      // Ignore env extraction error in non-vite environments
+    }
+
+    return base;
   };
 
   const loadAuthorizedAdminsRegistry = (): Record<string, { name: string; role: AdminUser['role']; pass: string }> => {
+    const initial = getInitialAuthorizedAdmins();
     try {
       const saved = localStorage.getItem('lunova_authorized_admins_v1');
       if (saved) {
         const parsed = JSON.parse(saved);
-        return { ...INITIAL_AUTHORIZED_ADMINS, ...parsed };
+        return { ...initial, ...parsed };
       }
     } catch (e) {
       console.error('Error loading authorized admins:', e);
     }
-    return INITIAL_AUTHORIZED_ADMINS;
+    return initial;
   };
 
   const [authorizedAdmins, setAuthorizedAdmins] = useState<Record<string, { name: string; role: AdminUser['role']; pass: string }>>(() => {
@@ -845,14 +900,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [authorizedAdmins]);
 
   const adminLogin = (email: string, pass: string) => {
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPass = (pass || '').trim();
+    
+    if (!cleanEmail) {
+      return { success: false, message: 'Please enter your administrator email address.' };
+    }
+    if (!cleanPass) {
+      return { success: false, message: 'Please enter your master passkey.' };
+    }
+
     const currentAdmins = loadAuthorizedAdminsRegistry();
     
     // Check if email is in authorized administrators list
     const adminRecord = currentAdmins[cleanEmail];
     
     if (adminRecord) {
-      if (pass.trim() === adminRecord.pass) {
+      if (cleanPass === adminRecord.pass.trim()) {
         const user: AdminUser = {
           id: `adm-${cleanEmail.replace(/[^a-z0-9]/g, '')}`,
           name: adminRecord.name,

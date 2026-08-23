@@ -1,29 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { ShieldCheck, Lock, Mail, ArrowRight, AlertTriangle, ShieldAlert, LogOut, Eye, EyeOff } from 'lucide-react';
 
 export const AdminLoginPage: React.FC = () => {
-  const { adminLogin, navigate, customerUser, customerLogout } = useStore();
+  const { adminUser, adminLogin, navigate, customerUser, customerLogout } = useStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // If already authenticated as admin, automatically redirect to admin dashboard
+  useEffect(() => {
+    if (adminUser) {
+      navigate('/admin/dashboard');
+    }
+  }, [adminUser, navigate]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    setTimeout(() => {
-      const res = adminLogin(email, password);
-      setLoading(false);
-      if (res.success) {
-        navigate('/admin/dashboard');
-      } else {
-        setError(res.message);
-      }
-    }, 400);
+    // Authenticate immediately and redirect on success
+    const res = adminLogin(email, password);
+    setLoading(false);
+    if (res.success) {
+      navigate('/admin/dashboard');
+    } else {
+      setError(res.message);
+    }
   };
 
   return (

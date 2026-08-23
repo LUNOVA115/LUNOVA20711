@@ -41,7 +41,9 @@ const AppContent: React.FC = () => {
   const { currentPath, adminUser } = useStore();
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
-  const isAdminRoute = currentPath.startsWith('/admin');
+  // Normalize path by stripping query params, hash and trailing slashes
+  const normalizedPath = (currentPath || '/').split('?')[0].split('#')[0].replace(/\/+$/, '') || '/';
+  const isAdminRoute = normalizedPath === '/admin' || normalizedPath.startsWith('/admin/');
 
   // Route Resolver
   const renderRoute = () => {
@@ -53,37 +55,37 @@ const AppContent: React.FC = () => {
       }
 
       // Authenticated Admin Routes
-      if (currentPath === '/admin' || currentPath === '/admin/dashboard' || currentPath === '/admin/login') {
+      if (normalizedPath === '/admin' || normalizedPath === '/admin/dashboard' || normalizedPath === '/admin/login') {
         return <AdminDashboardPage />;
       }
-      if (currentPath === '/admin/products/new') {
+      if (normalizedPath === '/admin/products/new') {
         return <AdminProductNewPage />;
       }
-      if (currentPath === '/admin/products') {
+      if (normalizedPath === '/admin/products') {
         return <AdminProductsPage />;
       }
-      if (currentPath === '/admin/inventory') {
+      if (normalizedPath === '/admin/inventory') {
         return <AdminInventoryPage />;
       }
-      if (currentPath === '/admin/orders') {
+      if (normalizedPath === '/admin/orders') {
         return <AdminOrdersPage />;
       }
-      if (currentPath === '/admin/customers') {
+      if (normalizedPath === '/admin/customers') {
         return <AdminCustomersPage />;
       }
-      if (currentPath === '/admin/categories') {
+      if (normalizedPath === '/admin/categories') {
         return <AdminCategoriesPage />;
       }
-      if (currentPath === '/admin/homepage') {
+      if (normalizedPath === '/admin/homepage') {
         return <AdminHomepagePage />;
       }
-      if (currentPath === '/admin/analytics') {
+      if (normalizedPath === '/admin/analytics') {
         return <AdminAnalyticsPage />;
       }
-      if (currentPath === '/admin/settings') {
+      if (normalizedPath === '/admin/settings') {
         return <AdminSettingsPage />;
       }
-      if (currentPath === '/admin/instagram') {
+      if (normalizedPath === '/admin/instagram') {
         return <AdminInstagramPage />;
       }
 
@@ -92,44 +94,44 @@ const AppContent: React.FC = () => {
     }
 
     // 2. Public Routes
-    if (currentPath === '/') {
+    if (normalizedPath === '/') {
       return <HomePage />;
     }
-    if (currentPath === '/shop') {
+    if (normalizedPath === '/shop') {
       return <ShopPage />;
     }
-    if (currentPath === '/flash-deals') {
+    if (normalizedPath === '/flash-deals') {
       return <FlashDealsPage />;
     }
-    if (currentPath === '/collections') {
+    if (normalizedPath === '/collections') {
       return <CollectionsPage />;
     }
-    if (currentPath === '/collections/moon') {
+    if (normalizedPath === '/collections/moon') {
       return <CollectionDetailPage slug="moon" />;
     }
-    if (currentPath === '/collections/infinity') {
+    if (normalizedPath === '/collections/infinity') {
       return <CollectionDetailPage slug="infinity" />;
     }
-    if (currentPath === '/collections/cosmic') {
+    if (normalizedPath === '/collections/cosmic') {
       return <CollectionDetailPage slug="cosmic" />;
     }
-    if (currentPath === '/collections/futuristic-home') {
+    if (normalizedPath === '/collections/futuristic-home') {
       return <CollectionDetailPage slug="futuristic-home" />;
     }
-    if (currentPath.startsWith('/product/')) {
-      const productId = currentPath.replace('/product/', '');
+    if (normalizedPath.startsWith('/product/')) {
+      const productId = normalizedPath.replace('/product/', '');
       return <ProductDetailPage productId={productId} />;
     }
-    if (currentPath === '/about') {
+    if (normalizedPath === '/about') {
       return <AboutPage />;
     }
-    if (currentPath === '/contact') {
+    if (normalizedPath === '/contact') {
       return <ContactPage />;
     }
-    if (currentPath === '/cart') {
+    if (normalizedPath === '/cart') {
       return <CartPage />;
     }
-    if (currentPath === '/wishlist') {
+    if (normalizedPath === '/wishlist') {
       return <WishlistPage />;
     }
 

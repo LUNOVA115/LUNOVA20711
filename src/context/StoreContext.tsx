@@ -346,6 +346,28 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('lunova_cart_v1', JSON.stringify(cart));
   }, [cart]);
 
+  // Synchronize cart items' product objects with latest products from the live products array
+  useEffect(() => {
+    setCart((prevCart) => {
+      let changed = false;
+      const updatedCart = prevCart.map((item) => {
+        const latestProduct = products.find((p) => p.id === item.product.id);
+        if (latestProduct && (
+          latestProduct.price !== item.product.price ||
+          latestProduct.originalPrice !== item.product.originalPrice ||
+          latestProduct.name !== item.product.name ||
+          latestProduct.images[0] !== item.product.images[0] ||
+          latestProduct.stock !== item.product.stock
+        )) {
+          changed = true;
+          return { ...item, product: latestProduct };
+        }
+        return item;
+      });
+      return changed ? updatedCart : prevCart;
+    });
+  }, [products]);
+
   // Wishlist
   const [wishlist, setWishlist] = useState<string[]>(() => {
     try {

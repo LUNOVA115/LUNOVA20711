@@ -91,8 +91,8 @@ export const FlashDealsPage: React.FC = () => {
     { id: 'moon', label: 'Moon Lamps' }
   ];
 
-  const rawPhone = contactInfo?.whatsappNumber || contactInfo?.phone || '+1 (800) 840-5866';
-  const cleanPhone = rawPhone.replace(/[^0-9]/g, '') || '18008405866';
+  const rawPhone = contactInfo?.whatsappNumber || contactInfo?.phone || '+92 315 0360126';
+  const cleanPhone = rawPhone.replace(/[^0-9]/g, '') || '923150360126';
 
   return (
     <div className="min-h-screen bg-[#07080b] text-zinc-100 pb-24 selection:bg-amber-400 selection:text-zinc-950">

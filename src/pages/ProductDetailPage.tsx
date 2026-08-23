@@ -54,13 +54,13 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ productId 
   const [selectedColorTemp, setSelectedColorTemp] = useState(product.colorTemperature || 'Warm Amber 2700K');
   const [activeTab, setActiveTab] = useState<'specs' | 'inbox' | 'shipping' | 'reviews'>('specs');
 
-  const rawPhone = contactInfo?.whatsappNumber || contactInfo?.phone || '+1 (800) 840-5866';
-  const cleanPhone = rawPhone.replace(/[^0-9]/g, '') || '18008405866';
+  const rawPhone = contactInfo?.whatsappNumber || contactInfo?.phone || '+92 315 0360126';
+  const cleanPhone = rawPhone.replace(/[^0-9]/g, '') || '923150360126';
   const productWhatsAppMessage = encodeURIComponent(
     `Hello LUNOVA Concierge, I'm inquiring about "${product.name}" (${formatPrice(product.price)}). Are custom specifications or expedited crate delivery available?`
   );
   const productWhatsAppUrl = `https://wa.me/${cleanPhone}?text=${productWhatsAppMessage}`;
-  const instagramUrl = instagramSettings.profileUrl || `https://instagram.com/${instagramSettings.handle || 'lunova.atelier'}`;
+  const instagramUrl = instagramSettings?.profileUrl || contactInfo?.instagramUrl || `https://instagram.com/${instagramSettings?.handle?.replace(/^@+/, '') || 'lunova.atelier'}`;
 
   
   // Review form modal

@@ -27,14 +27,52 @@ const AVAILABLE_COUPONS: Record<string, Coupon> = {
   'MOONGLOW': { code: 'MOONGLOW', discountPercent: 10, description: '10% Lunar Collection Gift' }
 };
 
-export const DEFAULT_CONTACT_INFO: StoreContactInfo = {
-  email: 'support@lunova.luxury',
-  phone: '+1 (800) 840-5866',
-  whatsappNumber: '+1 (800) 840-5866',
-  whatsappEnabled: true,
-  hours: 'Mon – Sat, 9:00 AM – 6:00 PM EST',
-  address: '750 Madison Avenue, 18th Fl, New York, NY 10065'
+export const getInitialContactInfo = (): StoreContactInfo => {
+  let envWhatsapp = '+92 315 0360126';
+  let envPhone = '+92 315 0360126';
+  let envInstagramHandle = 'lunova.atelier';
+  let envInstagramUrl = 'https://instagram.com/lunova.atelier';
+  let envEmail = 'support@lunova.luxury';
+  let envAddress = '750 Madison Avenue, New York, NY / Lahore Atelier';
+
+  try {
+    if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_WHATSAPP_NUMBER) {
+      envWhatsapp = String(import.meta.env.VITE_WHATSAPP_NUMBER).trim();
+      envPhone = envWhatsapp;
+    }
+    if (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_CONTACT_PHONE || import.meta.env?.VITE_STORE_PHONE)) {
+      envPhone = String(import.meta.env.VITE_CONTACT_PHONE || import.meta.env.VITE_STORE_PHONE).trim();
+    }
+    if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_INSTAGRAM_HANDLE) {
+      envInstagramHandle = String(import.meta.env.VITE_INSTAGRAM_HANDLE).trim().replace(/^@+/, '');
+      envInstagramUrl = `https://instagram.com/${envInstagramHandle}`;
+    }
+    if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_INSTAGRAM_URL) {
+      envInstagramUrl = String(import.meta.env.VITE_INSTAGRAM_URL).trim();
+    }
+    if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CONTACT_EMAIL) {
+      envEmail = String(import.meta.env.VITE_CONTACT_EMAIL).trim();
+    }
+    if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_STORE_ADDRESS) {
+      envAddress = String(import.meta.env.VITE_STORE_ADDRESS).trim();
+    }
+  } catch {
+    // Ignore env error
+  }
+
+  return {
+    email: envEmail,
+    phone: envPhone,
+    whatsappNumber: envWhatsapp,
+    whatsappEnabled: true,
+    hours: 'Mon – Sat, 9:00 AM – 6:00 PM PKT / EST',
+    address: envAddress,
+    instagramHandle: `@${envInstagramHandle}`,
+    instagramUrl: envInstagramUrl
+  };
 };
+
+export const DEFAULT_CONTACT_INFO: StoreContactInfo = getInitialContactInfo();
 
 export const DEFAULT_PAYMENT_SETTINGS: PaymentSettings = {
   easypaisaEnabled: true,
@@ -397,7 +435,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [contactInfo, setContactInfo] = useState<StoreContactInfo>(() => {
     try {
       const saved = localStorage.getItem('lunova_contact_info_v1');
-      return saved ? { ...DEFAULT_CONTACT_INFO, ...JSON.parse(saved) } : DEFAULT_CONTACT_INFO;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // If saved has the old US placeholder, upgrade to current default
+        if (parsed.whatsappNumber === '+1 (800) 840-5866' || parsed.phone === '+1 (800) 840-5866') {
+          return {
+            ...DEFAULT_CONTACT_INFO,
+            ...parsed,
+            whatsappNumber: parsed.whatsappNumber === '+1 (800) 840-5866' ? DEFAULT_CONTACT_INFO.whatsappNumber : parsed.whatsappNumber,
+            phone: parsed.phone === '+1 (800) 840-5866' ? DEFAULT_CONTACT_INFO.phone : parsed.phone
+          };
+        }
+        return { ...DEFAULT_CONTACT_INFO, ...parsed };
+      }
+      return DEFAULT_CONTACT_INFO;
     } catch {
       return DEFAULT_CONTACT_INFO;
     }

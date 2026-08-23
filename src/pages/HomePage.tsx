@@ -13,7 +13,19 @@ import {
 } from '../data/productImages';
 
 export const HomePage: React.FC = () => {
-  const { navigate } = useStore();
+  const { navigate, products } = useStore();
+
+  // Dynamically retrieve the flagship or first product of each category to display synchronized images
+  const moonProduct = useMemo(() => {
+    return products.find(p => p.category === 'Moon Collection' && p.status === 'active') || products.find(p => p.category === 'Moon Collection');
+  }, [products]);
+
+  const infinityProduct = useMemo(() => {
+    return products.find(p => p.category === 'Infinity Collection' && p.status === 'active') || products.find(p => p.category === 'Infinity Collection');
+  }, [products]);
+
+  const moonImage = moonProduct?.images?.[0] || IMAGE_3_WARM_MOON;
+  const infinityImage = infinityProduct?.images?.[0] || IMAGE_1_GOLD_TABLE;
 
   // Dynamic halo lighting
   const haloColor = 'rgba(251, 191, 36, 0.4)';
@@ -123,7 +135,7 @@ export const HomePage: React.FC = () => {
             {/* Visual Centerpiece */}
             <div className="relative z-10 w-48 h-48 sm:w-60 sm:h-60 mx-auto my-6 transform group-hover:scale-110 transition-transform duration-700 ease-out">
               <img
-                src={IMAGE_3_WARM_MOON}
+                src={moonImage}
                 alt="Moon Lamp Collection"
                 className="w-full h-full object-contain filter drop-shadow-[0_15px_35px_rgba(245,158,11,0.25)]"
               />
@@ -164,7 +176,7 @@ export const HomePage: React.FC = () => {
             {/* Visual Centerpiece */}
             <div className="relative z-10 w-48 h-48 sm:w-60 sm:h-60 mx-auto my-6 transform group-hover:scale-110 transition-transform duration-700 ease-out">
               <img
-                src={IMAGE_1_GOLD_TABLE}
+                src={infinityImage}
                 alt="Infinity Mirror Collection"
                 className="w-full h-full object-contain filter drop-shadow-[0_15px_35px_rgba(56,189,248,0.25)]"
               />

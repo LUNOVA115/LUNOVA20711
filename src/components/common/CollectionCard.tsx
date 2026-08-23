@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Category } from '../../types';
 import { useStore } from '../../context/StoreContext';
 import { ArrowUpRight } from 'lucide-react';
@@ -8,11 +8,18 @@ interface CollectionCardProps {
 }
 
 export const CollectionCard: React.FC<CollectionCardProps> = ({ category }) => {
-  const { navigate } = useStore();
+  const { navigate, products } = useStore();
 
   const handleOpen = () => {
     navigate(`/collections/${category.slug}`);
   };
+
+  // Dynamically find first active product of this category to use its image as background
+  const matchingProduct = useMemo(() => {
+    return products.find(p => p.category === category.name && p.status === 'active') || products.find(p => p.category === category.name);
+  }, [products, category.name]);
+
+  const displayImage = matchingProduct?.images?.[0] || category.image;
 
   return (
     <div
@@ -22,7 +29,7 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({ category }) => {
       {/* Background Image with Zoom & Dark Gradient Overlay */}
       <div className="absolute inset-0 z-0">
         <img
-          src={category.image}
+          src={displayImage}
           alt={category.name}
           referrerPolicy="no-referrer"
           className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-1000 ease-out opacity-75"

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useStore } from '../context/StoreContext';
 import { 
   Sparkles, 
@@ -13,7 +13,19 @@ import {
 import { IMAGE_5_LUNAR_SURFACE, IMAGE_8_LIFESTYLE_TABLE } from '../data/productImages';
 
 export const AboutPage: React.FC = () => {
-  const { navigate } = useStore();
+  const { navigate, products } = useStore();
+
+  // Dynamically retrieve product images for each category
+  const moonProduct = useMemo(() => {
+    return products.find(p => p.category === 'Moon Collection' && p.status === 'active') || products.find(p => p.category === 'Moon Collection');
+  }, [products]);
+
+  const infinityProduct = useMemo(() => {
+    return products.find(p => p.category === 'Infinity Collection' && p.status === 'active') || products.find(p => p.category === 'Infinity Collection');
+  }, [products]);
+
+  const moonImage = moonProduct?.images?.[0] || IMAGE_5_LUNAR_SURFACE;
+  const infinityImage = infinityProduct?.images?.[0] || IMAGE_8_LIFESTYLE_TABLE;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 space-y-24 text-zinc-100">
@@ -51,7 +63,7 @@ export const AboutPage: React.FC = () => {
 
         <div className="relative aspect-square sm:aspect-[4/3] rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl bg-zinc-950 p-3">
           <img
-            src={IMAGE_5_LUNAR_SURFACE}
+            src={moonImage}
             alt="Lunar Surface Detail Topography"
             referrerPolicy="no-referrer"
             className="w-full h-full object-contain rounded-2xl"
@@ -63,7 +75,7 @@ export const AboutPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div className="relative aspect-square sm:aspect-[4/3] rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl bg-zinc-950 p-3 order-last lg:order-first">
           <img
-            src={IMAGE_8_LIFESTYLE_TABLE}
+            src={infinityImage}
             alt="Infinity Mirror Optical Physics"
             referrerPolicy="no-referrer"
             className="w-full h-full object-cover rounded-2xl"

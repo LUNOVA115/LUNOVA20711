@@ -7,6 +7,7 @@ import { INITIAL_ORDERS } from '../data/initialOrders';
 import { INITIAL_CUSTOMERS } from '../data/initialCustomers';
 import { INITIAL_INSTAGRAM_SETTINGS } from '../data/initialInstagram';
 import { IMAGE_3_WARM_MOON, IMAGE_1_GOLD_TABLE, IMAGE_8_LIFESTYLE_TABLE } from '../data/productImages';
+import { db, collection, doc, setDoc, getDocs, deleteDoc, writeBatch, onSnapshot } from '../utils/firebase';
 
 export interface Toast {
   id: string;
@@ -249,7 +250,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  // Products (Updated with 3D product renders)
+  // Products (Updated with 3D product renders & Real-time Firestore Cloud Database)
   const [products, setProducts] = useState<Product[]>(() => {
     try {
       const saved = localStorage.getItem('lunova_products_v3');
@@ -277,6 +278,40 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       console.warn('Storage quota reached or localStorage unavailable for products:', err);
     }
   }, [products]);
+
+  // Firestore Products Synchronizer (Real-time sync between Admin & Customer Portals)
+  useEffect(() => {
+    const productsCol = collection(db, 'products');
+    const unsubscribe = onSnapshot(productsCol, async (snapshot) => {
+      if (snapshot.empty) {
+        console.log('[Firestore] Products collection is empty. Seeding initial products...');
+        try {
+          const batch = writeBatch(db);
+          INITIAL_PRODUCTS.forEach((product) => {
+            const prodRef = doc(db, 'products', product.id);
+            batch.set(prodRef, product);
+          });
+          await batch.commit();
+          console.log('[Firestore] Seeded initial products successfully!');
+        } catch (error) {
+          console.error('[Firestore] Error seeding initial products:', error);
+        }
+      } else {
+        const fbProducts: Product[] = [];
+        snapshot.forEach((docSnap) => {
+          fbProducts.push(docSnap.data() as Product);
+        });
+        
+        // Sort products by createdAt descending (newest first)
+        fbProducts.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
+        setProducts(fbProducts);
+      }
+    }, (error) => {
+      console.error('[Firestore] Real-time listener error:', error);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Categories (Moon Collection & Infinity Collection)
   const [categories, setCategories] = useState<Category[]>(() => {
@@ -1225,15 +1260,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       id,
       createdAt: new Date().toISOString()
     };
-    setProducts((prev) => [newProd, ...prev]);
+    
+    // Persist to Firestore Cloud Database
+    setDoc(doc(db, 'products', id), newProd).catch((err) => {
+      console.error('[Firestore] Error writing product:', err);
+    });
+
     addToast(`Product "${newProd.name}" created successfully`, 'success');
     return newProd;
   };
 
   const updateProduct = (updated: Product) => {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === updated.id ? updated : p))
-    );
+    // Persist to Firestore Cloud Database
+    setDoc(doc(db, 'products', updated.id), updated).catch((err) => {
+      console.error('[Firestore] Error updating product:', err);
+    });
+
     // Also sync cart if item exists
     setCart((prev) =>
       prev.map((item) =>
@@ -1245,7 +1287,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const deleteProduct = (productId: string) => {
     const prod = products.find((p) => p.id === productId);
-    setProducts((prev) => prev.filter((p) => p.id !== productId));
+    
+    // Delete from Firestore Cloud Database
+    deleteDoc(doc(db, 'products', productId)).catch((err) => {
+      console.error('[Firestore] Error deleting product:', err);
+    });
+
     setCart((prev) => prev.filter((item) => item.product.id !== productId));
     setWishlist((prev) => prev.filter((id) => id !== productId));
     addToast(`Product "${prod?.name || productId}" deleted`, 'info');
@@ -1321,16 +1368,36 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     addToast('Category removed', 'info');
   };
 
-  const resetToDefaults = () => {
-    setProducts(INITIAL_PRODUCTS);
-    setCategories(INITIAL_CATEGORIES);
-    setOrders(INITIAL_ORDERS);
-    setCustomers(INITIAL_CUSTOMERS);
-    localStorage.removeItem('lunova_products_v1');
-    localStorage.removeItem('lunova_categories_v1');
-    localStorage.removeItem('lunova_orders_v1');
-    localStorage.removeItem('lunova_customers_v1');
-    addToast('Store reset to initial catalogue and orders', 'info');
+  const resetToDefaults = async () => {
+    try {
+      // Clear all existing products in Firestore
+      const querySnapshot = await getDocs(collection(db, 'products'));
+      const batch = writeBatch(db);
+      querySnapshot.forEach((document) => {
+        batch.delete(doc(db, 'products', document.id));
+      });
+
+      setCategories(INITIAL_CATEGORIES);
+      setOrders(INITIAL_ORDERS);
+      setCustomers(INITIAL_CUSTOMERS);
+      
+      localStorage.removeItem('lunova_products_v3');
+      localStorage.removeItem('lunova_categories_v1');
+      localStorage.removeItem('lunova_orders_v1');
+      localStorage.removeItem('lunova_customers_v1');
+
+      // Write default products back into Firestore
+      INITIAL_PRODUCTS.forEach((product) => {
+        const prodRef = doc(db, 'products', product.id);
+        batch.set(prodRef, product);
+      });
+      await batch.commit();
+
+      addToast('Store reset to initial catalogue and orders', 'info');
+    } catch (err) {
+      console.error('[Firestore] Error resetting to defaults:', err);
+      addToast('Failed to reset store to defaults', 'error');
+    }
   };
 
   return (

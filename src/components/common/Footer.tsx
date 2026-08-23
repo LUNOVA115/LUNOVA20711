@@ -17,6 +17,7 @@ export const Footer: React.FC = () => {
     setIsCustomerOrdersModalOpen, 
     setIsCustomerAuthModalOpen, 
     customerUser, 
+    adminUser,
     contactInfo,
     instagramSettings,
     addToast
@@ -321,13 +322,15 @@ export const Footer: React.FC = () => {
         {/* Bottom Legal & Copyright Bar */}
         <div className="pt-8 border-t border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] font-mono text-zinc-400">
           <div className="flex items-center space-x-2">
-            <button
-              onClick={() => navigate('/admin/login')}
-              className="p-1 rounded hover:bg-zinc-800/80 transition-colors text-amber-400/80 hover:text-amber-300 cursor-pointer"
-              title="Secure Atelier Gateway"
-            >
-              <Lock className="w-3.5 h-3.5" />
-            </button>
+            {adminUser && (
+              <button
+                onClick={() => navigate('/admin/login')}
+                className="p-1 rounded hover:bg-zinc-800/80 transition-colors text-amber-400/80 hover:text-amber-300 cursor-pointer mr-1"
+                title="Secure Atelier Gateway"
+              >
+                <Lock className="w-3.5 h-3.5" />
+              </button>
+            )}
             <span>© 2026 LUNOVA ATELIER. HANDCRAFTED IN PAKISTAN. ALL RIGHTS RESERVED.</span>
           </div>
 

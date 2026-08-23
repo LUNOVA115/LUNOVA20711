@@ -41,18 +41,6 @@ const AppContent: React.FC = () => {
   const { currentPath, adminUser, navigate } = useStore();
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
-  // Global Admin Access Keyboard Shortcut (Alt+A or Option+A)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.altKey || e.metaKey) && (e.key === 'a' || e.key === 'A')) {
-        e.preventDefault();
-        navigate(adminUser ? '/admin/dashboard' : '/admin/login');
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [adminUser, navigate]);
-
   // Normalize path by stripping query params, hash and trailing slashes
   const normalizedPath = (currentPath || '/').split('?')[0].split('#')[0].replace(/\/+$/, '') || '/';
   const isAdminRoute = normalizedPath === '/admin' || normalizedPath.startsWith('/admin/');

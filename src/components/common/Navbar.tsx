@@ -330,9 +330,9 @@ export const Navbar: React.FC = () => {
                     </div>
                   )}
 
-                  {/* ADMIN PORTAL GATEWAY - ALWAYS VISIBLE */}
-                  <div className="pt-2 mt-2 border-t border-zinc-800/80">
-                    {adminUser ? (
+                  {/* ONLY VISIBLE IF ACTIVELY AUTHENTICATED AS ADMIN */}
+                  {adminUser && (
+                    <div className="pt-2 mt-2 border-t border-zinc-800/80">
                       <button
                         onClick={() => {
                           setIsAccountOpen(false);
@@ -348,24 +348,8 @@ export const Navbar: React.FC = () => {
                           <div className="text-[10px] text-zinc-400 font-mono">Logged in as {adminUser.name}</div>
                         </div>
                       </button>
-                    ) : (
-                      <button
-                        onClick={() => {
-                          setIsAccountOpen(false);
-                          handleNav('/admin/login');
-                        }}
-                        className="w-full flex items-center space-x-3 p-2.5 rounded-xl hover:bg-amber-500/10 border border-dashed border-zinc-800 hover:border-amber-500/30 text-left transition-all text-zinc-400 hover:text-amber-300 group cursor-pointer"
-                      >
-                        <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 group-hover:bg-amber-500/10 group-hover:border-amber-500/30 transition-all shrink-0">
-                          <Lock className="w-4 h-4 text-zinc-500 group-hover:text-amber-400 transition-colors" />
-                        </div>
-                        <div>
-                          <div className="font-semibold text-zinc-300 group-hover:text-amber-200 transition-colors">Admin Portal Access</div>
-                          <div className="text-[10px] text-zinc-500">Access console & manage store</div>
-                        </div>
-                      </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                 </div>
               )}
@@ -522,9 +506,9 @@ export const Navbar: React.FC = () => {
                   </button>
                 )}
 
-                {/* Always-visible Admin Portal access section on Mobile */}
-                <div className="pt-2 border-t border-zinc-800/50">
-                  {adminUser ? (
+                {/* Admin Portal access section on Mobile - ONLY VISIBLE WHEN LOGGED IN AS ADMIN */}
+                {adminUser && (
+                  <div className="pt-2 border-t border-zinc-800/50">
                     <button
                       onClick={() => {
                         handleNav('/admin/dashboard');
@@ -538,19 +522,8 @@ export const Navbar: React.FC = () => {
                       </span>
                       <span className="text-[10px] bg-amber-400 text-zinc-950 px-1.5 py-0.5 rounded font-bold">CONSOLE</span>
                     </button>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        handleNav('/admin/login');
-                        setMobileMenuOpen(false);
-                      }}
-                      className="w-full text-left py-2.5 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center space-x-2 cursor-pointer hover:bg-amber-500/10 hover:text-amber-300 transition-colors"
-                    >
-                      <Lock className="w-3.5 h-3.5" />
-                      <span>Admin Portal Access</span>
-                    </button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
             </div>

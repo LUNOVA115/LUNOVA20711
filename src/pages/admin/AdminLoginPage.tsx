@@ -9,11 +9,7 @@ import {
   ShieldAlert, 
   LogOut, 
   Eye, 
-  EyeOff,
-  Smartphone,
-  Laptop,
-  Sparkles,
-  KeyRound
+  EyeOff
 } from 'lucide-react';
 
 export const AdminLoginPage: React.FC = () => {
@@ -49,27 +45,6 @@ export const AdminLoginPage: React.FC = () => {
     } else {
       setError(res.message);
     }
-  };
-
-  const handleQuickFill = (presetEmail: string, presetPass: string) => {
-    setEmail(presetEmail);
-    setPassword(presetPass);
-    setError('');
-    
-    if (customerUser) {
-      customerLogout();
-    }
-
-    setLoading(true);
-    setTimeout(() => {
-      const res = adminLogin(presetEmail, presetPass);
-      setLoading(false);
-      if (res.success) {
-        navigate('/admin/dashboard');
-      } else {
-        setError(res.message);
-      }
-    }, 150);
   };
 
   return (
@@ -197,52 +172,7 @@ export const AdminLoginPage: React.FC = () => {
           </button>
         </form>
 
-        {/* Quick Device Authentication Presets (Mobile & Desktop Friendly) */}
-        <div className="pt-3 border-t border-zinc-800/80 space-y-2.5">
-          <div className="flex items-center justify-between text-[11px] text-zinc-400 font-mono">
-            <span className="flex items-center space-x-1 text-amber-300 font-semibold">
-              <KeyRound className="w-3.5 h-3.5" />
-              <span>1-Tap Device Clearance:</span>
-            </span>
-            <span className="flex items-center space-x-1 text-[10px] text-zinc-500">
-              <Smartphone className="w-3 h-3" />
-              <Laptop className="w-3 h-3" />
-              <span>Any Device</span>
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickFill('workp7384@gmail.com', 'lunova2026')}
-              className="p-2.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-800/90 border border-zinc-800 hover:border-amber-400/40 text-left transition-all group cursor-pointer"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-white font-semibold text-[11px] group-hover:text-amber-300 truncate">
-                  workp7384@gmail.com
-                </span>
-                <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
-              </div>
-              <div className="text-[10px] text-zinc-400 font-mono mt-0.5">Store Principal • Auto Sign-in</div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickFill('admin@lunova.luxury', 'lunova2026')}
-              className="p-2.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-800/90 border border-zinc-800 hover:border-amber-400/40 text-left transition-all group cursor-pointer"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-white font-semibold text-[11px] group-hover:text-amber-300 truncate">
-                  admin@lunova.luxury
-                </span>
-                <ShieldCheck className="w-3 h-3 text-amber-400 shrink-0" />
-              </div>
-              <div className="text-[10px] text-zinc-400 font-mono mt-0.5">Super Admin • Auto Sign-in</div>
-            </button>
-          </div>
-        </div>
-
-        <div className="text-center pt-1">
+        <div className="text-center pt-4">
           <button
             onClick={() => navigate('/')}
             className="text-xs text-zinc-500 hover:text-white transition-colors uppercase tracking-wider font-mono cursor-pointer"

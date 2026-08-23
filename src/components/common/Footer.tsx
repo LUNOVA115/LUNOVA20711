@@ -340,12 +340,27 @@ export const Footer: React.FC = () => {
               Concierge
             </button>
             <button 
-              onClick={() => navigate('/admin/login')} 
-              className="hover:text-amber-400 text-zinc-500 transition-colors flex items-center space-x-1 cursor-pointer"
+              onClick={() => {
+                if (customerUser) {
+                  setIsCustomerOrdersModalOpen(true);
+                } else {
+                  setIsCustomerAuthModalOpen(true);
+                }
+              }} 
+              className="hover:text-amber-300 text-zinc-400 transition-colors cursor-pointer"
             >
-              <ShieldCheck className="w-3 h-3 text-amber-400/60" />
-              <span>Admin</span>
+              Client Portal
             </button>
+            {adminUser && (
+              <button 
+                onClick={() => navigate('/admin/dashboard')} 
+                className="hover:text-amber-400 text-amber-400/90 font-semibold transition-colors flex items-center space-x-1.5 cursor-pointer bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30 text-[10px]"
+                title="Staff Management Console"
+              >
+                <ShieldCheck className="w-3 h-3 text-amber-400" />
+                <span>Admin Console</span>
+              </button>
+            )}
           </div>
         </div>
 

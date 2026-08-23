@@ -868,7 +868,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     navigate('/admin/login');
   };
 
+  // RBAC Authentication Guard: Ensures only authenticated administrators can execute privileged operations
+  const requireAdminAuth = (actionDescription: string): boolean => {
+    if (!adminUser || !adminUser.email) {
+      addToast(`Access Denied: Administrative authorization required to ${actionDescription}.`, 'error');
+      return false;
+    }
+    return true;
+  };
+
   const updateAdminProfile = (profile: Partial<AdminUser>) => {
+    if (!requireAdminAuth('update administrative profile')) return;
     setAdminUser((prev) => {
       const updated: AdminUser = prev 
         ? { ...prev, ...profile } 
@@ -885,6 +895,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Admin product mutators
   const addProduct = (productData: Omit<Product, 'id' | 'createdAt'>): Product => {
+    if (!requireAdminAuth('create new product items')) {
+      throw new Error('Administrative privilege required');
+    }
     const id = `prod-${Date.now().toString(36)}`;
     const newProd: Product = {
       ...productData,
@@ -897,6 +910,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const updateProduct = (updated: Product) => {
+    if (!requireAdminAuth('modify product details')) return;
     setProducts((prev) =>
       prev.map((p) => (p.id === updated.id ? updated : p))
     );
@@ -910,6 +924,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const deleteProduct = (productId: string) => {
+    if (!requireAdminAuth('remove product from catalogue')) return;
     const prod = products.find((p) => p.id === productId);
     setProducts((prev) => prev.filter((p) => p.id !== productId));
     setCart((prev) => prev.filter((item) => item.product.id !== productId));
@@ -953,6 +968,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const updateOrderStatus = (orderId: string, status: Order['orderStatus']) => {
+    if (!requireAdminAuth('update customer order status')) return;
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, orderStatus: status } : o))
     );
@@ -960,6 +976,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const updateOrderPaymentStatus = (orderId: string, status: Order['paymentStatus']) => {
+    if (!requireAdminAuth('update payment status')) return;
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, paymentStatus: status } : o))
     );
@@ -968,6 +985,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Category mutators
   const addCategory = (categoryData: Omit<Category, 'id'>): Category => {
+    if (!requireAdminAuth('create categories')) {
+      throw new Error('Administrative privilege required');
+    }
     const id = `cat-${Date.now().toString(36)}`;
     const newCat: Category = { ...categoryData, id };
     setCategories((prev) => [...prev, newCat]);
@@ -976,6 +996,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const updateCategory = (updated: Category) => {
+    if (!requireAdminAuth('update category details')) return;
     setCategories((prev) =>
       prev.map((c) => (c.id === updated.id ? updated : c))
     );
@@ -983,11 +1004,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const deleteCategory = (categoryId: string) => {
+    if (!requireAdminAuth('delete category')) return;
     setCategories((prev) => prev.filter((c) => c.id !== categoryId));
     addToast('Category removed', 'info');
   };
 
   const resetToDefaults = () => {
+    if (!requireAdminAuth('reset store to factory defaults')) return;
     setProducts(INITIAL_PRODUCTS);
     setCategories(INITIAL_CATEGORIES);
     setOrders(INITIAL_ORDERS);

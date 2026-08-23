@@ -240,51 +240,18 @@ export const Navbar: React.FC = () => {
             <div className="relative" ref={accountRef}>
               <button
                 onClick={() => setIsAccountOpen(!isAccountOpen)}
-                className={`relative p-2 sm:p-2.5 rounded-xl border transition-all flex items-center justify-center cursor-pointer shadow-sm group ${
-                  adminUser 
-                    ? 'border-amber-400/60 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20' 
-                    : customerUser 
-                    ? 'border-zinc-700 bg-zinc-800/90 text-amber-200' 
-                    : 'border-zinc-800/80 bg-zinc-900/80 hover:bg-zinc-800/90 hover:border-amber-400/40 text-zinc-300 hover:text-amber-200'
-                }`}
-                title={adminUser ? `Admin Session: ${adminUser.name}` : customerUser ? `Client Account: ${customerUser.name}` : "Account Portal"}
+                className="relative p-2 sm:p-2.5 rounded-xl border border-zinc-800/80 bg-zinc-900/80 hover:bg-zinc-800/90 hover:border-amber-400/40 text-zinc-300 hover:text-amber-200 transition-all flex items-center justify-center cursor-pointer shadow-sm group"
+                title="Account Portal"
                 aria-label="Profile"
               >
-                <User className={`w-4 h-4 group-hover:scale-110 transition-transform ${adminUser ? 'text-amber-300' : 'text-zinc-300 group-hover:text-amber-300'}`} />
-                {adminUser && (
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-400 ring-2 ring-zinc-950 animate-pulse" />
-                )}
+                <User className="w-4 h-4 text-zinc-300 group-hover:text-amber-300 group-hover:scale-110 transition-transform" />
               </button>
 
               {/* Account Dropdown Menu */}
               {isAccountOpen && (
-                <div className="absolute right-0 mt-2.5 w-72 bg-[#0c0d12]/98 backdrop-blur-2xl border border-zinc-800/90 rounded-2xl p-2 shadow-2xl shadow-black/90 space-y-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 text-xs">
+                <div className="absolute right-0 mt-2.5 w-64 bg-[#0c0d12]/98 backdrop-blur-2xl border border-zinc-800/90 rounded-2xl p-2 shadow-2xl shadow-black/90 space-y-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 text-xs">
                   
-                  {/* Active User Header / Clearance State */}
-                  {adminUser ? (
-                    <div className="px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 mb-1 space-y-0.5">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-white text-xs truncate">{adminUser.name}</span>
-                        <span className="px-1.5 py-0.5 rounded bg-amber-400 text-zinc-950 font-mono text-[9px] font-bold uppercase">{adminUser.role}</span>
-                      </div>
-                      <div className="text-[10px] text-amber-300/80 font-mono truncate">{adminUser.email}</div>
-                    </div>
-                  ) : customerUser ? (
-                    <div className="px-3 py-2 rounded-xl bg-zinc-900/90 border border-zinc-800/90 mb-1 space-y-0.5">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-white text-xs truncate">{customerUser.name}</span>
-                        <span className="px-1.5 py-0.5 rounded bg-amber-400/20 border border-amber-400/40 text-amber-300 font-mono text-[9px] font-bold uppercase">{customerUser.tier} VIP</span>
-                      </div>
-                      <div className="text-[10px] text-zinc-400 font-mono truncate">{customerUser.email}</div>
-                    </div>
-                  ) : (
-                    <div className="px-3 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/60 mb-1 space-y-0.5">
-                      <div className="text-xs font-semibold text-amber-200 font-serif tracking-wider">LUNOVA ATELIER</div>
-                      <div className="text-[10px] text-zinc-400">Client Portal & Order Concierge</div>
-                    </div>
-                  )}
-
-                  {/* Option 1: Customer Dashboard (Visible to everyone: Customers, Guests, and Admins) */}
+                  {/* Option 1: Customer Dashboard */}
                   <button
                     onClick={() => {
                       setIsAccountOpen(false);
@@ -294,71 +261,37 @@ export const Navbar: React.FC = () => {
                         setIsCustomerAuthModalOpen(true);
                       }
                     }}
-                    className="w-full flex items-center space-x-3 p-2.5 rounded-xl hover:bg-zinc-900/90 border border-transparent hover:border-zinc-800 text-left transition-all text-zinc-200 hover:text-white group cursor-pointer"
+                    className="w-full flex items-center space-x-3 p-2.5 rounded-xl hover:bg-zinc-800/80 border border-transparent hover:border-zinc-700/80 text-left transition-all text-zinc-200 hover:text-white group cursor-pointer"
                   >
                     <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 group-hover:border-amber-400/40 group-hover:bg-amber-400/10 transition-all shrink-0">
                       <User className="w-4 h-4 text-zinc-400 group-hover:text-amber-400 transition-colors" />
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div>
                       <div className="font-semibold text-zinc-100 group-hover:text-amber-300 transition-colors">Customer Dashboard</div>
-                      <div className="text-[10px] text-zinc-400 truncate">
-                        {customerUser ? 'View orders, vault & client tier' : 'Sign in, track orders & VIP status'}
-                      </div>
+                      <div className="text-[10px] text-zinc-400">Track orders, vault & client account</div>
                     </div>
                   </button>
 
-                  {/* Option 2: Admin Control Panel (STRICTLY rendered for authenticated administrators only) */}
-                  {adminUser && (
-                    <button
-                      onClick={() => {
-                        setIsAccountOpen(false);
+                  {/* Option 2: Admin Control Panel */}
+                  <button
+                    onClick={() => {
+                      setIsAccountOpen(false);
+                      if (adminUser) {
                         handleNav('/admin/dashboard');
-                      }}
-                      className="w-full flex items-center space-x-3 p-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-left transition-all text-zinc-200 hover:text-amber-200 group cursor-pointer"
-                    >
-                      <div className="p-2 rounded-lg bg-zinc-900 border border-amber-400/40 group-hover:border-amber-400 group-hover:bg-amber-500/20 transition-all shrink-0">
-                        <LayoutDashboard className="w-4 h-4 text-amber-400 transition-colors" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-amber-300 group-hover:text-amber-200 transition-colors flex items-center space-x-1.5">
-                          <span>Admin Control Panel</span>
-                          <span className="text-[8px] px-1.5 py-0.2 bg-amber-400 text-zinc-950 rounded font-bold uppercase font-mono">STAFF</span>
-                        </div>
-                        <div className="text-[10px] text-zinc-400 truncate">Inventory, sales & store management</div>
-                      </div>
-                    </button>
-                  )}
-
-                  {/* Sign Out Actions */}
-                  {customerUser && (
-                    <div className="pt-1 border-t border-zinc-800/80">
-                      <button
-                        onClick={() => {
-                          setIsAccountOpen(false);
-                          customerLogout();
-                        }}
-                        className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-left text-zinc-400 hover:text-rose-300 hover:bg-rose-500/10 text-[11px] transition-colors cursor-pointer"
-                      >
-                        <LogOut className="w-3.5 h-3.5 text-zinc-500 group-hover:text-rose-400" />
-                        <span>Sign Out Client Account</span>
-                      </button>
+                      } else {
+                        handleNav('/admin/login');
+                      }
+                    }}
+                    className="w-full flex items-center space-x-3 p-2.5 rounded-xl hover:bg-amber-500/10 border border-transparent hover:border-amber-500/30 text-left transition-all text-zinc-200 hover:text-amber-200 group cursor-pointer"
+                  >
+                    <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 group-hover:border-amber-500/50 group-hover:bg-amber-500/20 transition-all shrink-0">
+                      <LayoutDashboard className="w-4 h-4 text-zinc-400 group-hover:text-amber-400 transition-colors" />
                     </div>
-                  )}
-
-                  {adminUser && (
-                    <div className="pt-1 border-t border-zinc-800/80">
-                      <button
-                        onClick={() => {
-                          setIsAccountOpen(false);
-                          adminLogout();
-                        }}
-                        className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-xl text-left text-zinc-400 hover:text-rose-300 hover:bg-rose-500/10 text-[11px] transition-colors cursor-pointer"
-                      >
-                        <LogOut className="w-3.5 h-3.5 text-zinc-500 group-hover:text-rose-400" />
-                        <span>Exit Admin Session</span>
-                      </button>
+                    <div>
+                      <div className="font-semibold text-zinc-100 group-hover:text-amber-300 transition-colors">Admin Control Panel</div>
+                      <div className="text-[10px] text-zinc-400">Inventory, sales & store management</div>
                     </div>
-                  )}
+                  </button>
 
                 </div>
               )}
@@ -475,82 +408,44 @@ export const Navbar: React.FC = () => {
 
               {/* Account / Login section in mobile menu */}
               <div className="pt-3 border-t border-zinc-800/80">
-                {adminUser ? (
+                {customerUser ? (
                   <div className="space-y-2">
-                    <div className="py-2.5 px-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs flex items-center justify-between">
-                      <div className="truncate">
-                        <div className="font-semibold text-white truncate">{adminUser.name}</div>
-                        <div className="text-[10px] text-amber-300/80 font-mono truncate">{adminUser.email}</div>
-                      </div>
-                      <span className="text-[9px] bg-amber-400 text-zinc-950 font-bold px-2 py-0.5 rounded uppercase font-mono">{adminUser.role}</span>
-                    </div>
-
-                    {/* Admin option 1: Customer Dashboard (Available to Admin) */}
-                    <button
-                      onClick={() => {
-                        setIsCustomerOrdersModalOpen(true);
-                        setMobileMenuOpen(false);
-                      }}
-                      className="w-full text-left py-2.5 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-200 hover:text-white flex items-center space-x-2.5"
-                    >
-                      <User className="w-4 h-4 text-zinc-400" />
-                      <span>Customer Dashboard & Orders</span>
-                    </button>
-
-                    {/* Admin option 2: Admin Dashboard */}
-                    <button
-                      onClick={() => {
-                        handleNav('/admin/dashboard');
-                        setMobileMenuOpen(false);
-                      }}
-                      className="w-full text-left py-2.5 px-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 font-bold flex items-center justify-between shadow-sm"
-                    >
-                      <span className="flex items-center space-x-2">
-                        <LayoutDashboard className="w-4 h-4 text-amber-400" />
-                        <span>Admin Control Panel</span>
-                      </span>
-                      <span className="text-[9px] bg-amber-400 text-zinc-950 px-1.5 py-0.5 rounded font-bold font-mono">STAFF</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        adminLogout();
-                        setMobileMenuOpen(false);
-                      }}
-                      className="w-full text-left py-2 px-3 text-zinc-400 hover:text-rose-300 flex items-center space-x-2 text-xs"
-                    >
-                      <LogOut className="w-3.5 h-3.5" />
-                      <span>Exit Admin Session</span>
-                    </button>
-                  </div>
-                ) : customerUser ? (
-                  <div className="space-y-2">
-                    <div className="py-2 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs flex items-center justify-between">
-                      <div className="truncate">
-                        <div className="font-semibold text-white truncate">{customerUser.name}</div>
-                        <div className="text-[10px] text-zinc-400 font-mono truncate">{customerUser.email}</div>
-                      </div>
-                      <span className="text-amber-400 text-[10px] font-mono font-bold bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20">{customerUser.tier} VIP</span>
+                    <div className="py-2 px-3 rounded-xl bg-zinc-900 text-zinc-300 text-xs flex items-center justify-between">
+                      <span className="truncate">{customerUser.name}</span>
+                      <span className="text-amber-400 text-[10px]">{customerUser.tier}</span>
                     </div>
                     <button
                       onClick={() => {
                         setIsCustomerOrdersModalOpen(true);
                         setMobileMenuOpen(false);
                       }}
-                      className="w-full text-left py-2.5 px-3 rounded-xl bg-amber-400/10 text-amber-300 border border-amber-400/20 flex items-center space-x-2.5"
+                      className="w-full text-left py-2 px-3 rounded-xl bg-amber-400/10 text-amber-300 flex items-center space-x-2"
                     >
-                      <Package className="w-4 h-4 text-amber-400" />
-                      <span>Customer Dashboard & Orders</span>
+                      <Package className="w-3.5 h-3.5" />
+                      <span>My Orders & Tracking</span>
                     </button>
                     <button
                       onClick={() => {
                         customerLogout();
                         setMobileMenuOpen(false);
                       }}
-                      className="w-full text-left py-2 px-3 text-zinc-400 hover:text-rose-300 flex items-center space-x-2 text-xs"
+                      className="w-full text-left py-2 px-3 text-zinc-400 hover:text-rose-300 flex items-center space-x-2"
                     >
                       <LogOut className="w-3.5 h-3.5" />
                       <span>Sign Out</span>
+                    </button>
+                  </div>
+                ) : adminUser ? (
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => handleNav('/admin/dashboard')}
+                      className="w-full text-left py-2.5 px-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 font-bold flex items-center justify-between"
+                    >
+                      <span className="flex items-center space-x-2">
+                        <LayoutDashboard className="w-4 h-4" />
+                        <span>Admin Dashboard</span>
+                      </span>
+                      <span className="text-[10px] bg-amber-400 text-zinc-950 px-1.5 py-0.5 rounded font-bold">CONSOLE</span>
                     </button>
                   </div>
                 ) : (
@@ -562,7 +457,7 @@ export const Navbar: React.FC = () => {
                     className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 text-zinc-950 font-bold uppercase tracking-wider text-xs flex items-center justify-center space-x-2 shadow-lg shadow-amber-400/20"
                   >
                     <User className="w-4 h-4" />
-                    <span>Customer Dashboard / Sign In</span>
+                    <span>Customer Sign In / VIP</span>
                   </button>
                 )}
               </div>

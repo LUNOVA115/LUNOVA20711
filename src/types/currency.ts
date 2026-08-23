@@ -84,4 +84,4 @@ export const SUPPORTED_CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
   },
 };
 
-export const DEFAULT_CURRENCY: CurrencyCode = 'USD';
+export const DEFAULT_CURRENCY: CurrencyCode = 'PKR';

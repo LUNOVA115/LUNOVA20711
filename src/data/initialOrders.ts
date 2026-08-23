@@ -327,6 +327,6 @@ export const INITIAL_ORDERS: Order[] = [
     createdAt: '2026-08-19T08:15:00Z',
     trackingNumber: 'LNV-LEOPARDS-99210',
     carrier: 'Leopards Courier COD Special',
-    paymentNotes: 'Cash on Delivery: Collect $1,382.40 (Rs. 384,300) upon crate delivery.'
+    paymentNotes: 'Cash on Delivery: Collect Rs. 384,300 upon crate delivery.'
   }
 ];

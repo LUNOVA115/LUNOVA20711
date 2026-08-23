@@ -23,7 +23,7 @@ export interface Coupon {
 
 const AVAILABLE_COUPONS: Record<string, Coupon> = {
   'LUNOVA15': { code: 'LUNOVA15', discountPercent: 15, description: '15% Off VIP Welcome' },
-  'FUTURISTIC': { code: 'FUTURISTIC', fixedDiscount: 50, description: '$50 Off Architectural Living' },
+  'FUTURISTIC': { code: 'FUTURISTIC', fixedDiscount: 50, description: 'VIP Voucher - Architectural Living' },
   'MOONGLOW': { code: 'MOONGLOW', discountPercent: 10, description: '10% Lunar Collection Gift' }
 };
 
@@ -407,22 +407,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Global Store Operating Currency (Admin Configurable)
   const [currency, setCurrencyState] = useState<CurrencyCode>(() => {
     try {
-      const saved = localStorage.getItem('lunova_store_currency_v1');
+      const saved = localStorage.getItem('lunova_store_currency_v2');
       if (saved && SUPPORTED_CURRENCIES[saved as CurrencyCode]) {
         return saved as CurrencyCode;
       }
-      return DEFAULT_CURRENCY;
+      return DEFAULT_CURRENCY; // 'PKR'
     } catch {
       return DEFAULT_CURRENCY;
     }
   });
 
   useEffect(() => {
-    localStorage.setItem('lunova_store_currency_v1', currency);
+    try {
+      localStorage.setItem('lunova_store_currency_v2', currency);
+    } catch (e) {
+      console.warn('Could not save currency preference:', e);
+    }
   }, [currency]);
 
   const currencyConfig = useMemo(() => {
-    return SUPPORTED_CURRENCIES[currency] || SUPPORTED_CURRENCIES.USD;
+    return SUPPORTED_CURRENCIES[currency] || SUPPORTED_CURRENCIES.PKR;
   }, [currency]);
 
   const setCurrency = (newCode: CurrencyCode) => {

@@ -31,8 +31,8 @@ export const SAMPLE_EASYPAISA_RECEIPT = `data:image/svg+xml;utf8,${encodeURIComp
 
   <!-- Transaction Details Body -->
   <text x="300" y="300" text-anchor="middle" fill="#047857" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="18" font-weight="700">Payment Successful</text>
-  <text x="300" y="340" text-anchor="middle" fill="#111827" font-family="monospace, -apple-system" font-size="36" font-weight="800">$1,650.00</text>
-  <text x="300" y="365" text-anchor="middle" fill="#6B7280" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13">PKR Equivalent: Rs. 458,700 (Direct Merchant Settlement)</text>
+  <text x="300" y="340" text-anchor="middle" fill="#111827" font-family="monospace, -apple-system" font-size="36" font-weight="800">Rs. 458,700</text>
+  <text x="300" y="365" text-anchor="middle" fill="#6B7280" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13">Direct Merchant Easypaisa Settlement</text>
 
   <!-- Divider -->
   <line x1="60" y1="400" x2="540" y2="400" stroke="#E5E7EB" stroke-width="1.5" stroke-dasharray="6 6"/>

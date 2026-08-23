@@ -100,7 +100,7 @@ export const AdminSettingsPage: React.FC = () => {
 
   const [storeName, setStoreName] = useState('LUNOVA');
   const [tagline, setTagline] = useState('Futuristic Premium Home Decor & Atmospheric Architecture');
-  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>(activeStoreCurrency || 'USD');
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>(activeStoreCurrency || 'PKR');
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(500);
   const [taxRate, setTaxRate] = useState(8.25);
   const [whiteGloveEnabled, setWhiteGloveEnabled] = useState(true);
@@ -1533,7 +1533,7 @@ export const AdminSettingsPage: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-zinc-300 font-semibold uppercase tracking-wider mb-1.5">
-                  Complimentary Shipping Minimum ($)
+                  Complimentary Shipping Minimum ({SUPPORTED_CURRENCIES[selectedCurrency]?.symbol || 'Rs.'})
                 </label>
                 <input
                   type="number"

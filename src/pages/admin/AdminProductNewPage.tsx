@@ -39,7 +39,7 @@ const PRESET_ASSET_IMAGES = [
 ];
 
 export const AdminProductNewPage: React.FC = () => {
-  const { categories, addProduct, navigate, setProductAsHomeFeatured, addToast } = useStore();
+  const { categories, addProduct, navigate, setProductAsHomeFeatured, addToast, currencyConfig } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const replaceFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -282,7 +282,7 @@ export const AdminProductNewPage: React.FC = () => {
 
             <div>
               <label className="block text-zinc-300 font-semibold uppercase tracking-wider mb-1.5">
-                Price ($ USD) *
+                Price ({currencyConfig.symbol} {currencyConfig.code}) *
               </label>
               <input
                 type="number"
@@ -295,7 +295,7 @@ export const AdminProductNewPage: React.FC = () => {
 
             <div>
               <label className="block text-zinc-300 font-semibold uppercase tracking-wider mb-1.5">
-                Original Reference Price ($ USD)
+                Original Reference Price ({currencyConfig.symbol} {currencyConfig.code})
               </label>
               <input
                 type="number"

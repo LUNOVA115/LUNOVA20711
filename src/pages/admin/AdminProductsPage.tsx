@@ -10,7 +10,6 @@ import {
   Eye, 
   Check, 
   X, 
-  Filter, 
   Sparkles, 
   Image as ImageIcon, 
   Upload, 
@@ -19,14 +18,14 @@ import {
   CheckCircle2, 
   AlertTriangle, 
   RefreshCw, 
-  Sliders, 
-  ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
   Boxes,
   Plus,
   Zap,
-  Tag
+  Star,
+  ArrowLeft,
+  ArrowRight,
+  Maximize2,
+  FolderOpen
 } from 'lucide-react';
 import { 
   IMAGE_1_GOLD_TABLE, 
@@ -38,6 +37,7 @@ import {
   IMAGE_7_COOL_WHITE_MOON, 
   IMAGE_8_LIFESTYLE_TABLE 
 } from '../../data/productImages';
+import { optimizeImageFile } from '../../utils/imageOptimizer';
 
 const PRESET_ASSET_IMAGES = [
   { id: 'img-1', name: 'Golden Infinity Table', src: IMAGE_1_GOLD_TABLE },
@@ -78,7 +78,12 @@ export const AdminProductsPage: React.FC = () => {
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [quickPhotoProduct, setQuickPhotoProduct] = useState<Product | null>(null);
+  
+  // Dedicated Image Studio Modal
+  const [imageStudioProduct, setImageStudioProduct] = useState<Product | null>(null);
+  const [urlInput, setUrlInput] = useState('');
+  const [previewZoomImage, setPreviewZoomImage] = useState<string | null>(null);
+  const [isOptimizing, setIsOptimizing] = useState(false);
 
   // New Product Form State
   const [formData, setFormData] = useState({
@@ -103,7 +108,9 @@ export const AdminProductsPage: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
-  const quickPhotoInputRef = useRef<HTMLInputElement>(null);
+  const studioFileInputRef = useRef<HTMLInputElement>(null);
+  const studioReplaceInputRef = useRef<HTMLInputElement>(null);
+  const [replacingIndex, setReplacingIndex] = useState<number | null>(null);
 
   // Filtered and Sorted Products
   const filteredProducts = useMemo(() => {
@@ -268,33 +275,141 @@ export const AdminProductsPage: React.FC = () => {
       status: 'active',
       featured: false,
       bestseller: false,
+      isFlashDeal: false,
+      discountPercentage: 25,
+      salePrice: 1800,
       images: [IMAGE_3_WARM_MOON]
     });
   };
 
-  // Upload image from computer
-  const handleUploadImageToFileState = (file: File, target: 'new' | 'edit' | 'quickPhoto') => {
-    if (!file.type.startsWith('image/')) {
-      addToast('Please select a valid image file (JPG, PNG, WEBP).', 'error');
+  // Upload image from computer with automatic web optimization
+  const handleUploadImageToFileState = async (files: FileList | null, target: 'new' | 'edit' | 'studio') => {
+    if (!files || files.length === 0) return;
+    setIsOptimizing(true);
+
+    try {
+      const optimizedImages: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.type.startsWith('image/')) {
+          const optimized = await optimizeImageFile(file, 1600, 1600, 0.86);
+          optimizedImages.push(optimized);
+        }
+      }
+
+      if (optimizedImages.length === 0) {
+        addToast('No valid image files found.', 'warning');
+        return;
+      }
+
+      if (target === 'new') {
+        setFormData((prev) => ({ ...prev, images: [...optimizedImages, ...prev.images] }));
+        addToast(`${optimizedImages.length} photo(s) added to piece draft.`, 'success');
+      } else if (target === 'edit' && editingProduct) {
+        setEditingProduct({ ...editingProduct, images: [...optimizedImages, ...editingProduct.images] });
+        addToast(`${optimizedImages.length} photo(s) added to gallery.`, 'success');
+      } else if (target === 'studio' && imageStudioProduct) {
+        const updatedImages = [...imageStudioProduct.images, ...optimizedImages];
+        const updated = { ...imageStudioProduct, images: updatedImages };
+        updateProduct(updated);
+        setImageStudioProduct(updated);
+        addToast(`${optimizedImages.length} photo(s) uploaded and saved for "${imageStudioProduct.name}".`, 'success');
+      }
+    } catch (err) {
+      console.error(err);
+      addToast('Failed to optimize and upload image.', 'error');
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
+  // Replace single image at index in Studio
+  const handleReplaceSpecificImage = async (file: File) => {
+    if (!imageStudioProduct || replacingIndex === null) return;
+    setIsOptimizing(true);
+    try {
+      const optimized = await optimizeImageFile(file, 1600, 1600, 0.86);
+      const newImages = [...imageStudioProduct.images];
+      newImages[replacingIndex] = optimized;
+      const updated = { ...imageStudioProduct, images: newImages };
+      updateProduct(updated);
+      setImageStudioProduct(updated);
+      addToast(`Image #${replacingIndex + 1} replaced successfully!`, 'success');
+    } catch (err) {
+      console.error(err);
+      addToast('Failed to replace image.', 'error');
+    } finally {
+      setIsOptimizing(false);
+      setReplacingIndex(null);
+    }
+  };
+
+  // Add photo via URL
+  const handleAddImageFromUrl = (target: 'new' | 'edit' | 'studio') => {
+    const trimmed = urlInput.trim();
+    if (!trimmed) {
+      addToast('Please enter a valid image URL link.', 'warning');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target?.result as string;
-      if (target === 'new') {
-        setFormData((prev) => ({ ...prev, images: [dataUrl, ...prev.images] }));
-        addToast('Photo uploaded to new piece draft.', 'success');
-      } else if (target === 'edit' && editingProduct) {
-        setEditingProduct({ ...editingProduct, images: [dataUrl, ...editingProduct.images] });
-        addToast('Photo added to piece gallery.', 'success');
-      } else if (target === 'quickPhoto' && quickPhotoProduct) {
-        const updated = { ...quickPhotoProduct, images: [dataUrl, ...quickPhotoProduct.images.slice(1)] };
-        updateProduct(updated);
-        setQuickPhotoProduct(null);
-        addToast(`Primary photo updated for "${quickPhotoProduct.name}".`, 'success');
-      }
-    };
-    reader.readAsDataURL(file);
+
+    if (target === 'new') {
+      setFormData((prev) => ({ ...prev, images: [trimmed, ...prev.images] }));
+      setUrlInput('');
+      addToast('Photo URL added to draft.', 'success');
+    } else if (target === 'edit' && editingProduct) {
+      setEditingProduct({ ...editingProduct, images: [trimmed, ...editingProduct.images] });
+      setUrlInput('');
+      addToast('Photo URL added to piece.', 'success');
+    } else if (target === 'studio' && imageStudioProduct) {
+      const updatedImages = [...imageStudioProduct.images, trimmed];
+      const updated = { ...imageStudioProduct, images: updatedImages };
+      updateProduct(updated);
+      setImageStudioProduct(updated);
+      setUrlInput('');
+      addToast('Photo URL linked and saved to live storefront.', 'success');
+    }
+  };
+
+  // Set image as primary / cover photo
+  const handleSetPrimaryImage = (index: number) => {
+    if (!imageStudioProduct || index === 0) return;
+    const images = [...imageStudioProduct.images];
+    const selected = images.splice(index, 1)[0];
+    const newImages = [selected, ...images];
+    const updated = { ...imageStudioProduct, images: newImages };
+    updateProduct(updated);
+    setImageStudioProduct(updated);
+    addToast('Cover photo updated! Customers will now see this image first.', 'success');
+  };
+
+  // Reorder image (move left or right)
+  const handleMoveImage = (index: number, direction: 'left' | 'right') => {
+    if (!imageStudioProduct) return;
+    const images = [...imageStudioProduct.images];
+    const targetIdx = direction === 'left' ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= images.length) return;
+
+    const temp = images[index];
+    images[index] = images[targetIdx];
+    images[targetIdx] = temp;
+
+    const updated = { ...imageStudioProduct, images };
+    updateProduct(updated);
+    setImageStudioProduct(updated);
+  };
+
+  // Remove single image from Studio
+  const handleRemoveImageFromStudio = (index: number) => {
+    if (!imageStudioProduct) return;
+    if (imageStudioProduct.images.length <= 1) {
+      addToast('Product must have at least 1 display image.', 'warning');
+      return;
+    }
+    const newImages = imageStudioProduct.images.filter((_, i) => i !== index);
+    const updated = { ...imageStudioProduct, images: newImages };
+    updateProduct(updated);
+    setImageStudioProduct(updated);
+    addToast('Image removed from piece gallery.', 'info');
   };
 
   return (
@@ -302,13 +417,13 @@ export const AdminProductsPage: React.FC = () => {
       activeSection="products"
       title={
         <div className="flex items-center space-x-3">
-          <span>Product Inventory Catalog</span>
+          <span>Product Inventory & Image Studio</span>
           <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/40">
             {products.length} Products
           </span>
         </div>
       }
-      subtitle={`Comprehensive catalog management with live real-time stock updates, photo uploading, and instant store sync.`}
+      subtitle={`Live management console: update prices, stock, and change product photos anytime from any device.`}
       actionButton={
         <div className="flex items-center space-x-2">
           <button
@@ -318,7 +433,7 @@ export const AdminProductsPage: React.FC = () => {
                 addToast('Catalog reset to factory presets.', 'info');
               }
             }}
-            className="px-3.5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white text-xs font-mono flex items-center space-x-1.5 transition-colors"
+            className="px-3.5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white text-xs font-mono flex items-center space-x-1.5 transition-colors cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Reset Catalog</span>
@@ -326,7 +441,7 @@ export const AdminProductsPage: React.FC = () => {
 
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold uppercase tracking-wider text-xs shadow-lg shadow-amber-400/20 flex items-center space-x-2 transition-all"
+            className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold uppercase tracking-wider text-xs shadow-lg shadow-amber-400/20 flex items-center space-x-2 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>+ Add New Product</span>
@@ -341,7 +456,7 @@ export const AdminProductsPage: React.FC = () => {
         ========================================================================= */}
         <div className="bg-[#121318] border border-zinc-800/80 rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-md">
           
-          {/* Search Input for product name & subcategory */}
+          {/* Search Input */}
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
@@ -351,7 +466,7 @@ export const AdminProductsPage: React.FC = () => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              placeholder="Search by product name or subcategory..."
+              placeholder="Search products by name, subcategory, or SKU..."
               className="w-full pl-10 pr-4 py-2.5 bg-zinc-900 border border-zinc-700/80 rounded-xl text-white placeholder-zinc-500 font-medium focus:outline-none focus:border-amber-400"
             />
           </div>
@@ -447,12 +562,11 @@ export const AdminProductsPage: React.FC = () => {
                 <tr className="bg-zinc-900/90 border-b border-zinc-800 text-[10px] uppercase font-mono tracking-wider text-zinc-400">
                   <th className="py-4 px-4 text-center">THUMBNAIL</th>
                   <th className="py-4 px-4">PRODUCT NAME</th>
-                  <th className="py-4 px-4">SUBCATEGORY</th>
                   <th className="py-4 px-4">CATEGORY</th>
                   <th className="py-4 px-4">PRICE</th>
                   <th className="py-4 px-4 text-center">FLASH DEAL</th>
                   <th className="py-4 px-4">STOCK STATUS</th>
-                  <th className="py-4 px-4">PHOTO</th>
+                  <th className="py-4 px-4 text-center">PHOTOS & IMAGERY</th>
                   <th className="py-4 px-5 text-right">ACTIONS</th>
                 </tr>
               </thead>
@@ -466,7 +580,7 @@ export const AdminProductsPage: React.FC = () => {
                         <p className="text-zinc-400 text-xs">Try adjusting your search query or category filter.</p>
                         <button
                           onClick={() => setIsAddModalOpen(true)}
-                          className="px-4 py-2 rounded-xl bg-amber-400 text-zinc-950 font-bold uppercase text-[11px]"
+                          className="px-4 py-2 rounded-xl bg-amber-400 text-zinc-950 font-bold uppercase text-[11px] cursor-pointer"
                         >
                           + Add New Product
                         </button>
@@ -483,20 +597,29 @@ export const AdminProductsPage: React.FC = () => {
                     return (
                       <tr key={p.id} className="hover:bg-zinc-900/40 transition-colors">
                         
-                        {/* 1. Thumbnail */}
+                        {/* 1. Thumbnail (Click to open Image Studio) */}
                         <td className="py-3.5 px-4 text-center">
-                          <div className="relative inline-block group">
+                          <button
+                            type="button"
+                            onClick={() => setImageStudioProduct(p)}
+                            className="relative inline-block group cursor-pointer"
+                            title="Click to manage or change images"
+                          >
                             <img
                               src={p.images[0]}
                               alt={p.name}
-                              className="w-12 h-12 rounded-xl object-cover border border-zinc-800 bg-zinc-950 shadow-sm"
+                              className="w-14 h-14 rounded-2xl object-cover border border-zinc-800 group-hover:border-amber-400 transition-all bg-zinc-950 shadow-md group-hover:scale-105"
                             />
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 rounded-2xl flex flex-col items-center justify-center text-amber-300 transition-opacity">
+                              <ImageIcon className="w-4 h-4" />
+                              <span className="text-[8px] font-mono font-bold mt-0.5">Edit</span>
+                            </div>
                             {p.featured && (
-                              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-400 text-zinc-950 flex items-center justify-center text-[9px] font-bold" title="Featured Product">
+                              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-400 text-zinc-950 flex items-center justify-center text-[9px] font-bold shadow" title="Featured Product">
                                 ★
                               </span>
                             )}
-                          </div>
+                          </button>
                         </td>
 
                         {/* 2. Product Name */}
@@ -510,22 +633,23 @@ export const AdminProductsPage: React.FC = () => {
                             <span className={p.status === 'active' ? 'text-emerald-400' : 'text-zinc-500'}>
                               {p.status === 'active' ? 'Active' : 'Draft'}
                             </span>
+                            {p.subcategory && (
+                              <>
+                                <span>•</span>
+                                <span className="text-zinc-400 truncate max-w-[100px]">{p.subcategory}</span>
+                              </>
+                            )}
                           </div>
                         </td>
 
-                        {/* 3. Subcategory */}
-                        <td className="py-3.5 px-4 text-zinc-300 font-medium">
-                          {p.subcategory || <span className="text-zinc-600 italic">None</span>}
-                        </td>
-
-                        {/* 4. Category */}
+                        {/* 3. Category */}
                         <td className="py-3.5 px-4 text-zinc-300 whitespace-nowrap">
                           <span className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 font-medium text-[11px]">
                             {p.category}
                           </span>
                         </td>
 
-                        {/* 5. Price */}
+                        {/* 4. Price */}
                         <td className="py-3.5 px-4 font-mono whitespace-nowrap">
                           <div className="font-bold text-white text-sm">{formatPrice(p.salePrice || p.price)}</div>
                           {p.originalPrice && p.originalPrice > (p.salePrice || p.price) && (
@@ -535,7 +659,7 @@ export const AdminProductsPage: React.FC = () => {
                           )}
                         </td>
 
-                        {/* 6. Flash Deal Quick Status & Toggle */}
+                        {/* 5. Flash Deal Quick Status & Toggle */}
                         <td className="py-3.5 px-4 text-center whitespace-nowrap">
                           <button
                             onClick={() => handleToggleFlashDeal(p)}
@@ -551,7 +675,7 @@ export const AdminProductsPage: React.FC = () => {
                           </button>
                         </td>
 
-                        {/* 7. Stock Status */}
+                        {/* 6. Stock Status */}
                         <td className="py-3.5 px-4 whitespace-nowrap">
                           <div className="flex items-center space-x-2">
                             {isOutOfStock ? (
@@ -575,7 +699,7 @@ export const AdminProductsPage: React.FC = () => {
                             <div className="inline-flex items-center rounded-lg bg-zinc-900 border border-zinc-800 p-0.5">
                               <button
                                 onClick={() => handleQuickStockUpdate(p.id, -1)}
-                                className="w-5 h-5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 rounded text-xs font-mono transition-colors"
+                                className="w-5 h-5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 rounded text-xs font-mono transition-colors cursor-pointer"
                                 title="Decrease stock by 1"
                               >
                                 -
@@ -585,7 +709,7 @@ export const AdminProductsPage: React.FC = () => {
                               </span>
                               <button
                                 onClick={() => handleQuickStockUpdate(p.id, 1)}
-                                className="w-5 h-5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 rounded text-xs font-mono transition-colors"
+                                className="w-5 h-5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 rounded text-xs font-mono transition-colors cursor-pointer"
                                 title="Increase stock by 1"
                               >
                                 +
@@ -594,28 +718,25 @@ export const AdminProductsPage: React.FC = () => {
                           </div>
                         </td>
 
-                        {/* 7. Upload Photo Button */}
-                        <td className="py-3.5 px-4 whitespace-nowrap">
+                        {/* 7. Image Studio Quick Button */}
+                        <td className="py-3.5 px-4 text-center whitespace-nowrap">
                           <button
-                            onClick={() => {
-                              setQuickPhotoProduct(p);
-                              quickPhotoInputRef.current?.click();
-                            }}
-                            className="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-amber-400/20 border border-zinc-700/80 hover:border-amber-400/50 text-[11px] text-zinc-200 hover:text-amber-300 font-medium flex items-center space-x-1.5 transition-all shadow-sm group"
-                            title="Upload new primary photo from your computer"
+                            onClick={() => setImageStudioProduct(p)}
+                            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400/15 to-amber-500/20 hover:from-amber-400/25 hover:to-amber-500/30 border border-amber-400/40 text-amber-300 font-medium text-[11px] flex items-center space-x-1.5 mx-auto transition-all cursor-pointer shadow-sm group"
+                            title="Open Image Studio to change cover photo, upload device photos, or paste image URL"
                           >
-                            <Upload className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
-                            <span>Upload Photo</span>
+                            <ImageIcon className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                            <span>Change Photos ({p.images?.length || 1})</span>
                           </button>
                         </td>
 
-                        {/* 8. Actions (Edit & Red Remove Button) */}
+                        {/* 8. Actions */}
                         <td className="py-3.5 px-5 text-right whitespace-nowrap">
                           <div className="inline-flex items-center space-x-2">
                             {/* Edit Button */}
                             <button
                               onClick={() => handleOpenEdit(p)}
-                              className="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-amber-300 text-xs font-medium flex items-center space-x-1.5 transition-colors"
+                              className="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-amber-300 text-xs font-medium flex items-center space-x-1.5 transition-colors cursor-pointer"
                               title="Edit product specs, prices, and imagery"
                             >
                               <Edit3 className="w-3.5 h-3.5 text-amber-400" />
@@ -625,7 +746,7 @@ export const AdminProductsPage: React.FC = () => {
                             {/* View on Store button */}
                             <button
                               onClick={() => navigate(`/product/${p.id}`)}
-                              className="p-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                              className="p-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
                               title="View on Storefront"
                             >
                               <Eye className="w-3.5 h-3.5" />
@@ -634,7 +755,7 @@ export const AdminProductsPage: React.FC = () => {
                             {/* Red Remove Button */}
                             <button
                               onClick={() => setProductToDelete(p)}
-                              className="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-600 border border-rose-500/30 hover:border-rose-600 text-rose-400 hover:text-white text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm group"
+                              className="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-600 border border-rose-500/30 hover:border-rose-600 text-rose-400 hover:text-white text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm group cursor-pointer"
                               title="Remove Product"
                             >
                               <Trash2 className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
@@ -663,7 +784,7 @@ export const AdminProductsPage: React.FC = () => {
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 hover:text-white disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 hover:text-white disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
               >
                 Previous
               </button>
@@ -672,7 +793,7 @@ export const AdminProductsPage: React.FC = () => {
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 rounded-lg font-mono text-xs transition-all ${
+                  className={`w-8 h-8 rounded-lg font-mono text-xs transition-all cursor-pointer ${
                     currentPage === page
                       ? 'bg-amber-400 text-zinc-950 font-bold shadow-md shadow-amber-400/20'
                       : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
@@ -685,7 +806,7 @@ export const AdminProductsPage: React.FC = () => {
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 hover:text-white disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 hover:text-white disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
               >
                 Next
               </button>
@@ -695,17 +816,335 @@ export const AdminProductsPage: React.FC = () => {
 
       </div>
 
-      {/* Hidden Quick Photo Input */}
+      {/* =========================================================================
+          MODAL: DEDICATED PRODUCT IMAGE STUDIO (INSTANT LIVE SYNC)
+      ========================================================================= */}
+      {imageStudioProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative bg-[#0c0d12] border border-amber-500/30 rounded-3xl p-6 sm:p-8 max-w-3xl w-full shadow-2xl space-y-6 text-zinc-100 max-h-[90vh] overflow-y-auto">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <div className="p-2 rounded-xl bg-amber-400/10 text-amber-400 border border-amber-400/30">
+                    <ImageIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white uppercase tracking-wider">
+                      Product Image Studio
+                    </h3>
+                    <p className="text-xs text-amber-400 font-mono">
+                      {imageStudioProduct.name}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setImageStudioProduct(null)}
+                className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-900 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Live Storefront Sync Banner */}
+            <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between text-xs">
+              <div className="flex items-center space-x-2 text-emerald-300">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>Changes made here update immediately across customer catalogue & product page.</span>
+              </div>
+              <span className="text-[10px] font-mono text-emerald-400/80 uppercase font-bold">
+                Live Auto-Saved
+              </span>
+            </div>
+
+            {/* Add Images Methods (Upload, URL, Presets) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              {/* Method 1: Upload from Device */}
+              <div className="p-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Upload className="w-4 h-4 text-amber-400" />
+                    <span className="font-semibold text-white text-xs uppercase tracking-wider">Upload from Device</span>
+                  </div>
+                  <span className="text-[10px] text-zinc-400 font-mono">JPG, PNG, WEBP</span>
+                </div>
+                <p className="text-[11px] text-zinc-400">
+                  Select photos from your phone camera roll, tablet, or desktop. Photos are automatically compressed for lightning-fast loading.
+                </p>
+                <button
+                  type="button"
+                  disabled={isOptimizing}
+                  onClick={() => studioFileInputRef.current?.click()}
+                  className="w-full py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-md transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>{isOptimizing ? 'Compressing & Saving...' : 'Browse & Upload Images'}</span>
+                </button>
+                <input
+                  type="file"
+                  multiple
+                  ref={studioFileInputRef}
+                  onChange={(e) => handleUploadImageToFileState(e.target.files, 'studio')}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </div>
+
+              {/* Method 2: Add via URL Link */}
+              <div className="p-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <LinkIcon className="w-4 h-4 text-amber-400" />
+                    <span className="font-semibold text-white text-xs uppercase tracking-wider">Paste Image URL Link</span>
+                  </div>
+                  <span className="text-[10px] text-zinc-400 font-mono">Web Link</span>
+                </div>
+                <p className="text-[11px] text-zinc-400">
+                  Link images from Netlify assets, Cloudinary, AWS S3, Imgur, or your CDN.
+                </p>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="url"
+                    value={urlInput}
+                    onChange={(e) => setUrlInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddImageFromUrl('studio');
+                      }
+                    }}
+                    placeholder="https://images.example.com/photo.jpg"
+                    className="flex-1 px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-white text-xs font-mono focus:outline-none focus:border-amber-400"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleAddImageFromUrl('studio')}
+                    className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white font-bold text-xs uppercase tracking-wider cursor-pointer"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Current Product Image Gallery Grid with Controls */}
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-zinc-200 font-bold uppercase tracking-wider text-xs flex items-center space-x-2">
+                  <span>Current Gallery Images ({imageStudioProduct.images.length})</span>
+                  <span className="text-zinc-500 font-normal text-[11px]">(Image #1 is the Primary Cover)</span>
+                </label>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {imageStudioProduct.images.map((img, idx) => {
+                  const isPrimary = idx === 0;
+
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`relative rounded-2xl overflow-hidden border p-1 bg-zinc-950 transition-all ${
+                        isPrimary 
+                          ? 'border-amber-400/80 shadow-lg shadow-amber-500/10 ring-1 ring-amber-400/40' 
+                          : 'border-zinc-800 hover:border-zinc-700'
+                      }`}
+                    >
+                      {/* Image Thumbnail */}
+                      <div className="relative aspect-square rounded-xl overflow-hidden bg-black group">
+                        <img 
+                          src={img} 
+                          alt="" 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                        />
+                        
+                        {/* Hover Overlay with Zoom Preview */}
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-2">
+                          <button
+                            type="button"
+                            onClick={() => setPreviewZoomImage(img)}
+                            className="p-2 rounded-lg bg-zinc-900/90 text-white hover:text-amber-300 transition-colors"
+                            title="Zoom Preview"
+                          >
+                            <Maximize2 className="w-4 h-4" />
+                          </button>
+                          
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReplacingIndex(idx);
+                              studioReplaceInputRef.current?.click();
+                            }}
+                            className="p-2 rounded-lg bg-zinc-900/90 text-white hover:text-amber-300 transition-colors"
+                            title="Replace this photo"
+                          >
+                            <Upload className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* Badges */}
+                        {isPrimary ? (
+                          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-amber-400 text-zinc-950 text-[9px] font-mono font-bold uppercase flex items-center space-x-1 shadow-md">
+                            <Crown className="w-3 h-3" />
+                            <span>Primary Cover</span>
+                          </div>
+                        ) : (
+                          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-zinc-900/90 border border-zinc-700 text-zinc-300 text-[9px] font-mono font-semibold">
+                            #{idx + 1}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Controls Toolbar under each image */}
+                      <div className="p-2 space-y-1.5">
+                        {!isPrimary && (
+                          <button
+                            type="button"
+                            onClick={() => handleSetPrimaryImage(idx)}
+                            className="w-full py-1 rounded-lg bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[10px] font-mono font-bold flex items-center justify-center space-x-1 transition-colors cursor-pointer"
+                          >
+                            <Star className="w-3 h-3" />
+                            <span>Make Primary</span>
+                          </button>
+                        )}
+
+                        <div className="flex items-center justify-between pt-1 border-t border-zinc-900 text-zinc-400">
+                          {/* Reorder Arrows */}
+                          <div className="flex items-center space-x-1">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => handleMoveImage(idx, 'left')}
+                              className="p-1 rounded bg-zinc-900 hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none text-zinc-300 cursor-pointer"
+                              title="Move photo earlier"
+                            >
+                              <ArrowLeft className="w-3 h-3" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === imageStudioProduct.images.length - 1}
+                              onClick={() => handleMoveImage(idx, 'right')}
+                              className="p-1 rounded bg-zinc-900 hover:bg-zinc-800 disabled:opacity-30 disabled:pointer-events-none text-zinc-300 cursor-pointer"
+                              title="Move photo later"
+                            >
+                              <ArrowRight className="w-3 h-3" />
+                            </button>
+                          </div>
+
+                          {/* Delete Photo */}
+                          {imageStudioProduct.images.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImageFromStudio(idx)}
+                              className="p-1 rounded bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white transition-colors cursor-pointer"
+                              title="Delete this image"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Method 3: Pick from Preset Luxury Asset Library */}
+            <div className="pt-3 border-t border-zinc-800 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-zinc-300 font-semibold text-xs">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Quick Add from LUNOVA 3D Render Library</span>
+                </div>
+                <span className="text-[10px] text-zinc-500 font-mono">1-Click Insert</span>
+              </div>
+
+              <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                {PRESET_ASSET_IMAGES.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => {
+                      const updated = {
+                        ...imageStudioProduct,
+                        images: [...imageStudioProduct.images, preset.src]
+                      };
+                      updateProduct(updated);
+                      setImageStudioProduct(updated);
+                      addToast(`Added "${preset.name}" render to gallery.`, 'success');
+                    }}
+                    className="group relative aspect-square rounded-xl overflow-hidden border border-zinc-800 hover:border-amber-400 transition-all cursor-pointer"
+                    title={`Add ${preset.name}`}
+                  >
+                    <img src={preset.src} alt={preset.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                    <div className="absolute inset-0 bg-black/40 group-hover:bg-amber-400/20 transition-colors flex items-center justify-center">
+                      <Plus className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
+              <button
+                type="button"
+                onClick={() => navigate(`/product/${imageStudioProduct.id}`)}
+                className="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-mono flex items-center space-x-1.5 cursor-pointer"
+              >
+                <Eye className="w-3.5 h-3.5 text-amber-400" />
+                <span>Preview Customer View</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setImageStudioProduct(null)}
+                className="px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold uppercase tracking-wider text-xs shadow-lg shadow-amber-400/20 cursor-pointer"
+              >
+                Done & Close Studio
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Hidden file replacer input for Studio */}
       <input
         type="file"
-        ref={quickPhotoInputRef}
+        ref={studioReplaceInputRef}
         onChange={(e) => {
           const file = e.target.files?.[0];
-          if (file) handleUploadImageToFileState(file, 'quickPhoto');
+          if (file) handleReplaceSpecificImage(file);
         }}
         accept="image/*"
         className="hidden"
       />
+
+      {/* =========================================================================
+          ZOOM LIGHTBOX MODAL
+      ========================================================================= */}
+      {previewZoomImage && (
+        <div 
+          onClick={() => setPreviewZoomImage(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-lg cursor-zoom-out"
+        >
+          <div className="relative max-w-4xl max-h-[90vh]">
+            <img src={previewZoomImage} alt="Zoom Preview" className="max-w-full max-h-[85vh] rounded-2xl object-contain shadow-2xl border border-zinc-800" />
+            <button
+              onClick={() => setPreviewZoomImage(null)}
+              className="absolute -top-3 -right-3 p-2 rounded-full bg-zinc-900 border border-zinc-700 text-white hover:text-amber-400"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* =========================================================================
           MODAL: ADD NEW PRODUCT
@@ -726,7 +1165,7 @@ export const AdminProductsPage: React.FC = () => {
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-900"
+                className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-900 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -899,18 +1338,16 @@ export const AdminProductsPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-3 py-1.5 rounded-lg bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 font-mono text-xs flex items-center space-x-1.5"
+                    className="px-3 py-1.5 rounded-lg bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 font-mono text-xs flex items-center space-x-1.5 cursor-pointer"
                   >
                     <Upload className="w-3.5 h-3.5" />
                     <span>Upload From Device</span>
                   </button>
                   <input
                     type="file"
+                    multiple
                     ref={fileInputRef}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleUploadImageToFileState(file, 'new');
-                    }}
+                    onChange={(e) => handleUploadImageToFileState(e.target.files, 'new')}
                     accept="image/*"
                     className="hidden"
                   />
@@ -924,14 +1361,14 @@ export const AdminProductsPage: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setFormData({ ...formData, images: formData.images.filter((_, i) => i !== idx) })}
-                          className="absolute top-1 right-1 p-1 rounded-md bg-black/80 text-rose-400 hover:text-rose-300"
+                          className="absolute top-1 right-1 p-1 rounded-md bg-black/80 text-rose-400 hover:text-rose-300 cursor-pointer"
                         >
                           <X className="w-3 h-3" />
                         </button>
                       )}
                       {idx === 0 && (
                         <span className="absolute bottom-1 inset-x-1 bg-amber-400/90 text-zinc-950 text-[8px] font-mono font-bold text-center rounded">
-                          Primary
+                          Primary Cover
                         </span>
                       )}
                     </div>
@@ -944,13 +1381,13 @@ export const AdminProductsPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl border border-zinc-800 hover:bg-zinc-900 text-zinc-400 hover:text-white uppercase font-semibold text-xs tracking-wider"
+                  className="px-4 py-2.5 rounded-xl border border-zinc-800 hover:bg-zinc-900 text-zinc-400 hover:text-white uppercase font-semibold text-xs tracking-wider cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold uppercase tracking-wider text-xs shadow-lg shadow-amber-400/20 flex items-center space-x-1.5 transition-all"
+                  className="px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold uppercase tracking-wider text-xs shadow-lg shadow-amber-400/20 flex items-center space-x-1.5 transition-all cursor-pointer"
                 >
                   <Check className="w-4 h-4" />
                   <span>Save Product</span>
@@ -982,7 +1419,7 @@ export const AdminProductsPage: React.FC = () => {
               </div>
               <button
                 onClick={() => setEditingProduct(null)}
-                className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-900"
+                className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-900 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1136,18 +1573,16 @@ export const AdminProductsPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => editFileInputRef.current?.click()}
-                    className="px-3 py-1.5 rounded-lg bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 font-mono text-xs flex items-center space-x-1.5"
+                    className="px-3 py-1.5 rounded-lg bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 font-mono text-xs flex items-center space-x-1.5 cursor-pointer"
                   >
                     <Upload className="w-3.5 h-3.5" />
                     <span>Upload New Photo</span>
                   </button>
                   <input
                     type="file"
+                    multiple
                     ref={editFileInputRef}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleUploadImageToFileState(file, 'edit');
-                    }}
+                    onChange={(e) => handleUploadImageToFileState(e.target.files, 'edit')}
                     accept="image/*"
                     className="hidden"
                   />
@@ -1164,10 +1599,15 @@ export const AdminProductsPage: React.FC = () => {
                             ...editingProduct,
                             images: editingProduct.images.filter((_, i) => i !== idx)
                           })}
-                          className="absolute top-1 right-1 p-1 rounded-md bg-black/80 text-rose-400 hover:text-rose-300"
+                          className="absolute top-1 right-1 p-1 rounded-md bg-black/80 text-rose-400 hover:text-rose-300 cursor-pointer"
                         >
                           <X className="w-3 h-3" />
                         </button>
+                      )}
+                      {idx === 0 && (
+                        <span className="absolute bottom-1 inset-x-1 bg-amber-400/90 text-zinc-950 text-[8px] font-mono font-bold text-center rounded">
+                          Primary
+                        </span>
                       )}
                     </div>
                   ))}
@@ -1178,13 +1618,13 @@ export const AdminProductsPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setEditingProduct(null)}
-                  className="px-4 py-2.5 rounded-xl border border-zinc-800 hover:bg-zinc-900 text-zinc-400 hover:text-white uppercase font-semibold text-xs tracking-wider"
+                  className="px-4 py-2.5 rounded-xl border border-zinc-800 hover:bg-zinc-900 text-zinc-400 hover:text-white uppercase font-semibold text-xs tracking-wider cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold uppercase tracking-wider text-xs shadow-lg shadow-amber-400/20 flex items-center space-x-1.5 transition-all"
+                  className="px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold uppercase tracking-wider text-xs shadow-lg shadow-amber-400/20 flex items-center space-x-1.5 transition-all cursor-pointer"
                 >
                   <Check className="w-4 h-4" />
                   <span>Update Changes</span>
@@ -1198,7 +1638,7 @@ export const AdminProductsPage: React.FC = () => {
       )}
 
       {/* =========================================================================
-          MODAL: DELETE PRODUCT CONFIRMATION (PROTECTED WITH UNDO PREVENTION)
+          MODAL: DELETE PRODUCT CONFIRMATION
       ========================================================================= */}
       {productToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
@@ -1226,14 +1666,14 @@ export const AdminProductsPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setProductToDelete(null)}
-                className="px-4 py-2.5 rounded-xl border border-zinc-800 hover:bg-zinc-900 text-zinc-400 hover:text-white uppercase font-semibold text-xs tracking-wider"
+                className="px-4 py-2.5 rounded-xl border border-zinc-800 hover:bg-zinc-900 text-zinc-400 hover:text-white uppercase font-semibold text-xs tracking-wider cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleConfirmDelete}
-                className="px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold uppercase tracking-wider text-xs shadow-lg shadow-rose-600/30 flex items-center space-x-1.5 transition-all"
+                className="px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold uppercase tracking-wider text-xs shadow-lg shadow-rose-600/30 flex items-center space-x-1.5 transition-all cursor-pointer"
               >
                 <Trash2 className="w-4 h-4" />
                 <span>Delete Product</span>

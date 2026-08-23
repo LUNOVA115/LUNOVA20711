@@ -271,7 +271,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   });
 
   useEffect(() => {
-    localStorage.setItem('lunova_products_v3', JSON.stringify(products));
+    try {
+      localStorage.setItem('lunova_products_v3', JSON.stringify(products));
+    } catch (err) {
+      console.warn('Storage quota reached or localStorage unavailable for products:', err);
+    }
   }, [products]);
 
   // Categories (Moon Collection & Infinity Collection)

@@ -268,11 +268,18 @@ export const AdminInventoryPage: React.FC = () => {
                         {/* Product & SKU */}
                         <td className="py-4 px-5">
                           <div className="flex items-center space-x-3">
-                            <img
-                              src={p.images[0]}
-                              alt={p.name}
-                              className="w-12 h-12 rounded-xl object-cover border border-zinc-800 shrink-0 bg-zinc-950"
-                            />
+                            <button
+                              type="button"
+                              onClick={() => navigate('/admin/products')}
+                              className="relative shrink-0 group cursor-pointer"
+                              title="Click to view & edit in Products Image Studio"
+                            >
+                              <img
+                                src={p.images[0]}
+                                alt={p.name}
+                                className="w-12 h-12 rounded-xl object-cover border border-zinc-800 group-hover:border-amber-400 shrink-0 bg-zinc-950 transition-all shadow-sm"
+                              />
+                            </button>
                             <div className="min-w-0">
                               <div className="font-semibold text-white truncate max-w-xs">{p.name}</div>
                               <div className="text-[10px] font-mono text-amber-400 mt-0.5">{sku}</div>

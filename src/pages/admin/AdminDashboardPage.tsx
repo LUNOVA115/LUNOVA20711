@@ -211,7 +211,7 @@ export const AdminDashboardPage: React.FC = () => {
             <div className="flex items-center justify-between text-[10px] text-zinc-400 pt-2 border-t border-zinc-800/80 font-mono">
               <span>{instagramSettings.recentPosts?.length || 0} Synced Gallery Media Posts</span>
               <a 
-                href={`https://instagram.com/${instagramSettings.handle || 'lunova.atelier'}`}
+                href={instagramSettings.profileUrl || `https://www.instagram.com/${instagramSettings.handle || 'lunova.home_decors'}/?hl=en`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-pink-400 hover:underline flex items-center space-x-1"

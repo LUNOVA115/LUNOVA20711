@@ -118,8 +118,8 @@ export const AdminInstagramConnectCard: React.FC = () => {
 
     addInstagramPost({
       mediaUrl: postImageUrl.trim(),
-      caption: postCaption.trim() || `Atmospheric design by @${instagramSettings.handle || 'admin'}`,
-      permalink: postPermalink.trim() || `https://instagram.com/${instagramSettings.handle || 'lunova.atelier'}`
+      caption: postCaption.trim() || `Atmospheric design by @${instagramSettings.handle || 'lunova.home_decors'}`,
+      permalink: postPermalink.trim() || instagramSettings.profileUrl || `https://www.instagram.com/${instagramSettings.handle || 'lunova.home_decors'}/?hl=en`
     });
 
     setPostImageUrl('');
@@ -192,7 +192,7 @@ export const AdminInstagramConnectCard: React.FC = () => {
           )}
 
           <a
-            href={instagramSettings.profileUrl || `https://instagram.com/${instagramSettings.handle || 'lunova.atelier'}`}
+            href={instagramSettings.profileUrl || `https://www.instagram.com/${instagramSettings.handle || 'lunova.home_decors'}/?hl=en`}
             target="_blank"
             rel="noopener noreferrer"
             className="px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 text-xs font-mono font-semibold flex items-center space-x-1.5 transition-colors"

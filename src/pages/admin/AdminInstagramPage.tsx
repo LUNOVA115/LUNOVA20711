@@ -28,7 +28,7 @@ export const AdminInstagramPage: React.FC = () => {
       actionButton={
         <div className="flex items-center space-x-2">
           <a
-            href={instagramSettings.profileUrl || `https://instagram.com/${instagramSettings.handle || 'lunova.atelier'}`}
+            href={instagramSettings.profileUrl || `https://www.instagram.com/${instagramSettings.handle || 'lunova.home_decors'}/?hl=en`}
             target="_blank"
             rel="noopener noreferrer"
             className="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-xs font-mono font-bold text-white flex items-center space-x-2 transition-all shadow-sm"

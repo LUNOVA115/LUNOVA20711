@@ -60,7 +60,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ productId 
     `Hello LUNOVA Concierge, I'm inquiring about "${product.name}" (${formatPrice(product.price)}). Are custom specifications or expedited crate delivery available?`
   );
   const productWhatsAppUrl = `https://wa.me/${cleanPhone}?text=${productWhatsAppMessage}`;
-  const instagramUrl = instagramSettings?.profileUrl || contactInfo?.instagramUrl || `https://instagram.com/${instagramSettings?.handle?.replace(/^@+/, '') || 'lunova.atelier'}`;
+  const instagramUrl = instagramSettings?.profileUrl || contactInfo?.instagramUrl || `https://www.instagram.com/${instagramSettings?.handle?.replace(/^@+/, '') || 'lunova.home_decors'}/?hl=en`;
 
   
   // Review form modal

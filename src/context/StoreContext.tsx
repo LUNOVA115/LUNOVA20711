@@ -30,8 +30,8 @@ const AVAILABLE_COUPONS: Record<string, Coupon> = {
 export const getInitialContactInfo = (): StoreContactInfo => {
   let envWhatsapp = '+92 315 0360126';
   let envPhone = '+92 315 0360126';
-  let envInstagramHandle = 'lunova.atelier';
-  let envInstagramUrl = 'https://instagram.com/lunova.atelier';
+  let envInstagramHandle = 'lunova.home_decors';
+  let envInstagramUrl = 'https://www.instagram.com/lunova.home_decors/?hl=en';
   let envEmail = 'support@lunova.luxury';
   let envAddress = '750 Madison Avenue, New York, NY / Lahore Atelier';
 
@@ -45,7 +45,7 @@ export const getInitialContactInfo = (): StoreContactInfo => {
     }
     if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_INSTAGRAM_HANDLE) {
       envInstagramHandle = String(import.meta.env.VITE_INSTAGRAM_HANDLE).trim().replace(/^@+/, '');
-      envInstagramUrl = `https://instagram.com/${envInstagramHandle}`;
+      envInstagramUrl = `https://www.instagram.com/${envInstagramHandle}/?hl=en`;
     }
     if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_INSTAGRAM_URL) {
       envInstagramUrl = String(import.meta.env.VITE_INSTAGRAM_URL).trim();
@@ -437,16 +437,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const saved = localStorage.getItem('lunova_contact_info_v1');
       if (saved) {
         const parsed = JSON.parse(saved);
+        const upgraded = { ...DEFAULT_CONTACT_INFO, ...parsed };
+        
         // If saved has the old US placeholder, upgrade to current default
         if (parsed.whatsappNumber === '+1 (800) 840-5866' || parsed.phone === '+1 (800) 840-5866') {
-          return {
-            ...DEFAULT_CONTACT_INFO,
-            ...parsed,
-            whatsappNumber: parsed.whatsappNumber === '+1 (800) 840-5866' ? DEFAULT_CONTACT_INFO.whatsappNumber : parsed.whatsappNumber,
-            phone: parsed.phone === '+1 (800) 840-5866' ? DEFAULT_CONTACT_INFO.phone : parsed.phone
-          };
+          upgraded.whatsappNumber = DEFAULT_CONTACT_INFO.whatsappNumber;
+          upgraded.phone = DEFAULT_CONTACT_INFO.phone;
         }
-        return { ...DEFAULT_CONTACT_INFO, ...parsed };
+
+        // If saved has the old Instagram handle
+        if (parsed.instagramHandle === '@lunova.atelier' || !parsed.instagramHandle) {
+          upgraded.instagramHandle = DEFAULT_CONTACT_INFO.instagramHandle;
+          upgraded.instagramUrl = DEFAULT_CONTACT_INFO.instagramUrl;
+        }
+
+        return upgraded;
       }
       return DEFAULT_CONTACT_INFO;
     } catch {
@@ -484,7 +489,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [instagramSettings, setInstagramSettings] = useState<InstagramSettings>(() => {
     try {
       const saved = localStorage.getItem('lunova_instagram_settings_v1');
-      return saved ? { ...INITIAL_INSTAGRAM_SETTINGS, ...JSON.parse(saved) } : INITIAL_INSTAGRAM_SETTINGS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // If previously saved handle was the old default, upgrade to the user's requested account
+        if (parsed.handle === 'lunova.atelier' || !parsed.handle) {
+          return {
+            ...INITIAL_INSTAGRAM_SETTINGS,
+            ...parsed,
+            handle: INITIAL_INSTAGRAM_SETTINGS.handle,
+            accountName: INITIAL_INSTAGRAM_SETTINGS.accountName,
+            profileUrl: INITIAL_INSTAGRAM_SETTINGS.profileUrl
+          };
+        }
+        return { ...INITIAL_INSTAGRAM_SETTINGS, ...parsed };
+      }
+      return INITIAL_INSTAGRAM_SETTINGS;
     } catch {
       return INITIAL_INSTAGRAM_SETTINGS;
     }
@@ -517,7 +536,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       isConnected: true,
       handle: cleanHandle,
       accountName: accountName?.trim() || `${cleanHandle.toUpperCase()} | Official`,
-      profileUrl: `https://instagram.com/${cleanHandle}`,
+      profileUrl: `https://www.instagram.com/${cleanHandle}/?hl=en`,
       connectedAt: new Date().toISOString()
     };
 
@@ -527,14 +546,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setContactInfo((prev) => ({
       ...prev,
       instagramHandle: `@${cleanHandle}`,
-      instagramUrl: `https://instagram.com/${cleanHandle}`
+      instagramUrl: `https://www.instagram.com/${cleanHandle}/?hl=en`
     }));
 
     addToast(`Official Instagram page updated to @${cleanHandle}`, 'success');
   };
 
   const connectInstagramAccount = (rawHandle: string, accountName?: string, bio?: string, profilePicture?: string) => {
-    const cleanHandle = rawHandle.replace('@', '').trim();
+    const cleanHandle = rawHandle.replace(/^@+/, '').replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').split('?')[0].split('/')[0].trim();
     if (!cleanHandle) {
       addToast('Please enter your valid Instagram username/handle.', 'error');
       return;
@@ -544,8 +563,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       ...instagramSettings,
       isConnected: true,
       handle: cleanHandle,
-      accountName: accountName?.trim() || `${cleanHandle.toUpperCase()} | Official Store`,
-      profileUrl: `https://instagram.com/${cleanHandle}`,
+      accountName: accountName?.trim() || `${cleanHandle} | Official Store`,
+      profileUrl: `https://www.instagram.com/${cleanHandle}/?hl=en`,
       profilePicture: profilePicture || instagramSettings.profilePicture,
       bio: bio?.trim() || instagramSettings.bio || 'Official Storefront & Atmospheric Lighting Atelier.',
       connectedAt: new Date().toISOString()
@@ -557,7 +576,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setContactInfo((prev) => ({
       ...prev,
       instagramHandle: `@${cleanHandle}`,
-      instagramUrl: `https://instagram.com/${cleanHandle}`
+      instagramUrl: `https://www.instagram.com/${cleanHandle}/?hl=en`
     }));
 
     addToast(`Your Instagram account @${cleanHandle} has been verified and connected!`, 'success');
@@ -568,7 +587,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       id: `custom-ig-${Date.now()}`,
       mediaUrl: newPostData.mediaUrl,
       caption: newPostData.caption,
-      permalink: newPostData.permalink || `https://instagram.com/${instagramSettings.handle || 'lunova.atelier'}`,
+      permalink: newPostData.permalink || instagramSettings.profileUrl || `https://www.instagram.com/${instagramSettings.handle || 'lunova.home_decors'}/?hl=en`,
       timestamp: new Date().toISOString(),
       mediaType: 'IMAGE',
       likesCount: newPostData.likesCount || Math.floor(Math.random() * 500) + 120,

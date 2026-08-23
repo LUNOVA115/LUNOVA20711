@@ -554,7 +554,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
                             <span>Payment Receipt Attached</span>
                           </div>
                           <div className="text-[10px] text-zinc-400 font-mono">
-                            Ready for Admin Verification
+                            Ready for Order Verification
                           </div>
                         </div>
                       </div>

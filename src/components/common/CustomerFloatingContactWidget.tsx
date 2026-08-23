@@ -28,9 +28,9 @@ export const CustomerFloatingContactWidget: React.FC = () => {
   // Clean phone for wa.me link (keep only numbers)
   const cleanPhone = rawPhone.replace(/[^0-9]/g, '') || '923150360126';
   
-  const rawHandle = instagramSettings.handle || contactInfo?.instagramHandle || 'lunova.atelier';
+  const rawHandle = instagramSettings.handle || contactInfo?.instagramHandle || 'lunova.home_decors';
   const instagramHandle = rawHandle.replace('@', '').trim();
-  const instagramUrl = instagramSettings.profileUrl || contactInfo?.instagramUrl || `https://instagram.com/${instagramHandle}`;
+  const instagramUrl = instagramSettings.profileUrl || contactInfo?.instagramUrl || `https://www.instagram.com/${instagramHandle}/?hl=en`;
 
   // Default prefilled WhatsApp message
   const defaultWhatsAppText = customMessage.trim() 
@@ -183,7 +183,7 @@ export const CustomerFloatingContactWidget: React.FC = () => {
           <div className="flex items-center justify-between text-[9px] text-zinc-500 font-mono pt-1">
             <span className="flex items-center space-x-1">
               <ShieldCheck className="w-3 h-3 text-emerald-400" />
-              <span>Direct Admin & Atelier Line</span>
+              <span>Verified Concierge & Atelier Line</span>
             </span>
             <span>Typical reply: &lt; 15 mins</span>
           </div>

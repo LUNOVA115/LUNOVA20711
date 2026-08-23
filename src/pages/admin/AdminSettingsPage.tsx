@@ -109,10 +109,10 @@ export const AdminSettingsPage: React.FC = () => {
   const [contactEmail, setContactEmail] = useState(contactInfo?.email || 'support@lunova.luxury');
   const [contactPhone, setContactPhone] = useState(contactInfo?.phone || '+92 315 0360126');
   const [contactWhatsapp, setContactWhatsapp] = useState(contactInfo?.whatsappNumber || '+92 315 0360126');
-  const [instagramHandle, setInstagramHandle] = useState(instagramSettings?.handle || 'lunova.atelier');
-  const [instagramAccountTitle, setInstagramAccountTitle] = useState(instagramSettings?.accountName || 'LUNOVA Atelier | Official');
-  const [contactHours, setContactHours] = useState(contactInfo?.hours || 'Mon – Sat, 9:00 AM – 6:00 PM EST');
-  const [contactAddress, setContactAddress] = useState(contactInfo?.address || '750 Madison Avenue, 18th Fl, New York, NY 10065');
+  const [instagramHandle, setInstagramHandle] = useState(instagramSettings?.handle || 'lunova.home_decors');
+  const [instagramAccountTitle, setInstagramAccountTitle] = useState(instagramSettings?.accountName || 'LUNOVA Home Decors');
+  const [contactHours, setContactHours] = useState(contactInfo?.hours || 'Mon – Sat, 9:00 AM – 6:00 PM PKT / EST');
+  const [contactAddress, setContactAddress] = useState(contactInfo?.address || '750 Madison Avenue, New York, NY / Lahore Atelier');
 
   // Payment Gateways Settings Local State
   const [easypaisaEnabled, setEasypaisaEnabled] = useState(paymentSettings?.easypaisaEnabled ?? true);
@@ -1311,7 +1311,7 @@ export const AdminSettingsPage: React.FC = () => {
                     </div>
 
                     <a
-                      href={`https://instagram.com/${instagramHandle.replace(/^@+/, '').trim() || 'lunova.atelier'}`}
+                      href={instagramSettings?.profileUrl || `https://www.instagram.com/${instagramHandle.replace(/^@+/, '').trim() || 'lunova.home_decors'}/?hl=en`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-pink-300 text-[10px] font-mono flex items-center space-x-1 transition-colors border border-zinc-700"
@@ -1332,7 +1332,7 @@ export const AdminSettingsPage: React.FC = () => {
                         <input
                           type="text"
                           required
-                          placeholder="e.g. lunova.atelier or instagram.com/lunova.atelier"
+                          placeholder="e.g. lunova.home_decors or instagram.com/lunova.home_decors"
                           value={instagramHandle}
                           onChange={(e) => setInstagramHandle(e.target.value)}
                           className="w-full pl-7 pr-3.5 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-pink-400 transition-colors"

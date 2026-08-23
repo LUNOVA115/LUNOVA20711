@@ -10,8 +10,8 @@ export const InstagramShowcaseSection: React.FC = () => {
   }
 
   const posts = instagramSettings.recentPosts || [];
-  const handle = instagramSettings.handle || 'lunova.atelier';
-  const profileUrl = instagramSettings.profileUrl || `https://instagram.com/${handle}`;
+  const handle = instagramSettings.handle || 'lunova.home_decors';
+  const profileUrl = instagramSettings.profileUrl || `https://www.instagram.com/${handle}/?hl=en`;
 
   return (
     <section className="py-20 relative overflow-hidden bg-gradient-to-b from-[#08090c] via-black to-[#050608] border-t border-zinc-900">

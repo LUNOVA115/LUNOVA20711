@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StoreProvider, useStore } from './context/StoreContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { Navbar } from './components/common/Navbar';
@@ -38,8 +38,20 @@ import { AdminSettingsPage } from './pages/admin/AdminSettingsPage';
 import { AdminInstagramPage } from './pages/admin/AdminInstagramPage';
 
 const AppContent: React.FC = () => {
-  const { currentPath, adminUser } = useStore();
+  const { currentPath, adminUser, navigate } = useStore();
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+
+  // Global Admin Access Keyboard Shortcut (Alt+A or Option+A)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.altKey || e.metaKey) && (e.key === 'a' || e.key === 'A')) {
+        e.preventDefault();
+        navigate(adminUser ? '/admin/dashboard' : '/admin/login');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [adminUser, navigate]);
 
   // Normalize path by stripping query params, hash and trailing slashes
   const normalizedPath = (currentPath || '/').split('?')[0].split('#')[0].replace(/\/+$/, '') || '/';

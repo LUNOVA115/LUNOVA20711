@@ -16,7 +16,7 @@ const getInitialHandle = (): string => {
   } catch {
     // Ignore env error
   }
-  return 'lunova.atelier';
+  return 'lunova.home_decors';
 };
 
 const getInitialUrl = (handle: string): string => {
@@ -27,7 +27,7 @@ const getInitialUrl = (handle: string): string => {
   } catch {
     // Ignore env error
   }
-  return `https://instagram.com/${handle}`;
+  return `https://www.instagram.com/${handle}/?hl=en`;
 };
 
 const getInitialAccountName = (): string => {
@@ -38,7 +38,7 @@ const getInitialAccountName = (): string => {
   } catch {
     // Ignore env error
   }
-  return 'LUNOVA | Atmospheric Architecture';
+  return 'LUNOVA Home Decors';
 };
 
 const defaultHandle = getInitialHandle();
@@ -50,7 +50,7 @@ export const INITIAL_INSTAGRAM_SETTINGS: InstagramSettings = {
   handle: defaultHandle,
   accountName: defaultAccountName,
   profilePicture: IMAGE_3_WARM_MOON,
-  bio: 'Cinematic Astronomical Lighting & Hyper-Depth Optical Furniture. Custom fabricated in titanium, optical glass & NASA cartography.',
+  bio: 'Transforming living spaces with luxury lighting & atmospheric home decors ✨ Custom handcrafted pieces & infinite illusion designs.',
   followersCount: 148500,
   postsCount: 184,
   profileUrl: defaultProfileUrl,

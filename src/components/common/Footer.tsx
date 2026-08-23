@@ -17,7 +17,6 @@ export const Footer: React.FC = () => {
     setIsCustomerOrdersModalOpen, 
     setIsCustomerAuthModalOpen, 
     customerUser, 
-    adminUser,
     contactInfo,
     instagramSettings,
     addToast
@@ -29,8 +28,8 @@ export const Footer: React.FC = () => {
   const whatsappDigits = displayWhatsapp.replace(/[^0-9]/g, '') || '923150360126';
   const whatsappUrl = `https://wa.me/${whatsappDigits}?text=${encodeURIComponent("Hello LUNOVA Concierge, I'm inquiring about an order / handcrafted piece.")}`;
 
-  const instagramHandle = instagramSettings?.handle || contactInfo?.instagramHandle?.replace('@', '') || 'lunova.atelier';
-  const instagramUrl = instagramSettings?.profileUrl || contactInfo?.instagramUrl || `https://instagram.com/${instagramHandle}`;
+  const instagramHandle = instagramSettings?.handle || contactInfo?.instagramHandle?.replace('@', '') || 'lunova.home_decors';
+  const instagramUrl = instagramSettings?.profileUrl || contactInfo?.instagramUrl || `https://www.instagram.com/${instagramHandle}/?hl=en`;
 
   return (
     <footer className="bg-[#06070a] border-t border-amber-500/15 text-zinc-300 relative overflow-hidden transition-colors duration-300">
@@ -322,7 +321,13 @@ export const Footer: React.FC = () => {
         {/* Bottom Legal & Copyright Bar */}
         <div className="pt-8 border-t border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] font-mono text-zinc-400">
           <div className="flex items-center space-x-2">
-            <Lock className="w-3.5 h-3.5 text-amber-400/80" />
+            <button
+              onClick={() => navigate('/admin/login')}
+              className="p-1 rounded hover:bg-zinc-800/80 transition-colors text-amber-400/80 hover:text-amber-300 cursor-pointer"
+              title="Secure Atelier Gateway"
+            >
+              <Lock className="w-3.5 h-3.5" />
+            </button>
             <span>© 2026 LUNOVA ATELIER. HANDCRAFTED IN PAKISTAN. ALL RIGHTS RESERVED.</span>
           </div>
 
@@ -340,11 +345,10 @@ export const Footer: React.FC = () => {
               Concierge
             </button>
             <button 
-              onClick={() => navigate('/admin/login')} 
-              className="hover:text-amber-400 text-zinc-500 transition-colors flex items-center space-x-1 cursor-pointer"
+              onClick={() => navigate('/shop')} 
+              className="hover:text-amber-300 text-zinc-400 transition-colors cursor-pointer"
             >
-              <ShieldCheck className="w-3 h-3 text-amber-400/60" />
-              <span>Admin</span>
+              Atelier Vault
             </button>
           </div>
         </div>

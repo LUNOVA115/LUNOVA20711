@@ -287,10 +287,17 @@ export const AdminProductNewPage: React.FC = () => {
               <input
                 type="number"
                 required
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                value={Math.round(formData.price * currencyConfig.rateAgainstUSD)}
+                onChange={(e) => {
+                  const activeVal = Number(e.target.value);
+                  const inUSD = activeVal / currencyConfig.rateAgainstUSD;
+                  setFormData({ ...formData, price: inUSD });
+                }}
                 className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-amber-400"
               />
+              <div className="text-[10px] text-zinc-500 mt-1">
+                Base Price: ${formData.price.toFixed(2)} USD
+              </div>
             </div>
 
             <div>
@@ -299,10 +306,19 @@ export const AdminProductNewPage: React.FC = () => {
               </label>
               <input
                 type="number"
-                value={formData.originalPrice}
-                onChange={(e) => setFormData({ ...formData, originalPrice: Number(e.target.value) })}
+                value={formData.originalPrice ? Math.round(formData.originalPrice * currencyConfig.rateAgainstUSD) : ''}
+                onChange={(e) => {
+                  const activeVal = Number(e.target.value);
+                  const inUSD = activeVal ? activeVal / currencyConfig.rateAgainstUSD : 0;
+                  setFormData({ ...formData, originalPrice: inUSD || undefined });
+                }}
                 className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-amber-400"
               />
+              {formData.originalPrice && (
+                <div className="text-[10px] text-zinc-500 mt-1">
+                  Base Reference Price: ${formData.originalPrice.toFixed(2)} USD
+                </div>
+              )}
             </div>
 
             <div>

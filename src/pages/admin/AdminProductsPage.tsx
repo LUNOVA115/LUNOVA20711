@@ -1229,10 +1229,17 @@ export const AdminProductsPage: React.FC = () => {
                     type="number"
                     required
                     min="1"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                    value={Math.round(formData.price * currencyConfig.rateAgainstUSD)}
+                    onChange={(e) => {
+                      const activeVal = Number(e.target.value);
+                      const inUSD = activeVal / currencyConfig.rateAgainstUSD;
+                      setFormData({ ...formData, price: inUSD });
+                    }}
                     className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-white font-mono focus:outline-none focus:border-amber-400"
                   />
+                  <div className="text-[10px] text-zinc-500 mt-1">
+                    Base Price: ${formData.price.toFixed(2)} USD
+                  </div>
                 </div>
 
                 <div>
@@ -1242,10 +1249,19 @@ export const AdminProductsPage: React.FC = () => {
                   <input
                     type="number"
                     min="1"
-                    value={formData.originalPrice}
-                    onChange={(e) => setFormData({ ...formData, originalPrice: Number(e.target.value) })}
+                    value={formData.originalPrice ? Math.round(formData.originalPrice * currencyConfig.rateAgainstUSD) : ''}
+                    onChange={(e) => {
+                      const activeVal = Number(e.target.value);
+                      const inUSD = activeVal ? activeVal / currencyConfig.rateAgainstUSD : 0;
+                      setFormData({ ...formData, originalPrice: inUSD || undefined });
+                    }}
                     className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-white font-mono focus:outline-none focus:border-amber-400"
                   />
+                  {formData.originalPrice && (
+                    <div className="text-[10px] text-zinc-500 mt-1">
+                      Base: ${formData.originalPrice.toFixed(2)} USD
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -1479,10 +1495,17 @@ export const AdminProductsPage: React.FC = () => {
                     type="number"
                     required
                     min="1"
-                    value={editingProduct.price}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, price: Number(e.target.value) })}
+                    value={Math.round(editingProduct.price * currencyConfig.rateAgainstUSD)}
+                    onChange={(e) => {
+                      const activeVal = Number(e.target.value);
+                      const inUSD = activeVal / currencyConfig.rateAgainstUSD;
+                      setEditingProduct({ ...editingProduct, price: inUSD });
+                    }}
                     className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-white font-mono focus:outline-none focus:border-amber-400"
                   />
+                  <div className="text-[10px] text-zinc-500 mt-1">
+                    Base: ${editingProduct.price.toFixed(2)} USD
+                  </div>
                 </div>
 
                 <div>
@@ -1492,10 +1515,19 @@ export const AdminProductsPage: React.FC = () => {
                   <input
                     type="number"
                     min="1"
-                    value={editingProduct.originalPrice || ''}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, originalPrice: Number(e.target.value) })}
+                    value={editingProduct.originalPrice ? Math.round(editingProduct.originalPrice * currencyConfig.rateAgainstUSD) : ''}
+                    onChange={(e) => {
+                      const activeVal = Number(e.target.value);
+                      const inUSD = activeVal ? activeVal / currencyConfig.rateAgainstUSD : 0;
+                      setEditingProduct({ ...editingProduct, originalPrice: inUSD || undefined });
+                    }}
                     className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-white font-mono focus:outline-none focus:border-amber-400"
                   />
+                  {editingProduct.originalPrice && (
+                    <div className="text-[10px] text-zinc-500 mt-1">
+                      Base: ${editingProduct.originalPrice.toFixed(2)} USD
+                    </div>
+                  )}
                 </div>
 
                 <div>

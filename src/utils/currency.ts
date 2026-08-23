@@ -47,3 +47,11 @@ export function convertFromUSD(amountInUSD: number, currencyCode: CurrencyCode =
   const config = SUPPORTED_CURRENCIES[currencyCode] || SUPPORTED_CURRENCIES.USD;
   return amountInUSD * config.rateAgainstUSD;
 }
+
+/**
+ * Helper to convert active currency numeric value back into USD value
+ */
+export function convertToUSD(amountInActive: number, currencyCode: CurrencyCode = 'USD'): number {
+  const config = SUPPORTED_CURRENCIES[currencyCode] || SUPPORTED_CURRENCIES.USD;
+  return amountInActive / config.rateAgainstUSD;
+}

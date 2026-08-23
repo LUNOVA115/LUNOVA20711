@@ -20,7 +20,8 @@ import {
   ChevronDown,
   ArrowRight,
   ExternalLink,
-  Moon
+  Moon,
+  Lock
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -329,9 +330,9 @@ export const Navbar: React.FC = () => {
                     </div>
                   )}
 
-                  {/* ONLY VISIBLE IF ACTIVELY AUTHENTICATED AS ADMIN */}
-                  {adminUser && (
-                    <div className="pt-2 mt-2 border-t border-zinc-800/80">
+                  {/* ADMIN PORTAL GATEWAY - ALWAYS VISIBLE */}
+                  <div className="pt-2 mt-2 border-t border-zinc-800/80">
+                    {adminUser ? (
                       <button
                         onClick={() => {
                           setIsAccountOpen(false);
@@ -347,8 +348,24 @@ export const Navbar: React.FC = () => {
                           <div className="text-[10px] text-zinc-400 font-mono">Logged in as {adminUser.name}</div>
                         </div>
                       </button>
-                    </div>
-                  )}
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setIsAccountOpen(false);
+                          handleNav('/admin/login');
+                        }}
+                        className="w-full flex items-center space-x-3 p-2.5 rounded-xl hover:bg-amber-500/10 border border-dashed border-zinc-800 hover:border-amber-500/30 text-left transition-all text-zinc-400 hover:text-amber-300 group cursor-pointer"
+                      >
+                        <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 group-hover:bg-amber-500/10 group-hover:border-amber-500/30 transition-all shrink-0">
+                          <Lock className="w-4 h-4 text-zinc-500 group-hover:text-amber-400 transition-colors" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-300 group-hover:text-amber-200 transition-colors">Admin Portal Access</div>
+                          <div className="text-[10px] text-zinc-500">Access console & manage store</div>
+                        </div>
+                      </button>
+                    )}
+                  </div>
 
                 </div>
               )}
@@ -464,7 +481,7 @@ export const Navbar: React.FC = () => {
               </div>
 
               {/* Account / Login section in mobile menu */}
-              <div className="pt-3 border-t border-zinc-800/80">
+              <div className="pt-3 border-t border-zinc-800/80 space-y-2">
                 {customerUser ? (
                   <div className="space-y-2">
                     <div className="py-2 px-3 rounded-xl bg-zinc-900 text-zinc-300 text-xs flex items-center justify-between">
@@ -492,11 +509,28 @@ export const Navbar: React.FC = () => {
                       <span>Sign Out</span>
                     </button>
                   </div>
-                ) : adminUser ? (
-                  <div className="space-y-2">
+                ) : (
+                  <button
+                    onClick={() => {
+                      setIsCustomerAuthModalOpen(true);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 text-zinc-950 font-bold uppercase tracking-wider text-xs flex items-center justify-center space-x-2 shadow-lg shadow-amber-400/20 cursor-pointer"
+                  >
+                    <User className="w-4 h-4" />
+                    <span>Customer Sign In / VIP</span>
+                  </button>
+                )}
+
+                {/* Always-visible Admin Portal access section on Mobile */}
+                <div className="pt-2 border-t border-zinc-800/50">
+                  {adminUser ? (
                     <button
-                      onClick={() => handleNav('/admin/dashboard')}
-                      className="w-full text-left py-2.5 px-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 font-bold flex items-center justify-between"
+                      onClick={() => {
+                        handleNav('/admin/dashboard');
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full text-left py-2.5 px-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 font-bold flex items-center justify-between cursor-pointer"
                     >
                       <span className="flex items-center space-x-2">
                         <LayoutDashboard className="w-4 h-4" />
@@ -504,19 +538,19 @@ export const Navbar: React.FC = () => {
                       </span>
                       <span className="text-[10px] bg-amber-400 text-zinc-950 px-1.5 py-0.5 rounded font-bold">CONSOLE</span>
                     </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setIsCustomerAuthModalOpen(true);
-                      setMobileMenuOpen(false);
-                    }}
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 text-zinc-950 font-bold uppercase tracking-wider text-xs flex items-center justify-center space-x-2 shadow-lg shadow-amber-400/20"
-                  >
-                    <User className="w-4 h-4" />
-                    <span>Customer Sign In / VIP</span>
-                  </button>
-                )}
+                  ) : (
+                    <button
+                      onClick={() => {
+                        handleNav('/admin/login');
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full text-left py-2.5 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center space-x-2 cursor-pointer hover:bg-amber-500/10 hover:text-amber-300 transition-colors"
+                    >
+                      <Lock className="w-3.5 h-3.5" />
+                      <span>Admin Portal Access</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
             </div>

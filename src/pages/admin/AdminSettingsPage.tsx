@@ -32,7 +32,8 @@ import {
   Key,
   ShieldCheck,
   Instagram,
-  MessageCircle
+  MessageCircle,
+  AlertCircle
 } from 'lucide-react';
 import { 
   IMAGE_1_GOLD_TABLE, 
@@ -71,6 +72,7 @@ export const AdminSettingsPage: React.FC = () => {
     adminUser,
     updateAdminProfile,
     changeAdminCredentials,
+    changeAdminPassword,
     currency: activeStoreCurrency,
     setCurrency: setStoreCurrency,
     formatPrice,
@@ -83,6 +85,8 @@ export const AdminSettingsPage: React.FC = () => {
   const [adminName, setAdminName] = useState(adminUser?.name || 'Julian Thorne');
   const [adminEmail, setAdminEmail] = useState(adminUser?.email || 'admin@lunova.luxury');
   const [adminRole, setAdminRole] = useState<'Super Admin' | 'Store Manager' | 'Editor'>(adminUser?.role || 'Super Admin');
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileStatus, setProfileStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Security Credentials & Password Change Local State
   const [currentPassword, setCurrentPassword] = useState('');
@@ -91,7 +95,8 @@ export const AdminSettingsPage: React.FC = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [credentialLoading, setCredentialLoading] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordStatus, setPasswordStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const [storeName, setStoreName] = useState('LUNOVA');
   const [tagline, setTagline] = useState('Futuristic Premium Home Decor & Atmospheric Architecture');
@@ -140,62 +145,72 @@ export const AdminSettingsPage: React.FC = () => {
 
   const handleSaveAdminProfile = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    setProfileStatus(null);
+    setProfileLoading(true);
+
     if (!adminName.trim()) {
-      addToast('Please enter a valid admin profile name.', 'error');
+      setProfileStatus({ type: 'error', message: 'Please enter a valid administrator profile name.' });
+      addToast('Please enter a valid administrator profile name.', 'error');
+      setProfileLoading(false);
       return;
     }
-    updateAdminProfile({
-      name: adminName.trim(),
-      email: adminEmail.trim(),
+    if (!adminEmail.trim() || !adminEmail.includes('@')) {
+      setProfileStatus({ type: 'error', message: 'Please enter a valid administrator email address (e.g. admin@lunova.luxury).' });
+      addToast('Please enter a valid administrator email address.', 'error');
+      setProfileLoading(false);
+      return;
+    }
+
+    const res = changeAdminCredentials({
+      adminName: adminName.trim(),
+      newEmail: adminEmail.trim(),
       role: adminRole
     });
+
+    setProfileLoading(false);
+    if (res.success) {
+      setProfileStatus({ type: 'success', message: '✓ Administrator profile name and login email updated successfully.' });
+    } else {
+      setProfileStatus({ type: 'error', message: res.message });
+    }
   };
 
-  const handleChangeAdminSecurity = (e: React.FormEvent) => {
+  const handleUpdatePassword = (e: React.FormEvent) => {
     e.preventDefault();
-    setCredentialLoading(true);
+    setPasswordStatus(null);
+    setPasswordLoading(true);
 
-    if (!adminEmail.trim()) {
-      addToast('Please enter a valid administrator email address.', 'error');
-      setCredentialLoading(false);
+    if (!currentPassword || !currentPassword.trim()) {
+      setPasswordStatus({ type: 'error', message: 'Please enter your current administrator password.' });
+      setPasswordLoading(false);
       return;
     }
 
-    if (!adminEmail.includes('@')) {
-      addToast('Please enter a valid email format (e.g. name@domain.com).', 'error');
-      setCredentialLoading(false);
+    if (!newPassword || newPassword.trim().length < 4) {
+      setPasswordStatus({ type: 'error', message: 'New password must be at least 4 characters long.' });
+      setPasswordLoading(false);
       return;
     }
 
-    if (newPassword) {
-      if (newPassword.length < 4) {
-        addToast('New password must be at least 4 characters long.', 'error');
-        setCredentialLoading(false);
-        return;
-      }
-      if (newPassword !== confirmPassword) {
-        addToast('New password and confirmation do not match.', 'error');
-        setCredentialLoading(false);
-        return;
-      }
+    if (newPassword.trim() !== confirmPassword.trim()) {
+      setPasswordStatus({ type: 'error', message: 'New password and confirmation password do not match.' });
+      setPasswordLoading(false);
+      return;
     }
 
-    const result = changeAdminCredentials({
-      currentPassword: currentPassword ? currentPassword.trim() : undefined,
-      newEmail: adminEmail.trim(),
-      newPassword: newPassword ? newPassword.trim() : undefined,
-      adminName: adminName.trim(),
-      role: adminRole
-    });
+    const res = changeAdminPassword(currentPassword.trim(), newPassword.trim(), confirmPassword.trim());
+    setPasswordLoading(false);
 
-    setCredentialLoading(false);
-
-    if (result.success) {
+    if (res.success) {
+      setPasswordStatus({ 
+        type: 'success', 
+        message: '✓ Password changed successfully! You can now use your new password on the Admin Login portal.' 
+      });
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } else {
-      addToast(result.message, 'error');
+      setPasswordStatus({ type: 'error', message: res.message });
     }
   };
 
@@ -303,264 +318,324 @@ export const AdminSettingsPage: React.FC = () => {
         {/* =========================================================================
             SECTION: ADMINISTRATOR PROFILE & CREDENTIALS (EMAIL & PASSWORD CHANGE)
         ========================================================================= */}
-        <div className="bg-zinc-950 border border-amber-400/40 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden ring-1 ring-amber-400/20">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2.5 rounded-2xl bg-amber-400/15 text-amber-400 border border-amber-400/30">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-semibold uppercase tracking-wider text-white flex items-center space-x-2">
-                  <span>Admin Security & Login Credentials</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/15 text-amber-300 border border-amber-400/30 font-mono font-bold">
-                    Master Access
-                  </span>
-                </h3>
-                <p className="text-zinc-400 text-xs mt-0.5">
-                  Update your official administrative login email address, master passkey password, and profile clearance.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <span className="text-[11px] text-zinc-400 font-mono hidden sm:inline">
-                Active: <span className="text-amber-300 font-semibold">{adminUser?.email || 'admin@lunova.luxury'}</span>
-              </span>
-            </div>
-          </div>
-
-          <form onSubmit={handleChangeAdminSecurity} className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-start">
-              
-              {/* Live Profile Monogram & Clearance Preview */}
-              <div className="p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800 flex flex-col items-center justify-center text-center space-y-3">
-                <div className="relative">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-zinc-950 font-mono text-2xl font-bold shadow-lg shadow-amber-400/20">
-                    {adminName ? adminName.charAt(0).toUpperCase() : 'A'}
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-zinc-950 flex items-center justify-center">
-                    <Check className="w-3 h-3 text-zinc-950" />
-                  </div>
+        <div className="space-y-6">
+          {/* Card 1: Admin Profile & Sign-In Email */}
+          <div className="bg-zinc-950 border border-amber-400/40 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden ring-1 ring-amber-400/20">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 rounded-2xl bg-amber-400/15 text-amber-400 border border-amber-400/30">
+                  <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-white tracking-wide">{adminName || 'Admin Name'}</div>
-                  <div className="text-[10px] text-amber-400 font-mono mt-0.5 uppercase tracking-wider font-semibold">
-                    {adminRole}
-                  </div>
-                  <div className="text-[10px] text-zinc-400 font-mono mt-0.5 truncate max-w-[180px]">
-                    {adminEmail || 'admin@lunova.luxury'}
-                  </div>
-                </div>
-
-                <div className="w-full pt-3 border-t border-zinc-800/80 text-[10px] text-zinc-400 text-left space-y-1">
-                  <div className="flex justify-between">
-                    <span>Role Clearance:</span>
-                    <span className="text-amber-300 font-mono font-semibold">{adminRole}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Security Status:</span>
-                    <span className="text-emerald-400 font-mono font-semibold">Protected</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Profile & Email Input Controls */}
-              <div className="sm:col-span-2 space-y-4">
-                <div>
-                  <label className="block text-zinc-300 font-semibold uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                    <span className="flex items-center space-x-1.5">
-                      <User className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Administrator Profile Name *</span>
+                  <h3 className="text-base font-semibold uppercase tracking-wider text-white flex items-center space-x-2">
+                    <span>Admin Profile & Login Email</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/15 text-amber-300 border border-amber-400/30 font-mono font-bold">
+                      Master Clearance
                     </span>
-                    <span className="text-[10px] text-amber-400 font-mono">Live Across Portal</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={adminName}
-                    onChange={(e) => setAdminName(e.target.value)}
-                    placeholder="e.g. Julian Thorne, Alexander Vance, etc."
-                    className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-white font-medium focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
-                  />
-                  
-                  {/* Quick Name Presets */}
-                  <div className="mt-2 flex items-center space-x-2">
-                    <span className="text-[10px] text-zinc-500 font-mono">Suggestions:</span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {['Julian Thorne', 'Alexander Vance', 'Elena Rostova', 'Executive Director'].map((namePreset) => (
-                        <button
-                          key={namePreset}
-                          type="button"
-                          onClick={() => {
-                            setAdminName(namePreset);
-                            addToast(`Selected name: ${namePreset}`, 'info');
-                          }}
-                          className={`text-[10px] px-2 py-0.5 rounded-lg border font-mono transition-colors ${
-                            adminName === namePreset
-                              ? 'bg-amber-400/20 text-amber-300 border-amber-400/50'
-                              : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'
-                          }`}
-                        >
-                          {namePreset}
-                        </button>
-                      ))}
+                  </h3>
+                  <p className="text-zinc-400 text-xs mt-0.5">
+                    Configure your administrative identity, clearance authority, and sign-in email.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <span className="text-[11px] text-zinc-400 font-mono">
+                  Active Admin: <span className="text-amber-300 font-semibold">{adminUser?.email || 'admin@lunova.luxury'}</span>
+                </span>
+              </div>
+            </div>
+
+            {profileStatus && (
+              <div className={`p-4 rounded-2xl text-xs flex items-center space-x-3 ${
+                profileStatus.type === 'success' 
+                  ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-300' 
+                  : 'bg-rose-500/15 border border-rose-500/40 text-rose-300'
+              }`}>
+                {profileStatus.type === 'success' ? <Check className="w-4 h-4 shrink-0 text-emerald-400" /> : <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />}
+                <span className="font-medium">{profileStatus.message}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveAdminProfile} className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-start">
+                
+                {/* Live Profile Monogram & Clearance Preview */}
+                <div className="p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800 flex flex-col items-center justify-center text-center space-y-3">
+                  <div className="relative">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-zinc-950 font-mono text-2xl font-bold shadow-lg shadow-amber-400/20">
+                      {adminName ? adminName.charAt(0).toUpperCase() : 'A'}
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-zinc-950 flex items-center justify-center">
+                      <Check className="w-3 h-3 text-zinc-950" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-white tracking-wide">{adminName || 'Admin Name'}</div>
+                    <div className="text-[10px] text-amber-400 font-mono mt-0.5 uppercase tracking-wider font-semibold">
+                      {adminRole}
+                    </div>
+                    <div className="text-[10px] text-zinc-400 font-mono mt-0.5 truncate max-w-[180px]">
+                      {adminEmail || 'admin@lunova.luxury'}
+                    </div>
+                  </div>
+
+                  <div className="w-full pt-3 border-t border-zinc-800/80 text-[10px] text-zinc-400 text-left space-y-1">
+                    <div className="flex justify-between">
+                      <span>Role Clearance:</span>
+                      <span className="text-amber-300 font-mono font-semibold">{adminRole}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Security Status:</span>
+                      <span className="text-emerald-400 font-mono font-semibold">Protected</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Profile & Email Input Controls */}
+                <div className="sm:col-span-2 space-y-4">
                   <div>
-                    <label className="block text-zinc-300 font-semibold uppercase tracking-wider mb-1.5 flex items-center space-x-1.5">
-                      <Mail className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Admin Login Email *</span>
+                    <label className="block text-zinc-300 font-semibold uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                      <span className="flex items-center space-x-1.5">
+                        <User className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Administrator Profile Name *</span>
+                      </span>
+                      <span className="text-[10px] text-amber-400 font-mono">Live Across Portal</span>
                     </label>
                     <input
-                      type="email"
+                      type="text"
                       required
-                      value={adminEmail}
-                      onChange={(e) => setAdminEmail(e.target.value)}
-                      placeholder="admin@lunova.luxury"
-                      className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-white font-mono focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                      value={adminName}
+                      onChange={(e) => setAdminName(e.target.value)}
+                      placeholder="e.g. Julian Thorne, Alexander Vance, etc."
+                      className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-white font-medium focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
                     />
-                    <p className="text-[10px] text-zinc-500 mt-1">This email will be required on the Admin Login portal.</p>
+                    
+                    {/* Quick Name Presets */}
+                    <div className="mt-2 flex items-center space-x-2">
+                      <span className="text-[10px] text-zinc-500 font-mono">Suggestions:</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {['Julian Thorne', 'Alexander Vance', 'Elena Rostova', 'Executive Director'].map((namePreset) => (
+                          <button
+                            key={namePreset}
+                            type="button"
+                            onClick={() => {
+                              setAdminName(namePreset);
+                              addToast(`Selected name: ${namePreset}`, 'info');
+                            }}
+                            className={`text-[10px] px-2 py-0.5 rounded-lg border font-mono transition-colors cursor-pointer ${
+                              adminName === namePreset
+                                ? 'bg-amber-400/20 text-amber-300 border-amber-400/50'
+                                : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'
+                            }`}
+                          >
+                            {namePreset}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-zinc-300 font-semibold uppercase tracking-wider mb-1.5 flex items-center space-x-1.5">
-                      <Crown className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Clearance Authority Tier</span>
-                    </label>
-                    <select
-                      value={adminRole}
-                      onChange={(e) => setAdminRole(e.target.value as any)}
-                      className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-white font-medium focus:outline-none focus:border-amber-400"
-                    >
-                      <option value="Super Admin">Super Admin (Full Root Clearance)</option>
-                      <option value="Store Manager">Store Manager (Catalog & Fulfillment)</option>
-                      <option value="Editor">Editor (Catalog & Media)</option>
-                    </select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-zinc-300 font-semibold uppercase tracking-wider mb-1.5 flex items-center space-x-1.5">
+                        <Mail className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Admin Sign-In Email *</span>
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={adminEmail}
+                        onChange={(e) => setAdminEmail(e.target.value)}
+                        placeholder="admin@lunova.luxury"
+                        className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-white font-mono focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                      />
+                      <p className="text-[10px] text-zinc-500 mt-1">This email is used to log into the Admin Console.</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-zinc-300 font-semibold uppercase tracking-wider mb-1.5 flex items-center space-x-1.5">
+                        <Crown className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Clearance Authority Tier</span>
+                      </label>
+                      <select
+                        value={adminRole}
+                        onChange={(e) => setAdminRole(e.target.value as any)}
+                        className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-white font-medium focus:outline-none focus:border-amber-400"
+                      >
+                        <option value="Super Admin">Super Admin (Full Root Clearance)</option>
+                        <option value="Store Manager">Store Manager (Catalog & Fulfillment)</option>
+                        <option value="Editor">Editor (Catalog & Media)</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* PASSWORD UPDATE SUB-CARD */}
-            <div className="p-5 rounded-2xl bg-zinc-900/70 border border-zinc-800 space-y-4">
-              <div className="flex items-center space-x-2 text-zinc-200 font-semibold text-xs border-b border-zinc-800/80 pb-3">
-                <Key className="w-4 h-4 text-amber-400" />
-                <span className="uppercase tracking-wider">Change Admin Login Password</span>
-                <span className="text-[10px] text-zinc-500 font-normal ml-2 font-mono">(Leave blank if keeping current password)</span>
+              {/* Save Admin Profile Button */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-zinc-800">
+                <p className="text-[11px] text-zinc-400">
+                  Updates your display name and login email address immediately.
+                </p>
+                <button
+                  type="submit"
+                  disabled={profileLoading}
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-amber-400/50 text-white font-bold uppercase tracking-wider text-xs flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <Check className="w-4 h-4 text-amber-400" />
+                  <span>{profileLoading ? 'Saving Profile...' : 'Save Profile & Email'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Card 2: Dedicated Administrator Password Change */}
+          <div className="bg-zinc-950 border border-amber-400/40 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden ring-1 ring-amber-400/20">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 rounded-2xl bg-amber-400/15 text-amber-400 border border-amber-400/30">
+                  <Key className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold uppercase tracking-wider text-white flex items-center space-x-2">
+                    <span>Change Admin Login Password</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono font-bold">
+                      Passkey Security
+                    </span>
+                  </h3>
+                  <p className="text-zinc-400 text-xs mt-0.5">
+                    Update your master administrative passkey password. Requires entering your current password for security verification.
+                  </p>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {/* Current Password (Optional verification) */}
+              <div className="flex items-center space-x-2">
+                <span className="text-[10px] px-3 py-1 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 font-mono">
+                  Initial Default Passkey: <strong className="text-amber-300">lunova2026</strong>
+                </span>
+              </div>
+            </div>
+
+            {/* Password Feedback Alert Banner */}
+            {passwordStatus && (
+              <div className={`p-4 rounded-2xl text-xs flex items-center space-x-3 animate-in fade-in ${
+                passwordStatus.type === 'success' 
+                  ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-300' 
+                  : 'bg-rose-500/15 border border-rose-500/40 text-rose-300'
+              }`}>
+                {passwordStatus.type === 'success' ? (
+                  <Check className="w-5 h-5 shrink-0 text-emerald-400" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 shrink-0 text-rose-400" />
+                )}
                 <div>
-                  <label className="block text-zinc-400 font-semibold uppercase tracking-wider mb-1.5 text-[10px]">
-                    Current Password (Optional)
+                  <div className="font-bold">{passwordStatus.type === 'success' ? 'Password Changed Successfully' : 'Password Update Error'}</div>
+                  <div className="mt-0.5">{passwordStatus.message}</div>
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleUpdatePassword} className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* 1. Current Password */}
+                <div>
+                  <label className="block text-zinc-300 font-semibold uppercase tracking-wider mb-1.5 text-[11px] flex items-center justify-between">
+                    <span>1. Current Password *</span>
                   </label>
                   <div className="relative">
                     <input
                       type={showCurrentPassword ? 'text' : 'password'}
+                      required
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder="Enter current password"
-                      className="w-full pl-3 pr-9 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-xs font-mono focus:outline-none focus:border-amber-400"
+                      className="w-full pl-3 pr-10 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-white text-xs font-mono focus:outline-none focus:border-amber-400"
                     />
                     <button
                       type="button"
                       onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 p-1"
+                      title={showCurrentPassword ? 'Hide password' : 'Show password'}
                     >
-                      {showCurrentPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                  <p className="text-[10px] text-zinc-500 mt-1 font-mono">Default setup is <span className="text-amber-400">lunova2026</span></p>
                 </div>
 
-                {/* New Password */}
+                {/* 2. New Password */}
                 <div>
-                  <label className="block text-zinc-400 font-semibold uppercase tracking-wider mb-1.5 text-[10px]">
-                    New Password
+                  <label className="block text-zinc-300 font-semibold uppercase tracking-wider mb-1.5 text-[11px]">
+                    2. New Password (Min 4 chars) *
                   </label>
                   <div className="relative">
                     <input
                       type={showNewPassword ? 'text' : 'password'}
+                      required
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Enter new passkey"
-                      className="w-full pl-3 pr-9 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-xs font-mono focus:outline-none focus:border-amber-400"
+                      className="w-full pl-3 pr-10 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-white text-xs font-mono focus:outline-none focus:border-amber-400"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 p-1"
+                      title={showNewPassword ? 'Hide password' : 'Show password'}
                     >
-                      {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                  <p className="text-[10px] text-zinc-500 mt-1">Must be at least 4 characters</p>
                 </div>
 
-                {/* Confirm New Password */}
+                {/* 3. Confirm New Password */}
                 <div>
-                  <label className="block text-zinc-400 font-semibold uppercase tracking-wider mb-1.5 text-[10px]">
-                    Confirm New Password
+                  <label className="block text-zinc-300 font-semibold uppercase tracking-wider mb-1.5 text-[11px]">
+                    3. Confirm New Password *
                   </label>
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
+                      required
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Repeat new passkey"
-                      className="w-full pl-3 pr-9 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-xs font-mono focus:outline-none focus:border-amber-400"
+                      className="w-full pl-3 pr-10 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-white text-xs font-mono focus:outline-none focus:border-amber-400"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 p-1"
+                      title={showConfirmPassword ? 'Hide password' : 'Show password'}
                     >
-                      {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                  {confirmPassword && (
+                    <p className={`text-[10px] mt-1 font-mono ${newPassword === confirmPassword ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {newPassword === confirmPassword ? '✓ Passwords match' : '✗ Passwords do not match'}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              {newPassword && (
-                <div className="flex items-center space-x-2 text-[11px] pt-1">
-                  <div className={`w-2 h-2 rounded-full ${newPassword.length >= 6 ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-                  <span className="text-zinc-400">
-                    Strength: <strong className={newPassword.length >= 6 ? 'text-emerald-400' : 'text-amber-400'}>
-                      {newPassword.length >= 6 ? 'Strong Passkey' : 'Acceptable (Minimum 4 chars)'}
-                    </strong>
-                    {confirmPassword && (
-                      <span className={`ml-3 ${newPassword === confirmPassword ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {newPassword === confirmPassword ? '✓ Passwords match' : '✗ Passwords do not match'}
-                      </span>
-                    )}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Save Credentials Action Bar */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-              <p className="text-[11px] text-zinc-400">
-                Changes will take effect immediately. You can sign in using your new email & password across all devices.
-              </p>
-              <button
-                type="submit"
-                disabled={credentialLoading}
-                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-200 text-zinc-950 font-bold uppercase tracking-wider text-xs shadow-xl shadow-amber-400/20 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
-              >
-                {credentialLoading ? (
-                  <span>Updating Credentials...</span>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4" />
-                    <span>Save Admin Email & Password</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
+              {/* Action Bar */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-zinc-800">
+                <p className="text-[11px] text-zinc-400">
+                  After updating, your new password will be immediately active for future logins on the Admin Login portal.
+                </p>
+                <button
+                  type="submit"
+                  disabled={passwordLoading || !currentPassword || !newPassword || !confirmPassword}
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-200 text-zinc-950 font-bold uppercase tracking-wider text-xs shadow-xl shadow-amber-400/20 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Lock className="w-4 h-4" />
+                  <span>{passwordLoading ? 'Updating Password...' : 'Update Admin Password'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
 
         {/* =========================================================================

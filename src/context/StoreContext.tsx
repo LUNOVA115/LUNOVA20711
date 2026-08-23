@@ -143,6 +143,7 @@ interface StoreContextType {
   adminLogout: () => void;
   updateAdminProfile: (profile: Partial<AdminUser>) => void;
   changeAdminCredentials: (params: { currentPassword?: string; newEmail?: string; newPassword?: string; adminName?: string; role?: AdminUser['role'] }) => { success: boolean; message: string };
+  changeAdminPassword: (currentPassword: string, newPassword: string, confirmPassword: string) => { success: boolean; message: string };
   
   // Admin Mutators
   addProduct: (productData: Omit<Product, 'id' | 'createdAt'>) => Product;
@@ -822,16 +823,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     'admin@lunovahome.com': { name: 'Store Master', role: 'Super Admin', pass: 'lunova2026' }
   };
 
-  const [authorizedAdmins, setAuthorizedAdmins] = useState<Record<string, { name: string; role: AdminUser['role']; pass: string }>>(() => {
+  const loadAuthorizedAdminsRegistry = (): Record<string, { name: string; role: AdminUser['role']; pass: string }> => {
     try {
       const saved = localStorage.getItem('lunova_authorized_admins_v1');
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        return { ...INITIAL_AUTHORIZED_ADMINS, ...parsed };
       }
-      return INITIAL_AUTHORIZED_ADMINS;
-    } catch {
-      return INITIAL_AUTHORIZED_ADMINS;
+    } catch (e) {
+      console.error('Error loading authorized admins:', e);
     }
+    return INITIAL_AUTHORIZED_ADMINS;
+  };
+
+  const [authorizedAdmins, setAuthorizedAdmins] = useState<Record<string, { name: string; role: AdminUser['role']; pass: string }>>(() => {
+    return loadAuthorizedAdminsRegistry();
   });
 
   useEffect(() => {
@@ -840,12 +846,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const adminLogin = (email: string, pass: string) => {
     const cleanEmail = email.trim().toLowerCase();
+    const currentAdmins = loadAuthorizedAdminsRegistry();
     
     // Check if email is in authorized administrators list
-    const adminRecord = authorizedAdmins[cleanEmail];
+    const adminRecord = currentAdmins[cleanEmail];
     
     if (adminRecord) {
-      if (pass === adminRecord.pass) {
+      if (pass.trim() === adminRecord.pass) {
         const user: AdminUser = {
           id: `adm-${cleanEmail.replace(/[^a-z0-9]/g, '')}`,
           name: adminRecord.name,
@@ -858,7 +865,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addToast(`Admin Session Authorized: Welcome back, ${adminRecord.name}.`, 'success');
         return { success: true, message: 'Administrative authentication successful' };
       } else {
-        return { success: false, message: 'Invalid administrative password. Access denied.' };
+        return { success: false, message: 'Invalid administrative passkey. Please check your password.' };
       }
     }
 
@@ -874,7 +881,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // General unauthorized rejection
     return { 
       success: false, 
-      message: 'Access Denied: Unrecognized administrator credentials. Only authorized staff may access the admin portal.' 
+      message: 'Access Denied: Unrecognized administrator email. Please verify credentials or contact store principal.' 
     };
   };
 
@@ -886,39 +893,96 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const updateAdminProfile = (profile: Partial<AdminUser>) => {
+    const currentEmail = (adminUser?.email || 'admin@lunova.luxury').toLowerCase().trim();
+    const targetEmail = profile.email ? profile.email.toLowerCase().trim() : currentEmail;
+    const currentAdmins = loadAuthorizedAdminsRegistry();
+    const existing = currentAdmins[currentEmail] || { name: 'Julian Thorne', role: 'Super Admin', pass: 'lunova2026' };
+
+    const updatedRecord = {
+      ...existing,
+      name: profile.name || existing.name,
+      role: profile.role || existing.role,
+      pass: existing.pass // PRESERVE EXISTING PASSWORD
+    };
+
+    const nextAdmins = { ...currentAdmins };
+    if (targetEmail !== currentEmail) {
+      delete nextAdmins[currentEmail];
+    }
+    nextAdmins[targetEmail] = updatedRecord;
+
+    localStorage.setItem('lunova_authorized_admins_v1', JSON.stringify(nextAdmins));
+    setAuthorizedAdmins(nextAdmins);
+
     setAdminUser((prev) => {
-      const updated: AdminUser = prev 
-        ? { ...prev, ...profile } 
-        : { id: 'adm-001', name: profile.name || 'Julian Thorne', email: profile.email || 'admin@lunova.luxury', role: profile.role || 'Super Admin' };
+      const updated: AdminUser = {
+        id: `adm-${targetEmail.replace(/[^a-z0-9]/g, '')}`,
+        name: profile.name || prev?.name || existing.name,
+        email: targetEmail,
+        role: profile.role || prev?.role || existing.role
+      };
       localStorage.setItem('lunova_admin_v1', JSON.stringify(updated));
       return updated;
     });
-
-    // Also sync admin record in authorizedAdmins registry if email exists
-    if (adminUser?.email) {
-      const currentEmail = adminUser.email.toLowerCase();
-      const targetEmail = profile.email ? profile.email.toLowerCase().trim() : currentEmail;
-      setAuthorizedAdmins(prev => {
-        const existing = prev[currentEmail] || { name: 'Julian Thorne', role: 'Super Admin', pass: 'lunova2026' };
-        const updatedRecord = {
-          ...existing,
-          name: profile.name || existing.name,
-          role: profile.role || existing.role
-        };
-        const next = { ...prev };
-        if (targetEmail !== currentEmail) {
-          delete next[currentEmail];
-        }
-        next[targetEmail] = updatedRecord;
-        return next;
-      });
-    }
 
     if (profile.name) {
       addToast(`Admin profile name changed to "${profile.name}"`, 'success');
     } else {
       addToast('Admin profile updated successfully', 'success');
     }
+  };
+
+  // Dedicated single-responsibility password change method
+  const changeAdminPassword = (currentPassword: string, newPassword: string, confirmPassword: string) => {
+    const currentEmail = (adminUser?.email || 'admin@lunova.luxury').toLowerCase().trim();
+    const currentAdmins = loadAuthorizedAdminsRegistry();
+    const existingRecord = currentAdmins[currentEmail] || {
+      name: adminUser?.name || 'Julian Thorne',
+      role: adminUser?.role || 'Super Admin',
+      pass: 'lunova2026'
+    };
+
+    // Step 1: Verify current password
+    if (!currentPassword || !currentPassword.trim()) {
+      return { success: false, message: 'Please enter your current administrator password.' };
+    }
+
+    if (currentPassword.trim() !== existingRecord.pass) {
+      return { 
+        success: false, 
+        message: 'The current password you entered is incorrect. (Default setup passkey is: lunova2026)' 
+      };
+    }
+
+    // Step 2: Validate new password
+    if (!newPassword || newPassword.trim().length < 4) {
+      return { success: false, message: 'New password must be at least 4 characters long.' };
+    }
+
+    // Step 3: Check confirmation
+    if (newPassword.trim() !== confirmPassword.trim()) {
+      return { success: false, message: 'The new password and confirmation password do not match.' };
+    }
+
+    if (newPassword.trim() === existingRecord.pass) {
+      return { success: false, message: 'The new password must be different from your current password.' };
+    }
+
+    const updatedPass = newPassword.trim();
+    const updatedAdmins = {
+      ...currentAdmins,
+      [currentEmail]: {
+        ...existingRecord,
+        pass: updatedPass
+      }
+    };
+
+    // Synchronously write to localStorage to prevent race conditions
+    localStorage.setItem('lunova_authorized_admins_v1', JSON.stringify(updatedAdmins));
+    setAuthorizedAdmins(updatedAdmins);
+
+    addToast('Admin password updated successfully! Use your new password on next login.', 'success');
+    return { success: true, message: 'Your administrator password has been updated successfully.' };
   };
 
   const changeAdminCredentials = (params: {
@@ -928,16 +992,25 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     adminName?: string;
     role?: AdminUser['role'];
   }) => {
-    const currentAdminEmail = adminUser?.email?.toLowerCase().trim() || 'admin@lunova.luxury';
-    const currentRecord = authorizedAdmins[currentAdminEmail] || {
+    const currentAdminEmail = (adminUser?.email || 'admin@lunova.luxury').toLowerCase().trim();
+    const currentAdmins = loadAuthorizedAdminsRegistry();
+    const currentRecord = currentAdmins[currentAdminEmail] || {
       name: adminUser?.name || 'Julian Thorne',
       role: adminUser?.role || 'Super Admin',
       pass: 'lunova2026'
     };
 
-    // Verify current password if provided
-    if (params.currentPassword && params.currentPassword !== currentRecord.pass) {
-      return { success: false, message: 'Current password verification failed. Please enter the correct current password.' };
+    // Verify current password if changing password or if current password was entered
+    if (params.newPassword) {
+      if (params.currentPassword && params.currentPassword.trim() !== currentRecord.pass) {
+        return { 
+          success: false, 
+          message: 'Current password verification failed. (Default setup passkey is: lunova2026)' 
+        };
+      }
+      if (params.newPassword.trim().length < 4) {
+        return { success: false, message: 'New password must be at least 4 characters long.' };
+      }
     }
 
     const cleanNewEmail = params.newEmail ? params.newEmail.toLowerCase().trim() : currentAdminEmail;
@@ -947,28 +1020,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return { success: false, message: 'Please enter a valid email address.' };
     }
 
-    if (params.newPassword && params.newPassword.length < 4) {
-      return { success: false, message: 'New password must be at least 4 characters long.' };
-    }
-
-    const updatedPass = params.newPassword ? params.newPassword : currentRecord.pass;
+    const updatedPass = params.newPassword ? params.newPassword.trim() : currentRecord.pass;
     const updatedName = params.adminName ? params.adminName.trim() : (adminUser?.name || currentRecord.name);
     const updatedRole = params.role || adminUser?.role || currentRecord.role;
 
     // Update authorized registry
-    setAuthorizedAdmins(prev => {
-      const next = { ...prev };
-      // Delete old email record if email was changed
-      if (cleanNewEmail !== currentAdminEmail) {
-        delete next[currentAdminEmail];
-      }
-      next[cleanNewEmail] = {
-        name: updatedName,
-        role: updatedRole,
-        pass: updatedPass
-      };
-      return next;
-    });
+    const nextAdmins = { ...currentAdmins };
+    if (cleanNewEmail !== currentAdminEmail) {
+      delete nextAdmins[currentAdminEmail];
+    }
+    nextAdmins[cleanNewEmail] = {
+      name: updatedName,
+      role: updatedRole,
+      pass: updatedPass
+    };
+
+    // Synchronously write
+    localStorage.setItem('lunova_authorized_admins_v1', JSON.stringify(nextAdmins));
+    setAuthorizedAdmins(nextAdmins);
 
     // Update active admin user session
     const updatedAdminSession: AdminUser = {
@@ -1170,6 +1239,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         adminLogin,
         adminLogout,
         updateAdminProfile,
+        changeAdminCredentials,
+        changeAdminPassword,
         addProduct,
         updateProduct,
         deleteProduct,

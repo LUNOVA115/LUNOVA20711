@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
-import { User, Check, X, Shield, Mail, Crown, Sparkles, Instagram, ArrowRight, Key, Eye, EyeOff, Lock, ShieldCheck } from 'lucide-react';
+import { User, Check, X, Shield, Mail, Crown, Sparkles, Instagram, ArrowRight, Key, Eye, EyeOff, Lock, ShieldCheck, AlertCircle } from 'lucide-react';
 import { AdminUser } from '../../types';
 
 interface AdminProfileModalProps {
@@ -9,21 +9,33 @@ interface AdminProfileModalProps {
 }
 
 export const AdminProfileModal: React.FC<AdminProfileModalProps> = ({ isOpen, onClose }) => {
-  const { adminUser, changeAdminCredentials, instagramSettings, navigate, addToast } = useStore();
+  const { adminUser, changeAdminCredentials, changeAdminPassword, updateAdminProfile, addToast } = useStore();
 
   const [name, setName] = useState(adminUser?.name || 'Julian Thorne');
   const [email, setEmail] = useState(adminUser?.email || 'admin@lunova.luxury');
   const [role, setRole] = useState<AdminUser['role']>(adminUser?.role || 'Super Admin');
+  
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (adminUser) {
       setName(adminUser.name);
       setEmail(adminUser.email);
       setRole(adminUser.role);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setIsChangingPassword(false);
+      setErrorMsg('');
     }
   }, [adminUser, isOpen]);
 
@@ -31,39 +43,59 @@ export const AdminProfileModal: React.FC<AdminProfileModalProps> = ({ isOpen, on
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg('');
+    setLoading(true);
+
     if (!name.trim()) {
+      setErrorMsg('Please provide a valid admin display name.');
       addToast('Please provide a valid admin display name.', 'error');
+      setLoading(false);
       return;
     }
     if (!email.trim() || !email.includes('@')) {
+      setErrorMsg('Please provide a valid email format (e.g. admin@lunova.luxury).');
       addToast('Please provide a valid admin login email.', 'error');
+      setLoading(false);
       return;
     }
 
-    if (isChangingPassword && newPassword) {
-      if (newPassword.length < 4) {
-        addToast('New password must be at least 4 characters long.', 'error');
+    if (isChangingPassword) {
+      if (!currentPassword) {
+        setErrorMsg('Please enter your current administrator password.');
+        setLoading(false);
+        return;
+      }
+      if (!newPassword || newPassword.length < 4) {
+        setErrorMsg('New password must be at least 4 characters long.');
+        setLoading(false);
         return;
       }
       if (newPassword !== confirmPassword) {
-        addToast('Password confirmation does not match.', 'error');
+        setErrorMsg('New password and confirmation do not match.');
+        setLoading(false);
         return;
       }
     }
 
+    // Process credentials update
     const result = changeAdminCredentials({
       adminName: name.trim(),
       newEmail: email.trim(),
+      currentPassword: isChangingPassword && currentPassword ? currentPassword.trim() : undefined,
       newPassword: isChangingPassword && newPassword ? newPassword.trim() : undefined,
       role
     });
 
+    setLoading(false);
+
     if (result.success) {
+      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
       setIsChangingPassword(false);
       onClose();
     } else {
+      setErrorMsg(result.message);
       addToast(result.message, 'error');
     }
   };
@@ -96,6 +128,13 @@ export const AdminProfileModal: React.FC<AdminProfileModalProps> = ({ isOpen, on
           </button>
         </div>
 
+        {errorMsg && (
+          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
         {/* Edit Form */}
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           
@@ -114,7 +153,7 @@ export const AdminProfileModal: React.FC<AdminProfileModalProps> = ({ isOpen, on
           <div>
             <label className="block font-semibold uppercase tracking-wider text-zinc-300 mb-1.5 flex items-center justify-between">
               <span>Admin Profile Name *</span>
-              <span className="text-[10px] text-amber-400 font-mono">Displayed in Console</span>
+              <span className="text-[10px] text-amber-400 font-mono">Console Display</span>
             </label>
             <div className="relative">
               <User className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -176,8 +215,11 @@ export const AdminProfileModal: React.FC<AdminProfileModalProps> = ({ isOpen, on
               </div>
               <button
                 type="button"
-                onClick={() => setIsChangingPassword(!isChangingPassword)}
-                className={`text-[10px] px-2.5 py-1 rounded-lg font-mono transition-colors ${
+                onClick={() => {
+                  setIsChangingPassword(!isChangingPassword);
+                  setErrorMsg('');
+                }}
+                className={`text-[10px] px-2.5 py-1 rounded-lg font-mono transition-colors cursor-pointer ${
                   isChangingPassword 
                     ? 'bg-amber-400 text-zinc-950 font-bold' 
                     : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300'
@@ -189,41 +231,77 @@ export const AdminProfileModal: React.FC<AdminProfileModalProps> = ({ isOpen, on
 
             {isChangingPassword && (
               <div className="space-y-3 pt-2 border-t border-zinc-800/80 animate-in fade-in">
+                {/* Current Password */}
                 <div>
-                  <label className="block text-[10px] uppercase font-semibold text-zinc-400 mb-1">
-                    New Master Password
+                  <label className="block text-[10px] uppercase font-semibold text-zinc-400 mb-1 flex items-center justify-between">
+                    <span>Current Password *</span>
+                    <span className="text-[10px] text-zinc-500 font-mono">Default: lunova2026</span>
                   </label>
                   <div className="relative">
                     <input
-                      type={showPassword ? 'text' : 'password'}
+                      type={showCurrentPassword ? 'text' : 'password'}
                       required={isChangingPassword}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Enter new password (min 4 chars)"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="Enter current master password"
                       className="w-full pl-3 pr-9 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-amber-400"
                     />
                     <button
                       type="button"
-                      onClick={() => setShowPassword(!showPassword)}
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
                     >
-                      {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {showCurrentPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                 </div>
 
+                {/* New Password */}
                 <div>
                   <label className="block text-[10px] uppercase font-semibold text-zinc-400 mb-1">
-                    Confirm Password
+                    New Master Password (Min 4 chars) *
                   </label>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required={isChangingPassword}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Repeat new password"
-                    className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-amber-400"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      required={isChangingPassword}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new password"
+                      className="w-full pl-3 pr-9 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-amber-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
+                    >
+                      {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label className="block text-[10px] uppercase font-semibold text-zinc-400 mb-1">
+                    Confirm New Password *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      required={isChangingPassword}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Repeat new password"
+                      className="w-full pl-3 pr-9 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-amber-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -240,10 +318,11 @@ export const AdminProfileModal: React.FC<AdminProfileModalProps> = ({ isOpen, on
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold uppercase tracking-wider text-xs shadow-lg shadow-amber-400/20 flex items-center space-x-1.5 transition-all cursor-pointer"
+              disabled={loading}
+              className="px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold uppercase tracking-wider text-xs shadow-lg shadow-amber-400/20 flex items-center space-x-1.5 transition-all cursor-pointer disabled:opacity-50"
             >
               <Check className="w-4 h-4" />
-              <span>Save Admin Credentials</span>
+              <span>{loading ? 'Updating...' : 'Save Admin Credentials'}</span>
             </button>
           </div>
         </form>

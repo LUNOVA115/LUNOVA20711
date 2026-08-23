@@ -1,0 +1,8 @@
+{
+  "name": "LUNOVA - Futuristic Luxury Home Decor",
+  "description": "Futuristic luxury home decor e-commerce store featuring illuminated 3D Moon Lamps and Infinity Mirror Tables.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

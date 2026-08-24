@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useTheme } from '../../context/ThemeContext';
 import { AdminProfileModal } from './AdminProfileModal';
+import { AdminHamburgerDrawer } from './AdminHamburgerDrawer';
 import { 
   LayoutDashboard, 
   Package, 
@@ -53,6 +54,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   const { theme, toggleTheme, isDay } = useTheme();
   const { adminUser, adminLogout, navigate, orders, products, customers } = useStore();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isAdminDrawerOpen, setIsAdminDrawerOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -246,16 +248,27 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           MOBILE HEADER & SLIDE-OUT DRAWER
       ========================================================================= */}
       <div className="md:hidden bg-[#0e0f14] border-b border-zinc-800 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
-        <div 
-          onClick={() => navigate('/admin/dashboard')}
-          className="flex items-center space-x-2.5 cursor-pointer"
-        >
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-zinc-950 font-bold text-xs">
-            LV
-          </div>
-          <div>
-            <span className="text-sm font-semibold tracking-widest text-white uppercase">LUNOVA</span>
-            <span className="text-[9px] block font-mono text-amber-400">ADMIN</span>
+        <div className="flex items-center space-x-2.5">
+          <button
+            onClick={() => setIsAdminDrawerOpen(true)}
+            className="p-2 text-zinc-300 hover:text-amber-300 bg-zinc-900 border border-zinc-800 hover:border-amber-400/40 rounded-xl transition-all cursor-pointer flex items-center justify-center group shrink-0 shadow-sm"
+            aria-label="Open Navigation Drawer"
+            title="Open Navigation Menu"
+          >
+            <Menu className="w-5 h-5 text-zinc-300 group-hover:text-amber-300 transition-transform" />
+          </button>
+
+          <div 
+            onClick={() => navigate('/admin/dashboard')}
+            className="flex items-center space-x-2 cursor-pointer"
+          >
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-zinc-950 font-bold text-xs">
+              LV
+            </div>
+            <div>
+              <span className="text-sm font-semibold tracking-widest text-white uppercase">LUNOVA</span>
+              <span className="text-[9px] block font-mono text-amber-400">ADMIN</span>
+            </div>
           </div>
         </div>
 
@@ -392,16 +405,27 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
         {/* TOP DESKTOP & TABLET HEADER */}
         <header className="bg-[#0e0f14]/80 backdrop-blur-md border-b border-zinc-800/80 px-6 sm:px-8 py-4 sticky top-0 z-10 flex items-center justify-between">
           
-          {/* Breadcrumb & Title */}
-          <div>
-            <div className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider flex items-center space-x-1.5">
-              <span>Admin</span>
-              <span>/</span>
-              <span className="text-amber-400 font-semibold capitalize">{activeSection}</span>
+          {/* Breadcrumb, Title & Hamburger Icon */}
+          <div className="flex items-center space-x-3.5">
+            <button
+              onClick={() => setIsAdminDrawerOpen(true)}
+              className="p-2 sm:p-2.5 text-zinc-300 hover:text-amber-300 bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800/90 hover:border-amber-400/50 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center group shadow-sm shrink-0"
+              aria-label="Open Navigation Drawer"
+              title="Open Navigation Menu"
+            >
+              <Menu className="w-5 h-5 text-zinc-300 group-hover:text-amber-300 group-hover:scale-110 transition-transform" />
+            </button>
+
+            <div>
+              <div className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider flex items-center space-x-1.5">
+                <span>Admin</span>
+                <span>/</span>
+                <span className="text-amber-400 font-semibold capitalize">{activeSection}</span>
+              </div>
+              <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight mt-0.5">
+                {title}
+              </h1>
             </div>
-            <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight mt-0.5">
-              {title}
-            </h1>
           </div>
 
           {/* Header Action Items */}
@@ -757,6 +781,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       <AdminProfileModal
         isOpen={isProfileModalOpen}
         onClose={() => setIsProfileModalOpen(false)}
+      />
+
+      {/* Admin Side Hamburger Drawer Navigation */}
+      <AdminHamburgerDrawer
+        isOpen={isAdminDrawerOpen}
+        onClose={() => setIsAdminDrawerOpen(false)}
       />
     </div>
   );

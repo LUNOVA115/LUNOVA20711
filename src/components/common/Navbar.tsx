@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { useTheme } from '../../context/ThemeContext';
 import { CurrencySelector } from './CurrencySelector';
+import { HamburgerDrawer } from './HamburgerDrawer';
 import { 
   Search, 
   ShoppingBag, 
@@ -47,6 +48,7 @@ export const Navbar: React.FC = () => {
   } = useStore();
 
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
 
@@ -97,17 +99,17 @@ export const Navbar: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           
           {/* LEFT SIDE: Brand Logo / Wordmark + Horizontal Navigation */}
-          <div className="flex items-center space-x-4 sm:space-x-8">
-            {/* Mobile Menu Trigger (Left side on mobile) */}
-            <div className="flex items-center lg:hidden mr-1">
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 -ml-2 text-zinc-300 hover:text-amber-300 hover:bg-zinc-900/60 rounded-xl transition-colors cursor-pointer"
-                aria-label="Toggle menu"
-              >
-                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
-            </div>
+          <div className="flex items-center space-x-3 sm:space-x-6">
+            
+            {/* Hamburger Menu Icon (☰) - Positioned near LUNOVA logo on ALL screen sizes */}
+            <button
+              onClick={() => setIsDrawerOpen(true)}
+              className="p-2 sm:p-2.5 text-zinc-300 hover:text-amber-300 bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800/90 hover:border-amber-400/50 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center group shadow-sm shrink-0"
+              aria-label="Open Navigation Drawer"
+              title="Open Navigation Menu"
+            >
+              <Menu className="w-5 h-5 text-zinc-300 group-hover:text-amber-300 group-hover:scale-110 transition-transform" />
+            </button>
 
             {/* LUNOVA Monogram & Typography */}
             <div 
@@ -553,6 +555,12 @@ export const Navbar: React.FC = () => {
           </div>
         )}
       </header>
+
+      {/* Side Drawer Navigation Overlay (HOME, SHOP with dynamic categories, CONTACT ADMIN) */}
+      <HamburgerDrawer 
+        isOpen={isDrawerOpen} 
+        onClose={() => setIsDrawerOpen(false)} 
+      />
     </>
   );
 };

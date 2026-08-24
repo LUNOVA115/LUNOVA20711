@@ -74,7 +74,7 @@ export const HomePage: React.FC = () => {
 
           {/* Architectural Sub-copy */}
           <p className="text-base sm:text-lg text-zinc-300 max-w-2xl mx-auto font-light leading-relaxed">
-            Elevated design for modern living. Where timeless artistry blends with refined architectural simplicity.
+            Where refined design meets modern luxury, LUNOVA brings timeless pieces crafted to transform ordinary spaces into something truly exceptional.
           </p>
 
           {/* Action Buttons */}

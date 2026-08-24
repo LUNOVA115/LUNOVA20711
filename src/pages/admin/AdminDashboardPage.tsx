@@ -303,9 +303,11 @@ export const AdminDashboardPage: React.FC = () => {
             <div className="text-2xl sm:text-3xl font-bold text-white font-mono mt-2 tracking-tight">
               {formatPrice(totalRevenue > 0 ? totalRevenue : 5200)}
             </div>
-            <div className="text-[11px] text-emerald-400 flex items-center space-x-1 mt-2 font-mono">
+            <div className="text-[11px] text-emerald-400 flex items-center space-x-0.5 mt-2 font-mono">
               <ArrowUpRight className="w-3.5 h-3.5" />
-              <span>+18.4% vs last month</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              <span className="ml-0.5">+18.4% vs last month</span>
             </div>
           </div>
 
@@ -320,9 +322,11 @@ export const AdminDashboardPage: React.FC = () => {
             <div className="text-2xl sm:text-3xl font-bold text-white font-mono mt-2 tracking-tight">
               {orders.length + 120}
             </div>
-            <div className="text-[11px] text-emerald-400 flex items-center space-x-1 mt-2 font-mono">
+            <div className="text-[11px] text-emerald-400 flex items-center space-x-0.5 mt-2 font-mono">
               <ArrowUpRight className="w-3.5 h-3.5" />
-              <span>+12.8% vs last month</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              <span className="ml-0.5">+12.8% vs last month</span>
             </div>
           </div>
 
@@ -354,9 +358,11 @@ export const AdminDashboardPage: React.FC = () => {
             <div className="text-2xl sm:text-3xl font-bold text-white font-mono mt-2 tracking-tight">
               {customers.length + 322}
             </div>
-            <div className="text-[11px] text-emerald-400 flex items-center space-x-1 mt-2 font-mono">
+            <div className="text-[11px] text-emerald-400 flex items-center space-x-0.5 mt-2 font-mono">
               <ArrowUpRight className="w-3.5 h-3.5" />
-              <span>+9.4% this month</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              <span className="ml-0.5">+9.4% this month</span>
             </div>
           </div>
 

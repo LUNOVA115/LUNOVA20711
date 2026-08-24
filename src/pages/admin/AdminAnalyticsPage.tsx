@@ -59,9 +59,11 @@ export const AdminAnalyticsPage: React.FC = () => {
             <div className="text-xl sm:text-2xl font-bold text-white font-mono mt-2">
               Rs. {totalRevenue.toLocaleString()}
             </div>
-            <div className="text-[11px] text-emerald-400 flex items-center space-x-1 mt-1 font-mono">
+            <div className="text-[11px] text-emerald-400 flex items-center space-x-0.5 mt-1 font-mono">
               <ArrowUpRight className="w-3.5 h-3.5" />
-              <span>+18.4% vs last period</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              <span className="ml-0.5">+18.4% vs last period</span>
             </div>
           </div>
 
@@ -76,9 +78,11 @@ export const AdminAnalyticsPage: React.FC = () => {
             <div className="text-xl sm:text-2xl font-bold text-white font-mono mt-2">
               {orders.length + 118}
             </div>
-            <div className="text-[11px] text-emerald-400 flex items-center space-x-1 mt-1 font-mono">
+            <div className="text-[11px] text-emerald-400 flex items-center space-x-0.5 mt-1 font-mono">
               <ArrowUpRight className="w-3.5 h-3.5" />
-              <span>+12.8% volume</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              <span className="ml-0.5">+12.8% volume</span>
             </div>
           </div>
 
@@ -93,9 +97,11 @@ export const AdminAnalyticsPage: React.FC = () => {
             <div className="text-xl sm:text-2xl font-bold text-white font-mono mt-2">
               Rs. {avgOrderValue.toLocaleString()}
             </div>
-            <div className="text-[11px] text-emerald-400 flex items-center space-x-1 mt-1 font-mono">
+            <div className="text-[11px] text-emerald-400 flex items-center space-x-0.5 mt-1 font-mono">
               <ArrowUpRight className="w-3.5 h-3.5" />
-              <span>+5.2% basket size</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              <span className="ml-0.5">+5.2% basket size</span>
             </div>
           </div>
 
@@ -124,9 +130,11 @@ export const AdminAnalyticsPage: React.FC = () => {
             <div className="text-xl sm:text-2xl font-bold text-white font-mono mt-2">
               {customers.length + 320}
             </div>
-            <div className="text-[11px] text-emerald-400 flex items-center space-x-1 mt-1 font-mono">
+            <div className="text-[11px] text-emerald-400 flex items-center space-x-0.5 mt-1 font-mono">
               <ArrowUpRight className="w-3.5 h-3.5" />
-              <span>+9.4% new buyers</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              <span className="ml-0.5">+9.4% new buyers</span>
             </div>
           </div>
 

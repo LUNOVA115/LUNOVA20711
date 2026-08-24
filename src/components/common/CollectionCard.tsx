@@ -47,7 +47,9 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({ category }) => {
           <span className="text-[11px] font-mono tracking-widest text-amber-300 uppercase px-3 py-1 bg-zinc-900/80 border border-amber-400/30 rounded-full backdrop-blur-md">
             {category.itemCount} Masterpieces
           </span>
-          <div className="w-10 h-10 rounded-full bg-zinc-900/80 border border-white/10 group-hover:border-amber-400 group-hover:bg-amber-400 group-hover:text-zinc-950 text-white flex items-center justify-center transition-all duration-300">
+          <div className="px-2.5 h-10 rounded-full bg-zinc-900/80 border border-white/10 group-hover:border-amber-400 group-hover:bg-amber-400 group-hover:text-zinc-950 text-white flex items-center justify-center space-x-0.5 transition-all duration-300">
+            <ArrowUpRight className="w-5 h-5 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            <ArrowUpRight className="w-5 h-5 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             <ArrowUpRight className="w-5 h-5 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </div>
         </div>

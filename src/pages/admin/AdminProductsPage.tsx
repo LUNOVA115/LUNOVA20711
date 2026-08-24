@@ -1,7 +1,9 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { AdminLayout } from '../../components/admin/AdminLayout';
-import { Product } from '../../types';
+import { Product, PriceHistoryRecord } from '../../types';
+import { PriceHistoryChart } from '../../components/admin/PriceHistoryChart';
+import { PriceHistoryModal } from '../../components/admin/PriceHistoryModal';
 import { 
   PlusCircle, 
   Search, 
@@ -25,7 +27,9 @@ import {
   ArrowLeft,
   ArrowRight,
   Maximize2,
-  FolderOpen
+  FolderOpen,
+  TrendingUp,
+  TrendingDown
 } from 'lucide-react';
 import { 
   IMAGE_1_GOLD_TABLE, 
@@ -61,7 +65,8 @@ export const AdminProductsPage: React.FC = () => {
     formatPrice,
     currencyConfig,
     navigate,
-    addToast
+    addToast,
+    adminUser
   } = useStore();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -69,6 +74,9 @@ export const AdminProductsPage: React.FC = () => {
   const [selectedStockStatus, setSelectedStockStatus] = useState<'all' | 'in_stock' | 'low_stock' | 'out_of_stock'>('all');
   const [flashDealsOnly, setFlashDealsOnly] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'price_asc' | 'price_desc' | 'stock' | 'name'>('newest');
+
+  // Price History Modal state
+  const [priceHistoryProduct, setPriceHistoryProduct] = useState<Product | null>(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -212,7 +220,35 @@ export const AdminProductsPage: React.FC = () => {
   const handleSaveEdit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct) return;
-    updateProduct(editingProduct);
+
+    const originalProduct = products.find((p) => p.id === editingProduct.id);
+    let updatedProduct = { ...editingProduct };
+
+    if (originalProduct) {
+      const priceChanged = originalProduct.price !== editingProduct.price;
+      const originalPriceChanged = originalProduct.originalPrice !== editingProduct.originalPrice;
+      const salePriceChanged = originalProduct.salePrice !== editingProduct.salePrice;
+
+      if (priceChanged || originalPriceChanged || salePriceChanged) {
+        const todayDate = new Date().toISOString().split('T')[0];
+        const newRecord: PriceHistoryRecord = {
+          id: `ph-${editingProduct.id}-${Date.now().toString(36)}`,
+          price: editingProduct.price,
+          originalPrice: editingProduct.originalPrice,
+          salePrice: editingProduct.salePrice,
+          date: todayDate,
+          changedBy: adminUser?.name || 'Store Admin',
+          note: `Price updated: ${formatPrice(editingProduct.salePrice || editingProduct.price)}`
+        };
+
+        const existingHistory = editingProduct.priceHistory || originalProduct.priceHistory || [];
+        updatedProduct.priceHistory = [...existingHistory, newRecord].sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+      }
+    }
+
+    updateProduct(updatedProduct);
     addToast(`Product "${editingProduct.name}" updated successfully.`, 'success');
     setEditingProduct(null);
   };
@@ -224,6 +260,17 @@ export const AdminProductsPage: React.FC = () => {
       addToast('Please enter a product name.', 'error');
       return;
     }
+
+    const todayDate = new Date().toISOString().split('T')[0];
+    const initialPriceRecord: PriceHistoryRecord = {
+      id: `ph-new-${Date.now().toString(36)}`,
+      price: Number(formData.price),
+      originalPrice: formData.originalPrice ? Number(formData.originalPrice) : undefined,
+      salePrice: formData.isFlashDeal ? formData.salePrice : undefined,
+      date: todayDate,
+      changedBy: adminUser?.name || 'Store Admin',
+      note: 'Initial Catalog Product Release'
+    };
 
     const created = addProduct({
       name: formData.name.trim(),
@@ -255,7 +302,8 @@ export const AdminProductsPage: React.FC = () => {
       specifications: [
         { label: 'Craftsmanship', value: 'Hand-assembled in limited artisan batches' },
         { label: 'Warranty', value: '5-Year Structural & Optical Guarantee' }
-      ]
+      ],
+      priceHistory: [initialPriceRecord]
     });
 
     addToast(`Product "${created.name}" added to live catalog.`, 'success');
@@ -649,14 +697,27 @@ export const AdminProductsPage: React.FC = () => {
                           </span>
                         </td>
 
-                        {/* 4. Price */}
+                        {/* 4. Price & History */}
                         <td className="py-3.5 px-4 font-mono whitespace-nowrap">
-                          <div className="font-bold text-white text-sm">{formatPrice(p.salePrice || p.price)}</div>
-                          {p.originalPrice && p.originalPrice > (p.salePrice || p.price) && (
-                            <div className="text-[10px] text-zinc-500 line-through">
-                              {formatPrice(p.originalPrice)}
+                          <div className="flex items-center space-x-2">
+                            <div>
+                              <div className="font-bold text-white text-sm">{formatPrice(p.salePrice || p.price)}</div>
+                              {p.originalPrice && p.originalPrice > (p.salePrice || p.price) && (
+                                <div className="text-[10px] text-zinc-500 line-through">
+                                  {formatPrice(p.originalPrice)}
+                                </div>
+                              )}
                             </div>
-                          )}
+                            <button
+                              type="button"
+                              onClick={() => setPriceHistoryProduct(p)}
+                              className="px-2 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-mono font-bold flex items-center space-x-1 transition-all cursor-pointer group shadow-sm shrink-0"
+                              title="View Price History Line Graph"
+                            >
+                              <TrendingUp className="w-3 h-3 text-amber-400 group-hover:scale-110 transition-transform" />
+                              <span>History</span>
+                            </button>
+                          </div>
                         </td>
 
                         {/* 5. Flash Deal Quick Status & Toggle */}
@@ -1557,6 +1618,27 @@ export const AdminProductsPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Embedded Price History Line Graph Preview */}
+              <div className="p-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="font-bold text-white text-xs uppercase tracking-wider font-mono">
+                      Price Adjustment History Graph
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPriceHistoryProduct(editingProduct)}
+                    className="text-amber-400 hover:text-amber-300 text-[11px] font-mono hover:underline flex items-center space-x-1 cursor-pointer"
+                  >
+                    <span>Full Log & History Modal</span>
+                    <span>→</span>
+                  </button>
+                </div>
+                <PriceHistoryChart product={editingProduct} height={150} showStats={false} />
+              </div>
+
               {/* Status & Featured */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -1714,6 +1796,16 @@ export const AdminProductsPage: React.FC = () => {
 
           </div>
         </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: PRICE HISTORY CHART & ADJUSTMENT LOGS
+      ========================================================================= */}
+      {priceHistoryProduct && (
+        <PriceHistoryModal
+          product={products.find((p) => p.id === priceHistoryProduct.id) || priceHistoryProduct}
+          onClose={() => setPriceHistoryProduct(null)}
+        />
       )}
 
     </AdminLayout>

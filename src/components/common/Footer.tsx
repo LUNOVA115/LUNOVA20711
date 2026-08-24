@@ -8,7 +8,9 @@ import {
   ArrowRight,
   Instagram,
   Facebook,
-  Twitter
+  Twitter,
+  Smartphone,
+  Download
 } from 'lucide-react';
 
 export const Footer: React.FC = () => {
@@ -200,6 +202,21 @@ export const Footer: React.FC = () => {
                     <span className="w-1.5 h-1.5 rounded-full bg-zinc-600 group-hover:bg-amber-400 transition-colors" />
                     <span className="group-hover:translate-x-0.5 transition-transform">View All Collections</span>
                   </button>
+                </li>
+                <li className="pt-2">
+                  <a
+                    href="/downloads/LUNOVA-Luxury-App.apk"
+                    download="LUNOVA-Luxury-App.apk"
+                    onClick={() => {
+                      addToast('Downloading official LUNOVA Android App (v2.4)...', 'success');
+                    }}
+                    className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-zinc-950 text-xs font-sans font-extrabold uppercase tracking-wider shadow-md shadow-amber-500/20 hover:scale-105 transition-all duration-200 cursor-pointer border border-amber-300/80 active:scale-95"
+                    title="Download Official LUNOVA Mobile App (APK)"
+                  >
+                    <Smartphone className="w-3.5 h-3.5 text-zinc-950 shrink-0 stroke-[2.5]" />
+                    <span className="font-extrabold text-[11px] tracking-wider text-zinc-950">DOWNLOAD APP</span>
+                    <Download className="w-3.5 h-3.5 text-zinc-950 shrink-0 stroke-[2.5]" />
+                  </a>
                 </li>
               </ul>
             </div>

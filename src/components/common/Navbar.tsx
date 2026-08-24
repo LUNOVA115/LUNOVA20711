@@ -358,37 +358,19 @@ export const Navbar: React.FC = () => {
               )}
             </div>
 
-            {/* 5. TOP-RIGHT CONTROLS: DOWNLOAD APP (STACKED DIRECTLY ABOVE THEME TOGGLE) */}
-            <div className="flex flex-col items-end justify-center space-y-1">
-              {/* ELEGANT MINIMAL DOWNLOAD APP BUTTON */}
-              <a
-                href="/downloads/LUNOVA-Luxury-App.apk"
-                download="LUNOVA-Luxury-App.apk"
-                onClick={() => {
-                  addToast('Downloading official LUNOVA Android App (v2.4)...', 'success');
-                }}
-                className="group px-1.5 py-0.5 rounded-md border border-amber-400/40 bg-gradient-to-r from-amber-400/10 via-amber-300/15 to-amber-500/10 hover:from-amber-400/20 hover:to-amber-500/20 text-amber-300 hover:text-amber-200 font-mono font-medium tracking-tight flex items-center space-x-1 shadow-xs shadow-amber-400/10 transition-all cursor-pointer whitespace-nowrap"
-                title="Download LUNOVA Mobile App (Android APK)"
-              >
-                <Smartphone className="w-2.5 h-2.5 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
-                <span className="font-semibold uppercase tracking-wider text-[8px] sm:text-[9px]">Download App</span>
-                <Download className="w-2 h-2 text-amber-300 group-hover:translate-y-0.5 transition-transform shrink-0" />
-              </a>
-
-              {/* CRESCENT / HALF-MOON THEME TOGGLE (Preserved directly below) */}
-              <button
-                onClick={toggleTheme}
-                className="relative p-2 sm:p-2.5 rounded-xl border border-zinc-800/80 bg-zinc-900/80 hover:bg-zinc-800/90 hover:border-amber-400/40 text-zinc-300 hover:text-amber-200 transition-all flex items-center justify-center cursor-pointer shadow-sm group"
-                title={isDay ? "Switch to Night Mode (Soft Dark Gray)" : "Switch to Day Mode (Soft Beige)"}
-                aria-label="Toggle Theme Mode"
-              >
-                <Moon className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${
-                  isDay 
-                    ? 'text-amber-600 fill-amber-500/20 rotate-[-12deg]' 
-                    : 'text-zinc-300 group-hover:text-amber-300 fill-amber-400/10'
-                }`} />
-              </button>
-            </div>
+            {/* 5. CRESCENT / HALF-MOON THEME TOGGLE (Day Mode: Soft Beige / Night Mode: Soft Dark Gray) */}
+            <button
+              onClick={toggleTheme}
+              className="relative p-2 sm:p-2.5 rounded-xl border border-zinc-800/80 bg-zinc-900/80 hover:bg-zinc-800/90 hover:border-amber-400/40 text-zinc-300 hover:text-amber-200 transition-all flex items-center justify-center cursor-pointer shadow-sm group"
+              title={isDay ? "Switch to Night Mode (Soft Dark Gray)" : "Switch to Day Mode (Soft Beige)"}
+              aria-label="Toggle Theme Mode"
+            >
+              <Moon className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${
+                isDay 
+                  ? 'text-amber-600 fill-amber-500/20 rotate-[-12deg]' 
+                  : 'text-zinc-300 group-hover:text-amber-300 fill-amber-400/10'
+              }`} />
+            </button>
 
           </div>
         </div>

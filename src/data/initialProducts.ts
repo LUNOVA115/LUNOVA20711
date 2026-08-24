@@ -54,7 +54,13 @@ export const INITIAL_PRODUCTS: Product[] = [
       'Optical Glass Microfiber Care Kit',
       'Certificate of Authenticity'
     ],
-    createdAt: '2026-01-15T10:00:00Z'
+    createdAt: '2026-01-15T10:00:00Z',
+    priceHistory: [
+      { id: 'ph-001-1', date: '2026-01-15', price: 1450, note: 'Initial Launch List Price', changedBy: 'Julian Thorne' },
+      { id: 'ph-001-2', date: '2026-03-01', price: 1380, originalPrice: 1450, note: 'Spring Catalog Adjustment', changedBy: 'Elena Vance' },
+      { id: 'ph-001-3', date: '2026-05-10', price: 1320, originalPrice: 1450, note: 'Volume Manufacturing Discount', changedBy: 'Julian Thorne' },
+      { id: 'ph-001-4', date: '2026-07-01', price: 1280, originalPrice: 1450, salePrice: 1160, note: 'Flash Deal & Price Optimization', changedBy: 'Julian Thorne' }
+    ]
   },
   {
     id: 'prod-002',
@@ -96,7 +102,13 @@ export const INITIAL_PRODUCTS: Product[] = [
       'LUNOVA Cleaning Kit & Gloves',
       'Numbered Limited Edition Metal Card'
     ],
-    createdAt: '2026-02-01T12:00:00Z'
+    createdAt: '2026-02-01T12:00:00Z',
+    priceHistory: [
+      { id: 'ph-002-1', date: '2026-02-01', price: 1520, note: 'Initial Release List Price', changedBy: 'Elena Vance' },
+      { id: 'ph-002-2', date: '2026-04-12', price: 1440, originalPrice: 1520, note: 'Mid-Year Promotion', changedBy: 'Julian Thorne' },
+      { id: 'ph-002-3', date: '2026-06-25', price: 1380, originalPrice: 1520, note: 'Material Sourcing Cost Reduction', changedBy: 'Julian Thorne' },
+      { id: 'ph-002-4', date: '2026-08-01', price: 1350, originalPrice: 1520, note: 'Active Catalog Standard', changedBy: 'Store Master' }
+    ]
   },
   {
     id: 'prod-003',
@@ -141,7 +153,13 @@ export const INITIAL_PRODUCTS: Product[] = [
       'Touch Dial Controller with Magnetic Base',
       'Lunar Map Exploration Booklet'
     ],
-    createdAt: '2026-01-08T08:00:00Z'
+    createdAt: '2026-01-08T08:00:00Z',
+    priceHistory: [
+      { id: 'ph-003-1', date: '2026-01-08', price: 349, note: 'Initial Catalog Launch', changedBy: 'Julian Thorne' },
+      { id: 'ph-003-2', date: '2026-03-15', price: 329, originalPrice: 349, note: 'Early Spring Special', changedBy: 'Elena Vance' },
+      { id: 'ph-003-3', date: '2026-05-20', price: 305, originalPrice: 349, note: 'Bulk Production Efficiency', changedBy: 'Julian Thorne' },
+      { id: 'ph-003-4', date: '2026-07-15', price: 289, originalPrice: 349, salePrice: 244, note: 'Flash Deal Price Adjustment', changedBy: 'Julian Thorne' }
+    ]
   },
   {
     id: 'prod-004',
@@ -184,7 +202,13 @@ export const INITIAL_PRODUCTS: Product[] = [
       '12V Adapter with Multi-Region Plug Adapters',
       'User Manual & Calibration Guide'
     ],
-    createdAt: '2026-01-20T14:30:00Z'
+    createdAt: '2026-01-20T14:30:00Z',
+    priceHistory: [
+      { id: 'ph-004-1', date: '2026-01-20', price: 380, note: 'Pre-order Base Price', changedBy: 'Elena Vance' },
+      { id: 'ph-004-2', date: '2026-04-05', price: 350, originalPrice: 380, note: 'Quarterly Price Adjustment', changedBy: 'Julian Thorne' },
+      { id: 'ph-004-3', date: '2026-06-18', price: 335, originalPrice: 380, note: 'Seasonal Discount', changedBy: 'Julian Thorne' },
+      { id: 'ph-004-4', date: '2026-08-05', price: 320, originalPrice: 380, salePrice: 285, note: 'Flash Sale Launch', changedBy: 'Store Master' }
+    ]
   },
   {
     id: 'prod-005',
@@ -224,7 +248,12 @@ export const INITIAL_PRODUCTS: Product[] = [
       'Heavy Duty Heavy Wall Anchor System',
       'Installation Level & Template'
     ],
-    createdAt: '2026-01-25T11:15:00Z'
+    createdAt: '2026-01-25T11:15:00Z',
+    priceHistory: [
+      { id: 'ph-005-1', date: '2026-01-25', price: 399, note: 'Initial Launch', changedBy: 'Julian Thorne' },
+      { id: 'ph-005-2', date: '2026-04-10', price: 370, originalPrice: 399, note: 'Spring Collection Adjustment', changedBy: 'Elena Vance' },
+      { id: 'ph-005-3', date: '2026-07-02', price: 340, originalPrice: 399, note: 'Competitive Alignment', changedBy: 'Julian Thorne' }
+    ]
   },
   {
     id: 'prod-006',
@@ -262,7 +291,12 @@ export const INITIAL_PRODUCTS: Product[] = [
       'Drywall & Masonry Screws Kit',
       'Instruction Guide'
     ],
-    createdAt: '2026-02-04T09:00:00Z'
+    createdAt: '2026-02-04T09:00:00Z',
+    priceHistory: [
+      { id: 'ph-006-1', date: '2026-02-04', price: 340, note: 'Initial Launch', changedBy: 'Elena Vance' },
+      { id: 'ph-006-2', date: '2026-05-01', price: 315, originalPrice: 340, note: 'Mid-Season Promo', changedBy: 'Julian Thorne' },
+      { id: 'ph-006-3', date: '2026-07-20', price: 295, originalPrice: 340, note: 'Catalog Standard Revision', changedBy: 'Store Master' }
+    ]
   },
   {
     id: 'prod-007',
@@ -301,7 +335,12 @@ export const INITIAL_PRODUCTS: Product[] = [
       'Low-Profile Transparent Power Lead',
       'Remote Controller'
     ],
-    createdAt: '2026-02-08T16:20:00Z'
+    createdAt: '2026-02-08T16:20:00Z',
+    priceHistory: [
+      { id: 'ph-007-1', date: '2026-02-08', price: 320, note: 'Initial Launch', changedBy: 'Julian Thorne' },
+      { id: 'ph-007-2', date: '2026-05-15', price: 298, originalPrice: 320, note: 'Component Cost Reduction', changedBy: 'Elena Vance' },
+      { id: 'ph-007-3', date: '2026-08-10', price: 280, originalPrice: 320, note: 'Late Summer Adjustment', changedBy: 'Julian Thorne' }
+    ]
   },
   {
     id: 'prod-008',
@@ -342,6 +381,12 @@ export const INITIAL_PRODUCTS: Product[] = [
       'White Glove Cleaning & Surface Protection Kit',
       'Hand-Signed Certificate of Master Artisanship'
     ],
-    createdAt: '2026-01-05T09:00:00Z'
+    createdAt: '2026-01-05T09:00:00Z',
+    priceHistory: [
+      { id: 'ph-008-1', date: '2026-01-05', price: 1890, note: 'Masterpiece Unveiling', changedBy: 'Julian Thorne' },
+      { id: 'ph-008-2', date: '2026-03-20', price: 1780, originalPrice: 1890, note: 'Pre-season VIP Tier Discount', changedBy: 'Julian Thorne' },
+      { id: 'ph-008-3', date: '2026-06-10', price: 1720, originalPrice: 1890, note: 'Atelier Direct Pricing', changedBy: 'Elena Vance' },
+      { id: 'ph-008-4', date: '2026-08-12', price: 1650, originalPrice: 1890, note: 'Catalog Flagship Optimization', changedBy: 'Store Master' }
+    ]
   }
 ];

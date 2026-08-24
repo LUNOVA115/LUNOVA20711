@@ -13,6 +13,16 @@ export interface ProductSpecification {
   value: string;
 }
 
+export interface PriceHistoryRecord {
+  id: string;
+  price: number;
+  originalPrice?: number;
+  salePrice?: number;
+  date: string;
+  changedBy?: string;
+  note?: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -45,6 +55,7 @@ export interface Product {
   salePrice?: number;
   flashDealEndsAt?: string;
   createdAt: string;
+  priceHistory?: PriceHistoryRecord[];
 }
 
 export interface Category {

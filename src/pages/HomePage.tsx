@@ -5,7 +5,9 @@ import {
   ArrowRight, 
   Sparkles, 
   Moon, 
-  Layers
+  Layers,
+  Smartphone,
+  Download
 } from 'lucide-react';
 import { 
   IMAGE_1_GOLD_TABLE, 
@@ -13,7 +15,7 @@ import {
 } from '../data/productImages';
 
 export const HomePage: React.FC = () => {
-  const { navigate, products } = useStore();
+  const { navigate, products, addToast } = useStore();
 
   // Dynamically retrieve the flagship or first product of each category to display synchronized images
   const moonProduct = useMemo(() => {
@@ -194,6 +196,8 @@ export const HomePage: React.FC = () => {
           </div>
 
         </div>
+
+
       </section>
 
     </div>

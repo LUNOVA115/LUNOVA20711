@@ -43,3 +43,37 @@ export const PRODUCT_IMAGE_MAP: Record<string, string> = {
   'image-8': IMAGE_8_LIFESTYLE_TABLE,
 };
 
+/**
+ * Resolves any product image string (whether a dev path, prod hashed path, or base64 data URL)
+ * to its correct, current runtime representation.
+ */
+export const resolveProductImage = (imgSrc: string): string => {
+  if (!imgSrc) return '';
+  
+  // If it's a base64 string or external URL, return as-is
+  if (imgSrc.startsWith('data:') || imgSrc.startsWith('http://') || imgSrc.startsWith('https://')) {
+    return imgSrc;
+  }
+  
+  const lower = imgSrc.toLowerCase();
+  
+  // Map keywords or paths to the imported active build-resolved asset variables
+  if (lower.includes('gold_table_3d') || lower.includes('gold-table') || lower.includes('image-1') || lower.includes('image-8')) {
+    return IMAGE_1_GOLD_TABLE;
+  }
+  if (lower.includes('blue_table_3d') || lower.includes('blue-table') || lower.includes('image-2')) {
+    return IMAGE_2_BLUE_TABLE;
+  }
+  if (lower.includes('warm_moon_lamp_3d') || lower.includes('warm-moon') || lower.includes('image-3') || lower.includes('image-6')) {
+    return IMAGE_3_WARM_MOON;
+  }
+  if (lower.includes('crater_moon_lamp_3d') || lower.includes('crater-moon') || lower.includes('image-4') || lower.includes('image-5')) {
+    return IMAGE_4_CRATER_MOON;
+  }
+  if (lower.includes('cool_moon_lamp_3d') || lower.includes('cool-moon') || lower.includes('image-7')) {
+    return IMAGE_7_COOL_WHITE_MOON;
+  }
+  
+  return imgSrc;
+};
+

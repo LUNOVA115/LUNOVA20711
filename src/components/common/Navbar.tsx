@@ -190,7 +190,7 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center space-x-1.5 sm:space-x-2.5">
             
             {/* CURRENCY SELECTOR DROPDOWN */}
-            <CurrencySelector variant="navbar" />
+            {adminUser && <CurrencySelector variant="navbar" />}
             
             {/* 1. SEARCH TRIGGER */}
             <button

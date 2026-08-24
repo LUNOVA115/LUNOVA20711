@@ -6,7 +6,7 @@ import { INITIAL_CATEGORIES } from '../data/initialCategories';
 import { INITIAL_ORDERS } from '../data/initialOrders';
 import { INITIAL_CUSTOMERS } from '../data/initialCustomers';
 import { INITIAL_INSTAGRAM_SETTINGS } from '../data/initialInstagram';
-import { IMAGE_3_WARM_MOON, IMAGE_1_GOLD_TABLE, IMAGE_8_LIFESTYLE_TABLE } from '../data/productImages';
+import { IMAGE_3_WARM_MOON, IMAGE_1_GOLD_TABLE, IMAGE_8_LIFESTYLE_TABLE, resolveProductImage } from '../data/productImages';
 import { db, collection, doc, setDoc, getDocs, deleteDoc, writeBatch, onSnapshot } from '../utils/firebase';
 
 export interface Toast {
@@ -299,7 +299,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       } else {
         const fbProducts: Product[] = [];
         snapshot.forEach((docSnap) => {
-          fbProducts.push(docSnap.data() as Product);
+          const rawProduct = docSnap.data() as Product;
+          // Dynamically resolve product images on load so static paths match current environment (dev vs prod/Netlify)
+          const resolvedImages = (rawProduct.images || []).map((img) => resolveProductImage(img));
+          fbProducts.push({
+            ...rawProduct,
+            images: resolvedImages
+          });
         });
         
         // Sort products by createdAt descending (newest first)
@@ -1271,6 +1277,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const updateProduct = (updated: Product) => {
+    const resolvedProduct = {
+      ...updated,
+      images: (updated.images || []).map((img) => resolveProductImage(img))
+    };
+
     // Persist to Firestore Cloud Database
     setDoc(doc(db, 'products', updated.id), updated).catch((err) => {
       console.error('[Firestore] Error updating product:', err);
@@ -1279,7 +1290,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Also sync cart if item exists
     setCart((prev) =>
       prev.map((item) =>
-        item.product.id === updated.id ? { ...item, product: updated } : item
+        item.product.id === resolvedProduct.id ? { ...item, product: resolvedProduct } : item
       )
     );
     addToast(`Product "${updated.name}" updated`, 'success');

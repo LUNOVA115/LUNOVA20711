@@ -367,12 +367,12 @@ export const Navbar: React.FC = () => {
                 onClick={() => {
                   addToast('Downloading official LUNOVA Android App (v2.4)...', 'success');
                 }}
-                className="group px-2.5 py-1 rounded-lg border border-amber-400/40 bg-gradient-to-r from-amber-400/10 via-amber-300/15 to-amber-500/10 hover:from-amber-400/20 hover:to-amber-500/20 text-amber-300 hover:text-amber-200 text-[10px] font-mono font-medium tracking-wide flex items-center space-x-1.5 shadow-sm shadow-amber-400/10 transition-all cursor-pointer whitespace-nowrap"
+                className="group px-1.5 py-0.5 rounded-md border border-amber-400/40 bg-gradient-to-r from-amber-400/10 via-amber-300/15 to-amber-500/10 hover:from-amber-400/20 hover:to-amber-500/20 text-amber-300 hover:text-amber-200 font-mono font-medium tracking-tight flex items-center space-x-1 shadow-xs shadow-amber-400/10 transition-all cursor-pointer whitespace-nowrap"
                 title="Download LUNOVA Mobile App (Android APK)"
               >
-                <Smartphone className="w-3 h-3 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
-                <span className="font-semibold uppercase tracking-wider text-[9px] sm:text-[10px]">Download App</span>
-                <Download className="w-2.5 h-2.5 text-amber-300 group-hover:translate-y-0.5 transition-transform shrink-0" />
+                <Smartphone className="w-2.5 h-2.5 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
+                <span className="font-semibold uppercase tracking-wider text-[8px] sm:text-[9px]">Download App</span>
+                <Download className="w-2 h-2 text-amber-300 group-hover:translate-y-0.5 transition-transform shrink-0" />
               </a>
 
               {/* CRESCENT / HALF-MOON THEME TOGGLE (Preserved directly below) */}

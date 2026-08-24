@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { AdminLayout } from '../../components/admin/AdminLayout';
 import { AdminRevenueChart } from '../../components/admin/AdminRevenueChart';
@@ -41,6 +41,7 @@ export const AdminDashboardPage: React.FC = () => {
     instagramSettings,
     contactInfo,
     updateWhatsAppNumber,
+    updateContactInfo,
     adminUser,
     navigate, 
     updateOrderStatus,
@@ -51,18 +52,37 @@ export const AdminDashboardPage: React.FC = () => {
 
   const [dateFilter, setDateFilter] = useState<'today' | '7d' | '30d' | 'year'>('30d');
   const [isEditingWhatsApp, setIsEditingWhatsApp] = useState(false);
+  const [quickEmail, setQuickEmail] = useState(contactInfo?.email || 'support@lunova.luxury');
+  const [quickPhone, setQuickPhone] = useState(contactInfo?.phone || '+92 315 0360126');
   const [quickWhatsApp, setQuickWhatsApp] = useState(contactInfo?.whatsappNumber || '+92 315 0360126');
+  const [quickHours, setQuickHours] = useState(contactInfo?.hours || 'Mon – Sat, 9:00 AM – 6:00 PM PKT / EST');
+  const [quickAddress, setQuickAddress] = useState(contactInfo?.address || '750 Madison Avenue, New York, NY / Lahore Atelier');
+
+  useEffect(() => {
+    if (contactInfo) {
+      if (contactInfo.email) setQuickEmail(contactInfo.email);
+      if (contactInfo.phone) setQuickPhone(contactInfo.phone);
+      if (contactInfo.whatsappNumber) setQuickWhatsApp(contactInfo.whatsappNumber);
+      if (contactInfo.hours) setQuickHours(contactInfo.hours);
+      if (contactInfo.address) setQuickAddress(contactInfo.address);
+    }
+  }, [contactInfo]);
 
   const currentWhatsapp = contactInfo?.whatsappNumber || '+92 315 0360126';
   const cleanDigits = currentWhatsapp.replace(/[^0-9]/g, '') || '923150360126';
 
   const handleSaveQuickWhatsApp = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!quickWhatsApp.trim()) {
-      addToast('Please enter a valid phone number.', 'error');
-      return;
+    updateContactInfo({
+      email: quickEmail.trim(),
+      phone: quickPhone.trim(),
+      whatsappNumber: quickWhatsApp.trim(),
+      hours: quickHours.trim(),
+      address: quickAddress.trim()
+    });
+    if (quickWhatsApp.trim()) {
+      updateWhatsAppNumber(quickWhatsApp.trim());
     }
-    updateWhatsAppNumber(quickWhatsApp.trim());
     setIsEditingWhatsApp(false);
   };
 
@@ -224,18 +244,18 @@ export const AdminDashboardPage: React.FC = () => {
 
         </div>
 
-        {/* Quick Edit WhatsApp Number Modal */}
+        {/* Quick Edit Contact Details Modal */}
         {isEditingWhatsApp && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-            <div className="bg-zinc-950 border border-emerald-500/40 rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl space-y-5 ring-1 ring-emerald-500/20">
+            <div className="bg-zinc-950 border border-emerald-500/40 rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl space-y-5 ring-1 ring-emerald-500/20 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
                 <div className="flex items-center space-x-2.5">
                   <div className="w-8 h-8 rounded-xl bg-emerald-500 text-zinc-950 flex items-center justify-center font-bold">
                     <MessageCircle className="w-4 h-4 fill-zinc-950" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">Update WhatsApp Number</h3>
-                    <p className="text-[10px] text-zinc-400">Change receiving phone line anytime</p>
+                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">Update Store Contact Details</h3>
+                    <p className="text-[10px] text-zinc-400">Syncs live across Customer Portal & Admin</p>
                   </div>
                 </div>
                 <button
@@ -249,24 +269,78 @@ export const AdminDashboardPage: React.FC = () => {
 
               <form onSubmit={handleSaveQuickWhatsApp} className="space-y-4">
                 <div>
-                  <label className="block text-zinc-300 font-mono text-[11px] uppercase mb-1.5">
-                    WhatsApp Contact Number (with country code)
+                  <label className="block text-zinc-300 font-mono text-[11px] uppercase mb-1">
+                    Support / Concierge Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="e.g. support@lunova.luxury"
+                    value={quickEmail}
+                    onChange={(e) => setQuickEmail(e.target.value)}
+                    className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-emerald-400"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-zinc-300 font-mono text-[11px] uppercase mb-1">
+                      Support Phone Line
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. +92 315 0360126"
+                      value={quickPhone}
+                      onChange={(e) => setQuickPhone(e.target.value)}
+                      className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-emerald-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-zinc-300 font-mono text-[11px] uppercase mb-1">
+                      WhatsApp Number
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. +92 315 0360126"
+                      value={quickWhatsApp}
+                      onChange={(e) => setQuickWhatsApp(e.target.value)}
+                      className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-emerald-400"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-zinc-300 font-mono text-[11px] uppercase mb-1">
+                    Business Hours
                   </label>
                   <input
                     type="text"
                     required
-                    autoFocus
-                    placeholder="e.g. +92 315 0360126 or +1 (800) 840-5866"
-                    value={quickWhatsApp}
-                    onChange={(e) => setQuickWhatsApp(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-emerald-400"
+                    placeholder="e.g. Mon – Sat, 9:00 AM – 6:00 PM PKT / EST"
+                    value={quickHours}
+                    onChange={(e) => setQuickHours(e.target.value)}
+                    className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-xl text-white font-sans text-xs focus:outline-none focus:border-emerald-400"
                   />
-                  <p className="text-[10px] text-zinc-400 mt-1">
-                    Updates the store floating WhatsApp button, contact page, and footer links instantly.
-                  </p>
                 </div>
 
-                <div className="flex items-center justify-end space-x-2 pt-2">
+                <div>
+                  <label className="block text-zinc-300 font-mono text-[11px] uppercase mb-1">
+                    Studio / Atelier Location Address
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 750 Madison Avenue, New York, NY / Lahore Atelier"
+                    value={quickAddress}
+                    onChange={(e) => setQuickAddress(e.target.value)}
+                    className="w-full px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-xl text-white font-sans text-xs focus:outline-none focus:border-emerald-400"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end space-x-2 pt-2 border-t border-zinc-800">
                   <button
                     type="button"
                     onClick={() => setIsEditingWhatsApp(false)}
@@ -279,7 +353,7 @@ export const AdminDashboardPage: React.FC = () => {
                     className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs font-mono flex items-center space-x-1.5 shadow-lg shadow-emerald-500/20"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    <span>Save Number</span>
+                    <span>Save Details</span>
                   </button>
                 </div>
               </form>

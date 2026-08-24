@@ -313,10 +313,47 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setProducts(fbProducts);
       }
     }, (error) => {
-      console.error('[Firestore] Real-time listener error:', error);
+      console.warn('[Firestore] Real-time listener status:', error?.message || error);
     });
 
     return () => unsubscribe();
+  }, []);
+
+  // Firestore Contact Info Real-Time Synchronizer (Syncs Admin changes live to Customer Portal)
+  useEffect(() => {
+    const contactDocRef = doc(db, 'settings', 'contact_info');
+    const unsubscribe = onSnapshot(contactDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data() as StoreContactInfo;
+        if (data && (data.email || data.phone || data.hours || data.address)) {
+          setContactInfo((prev) => ({ ...prev, ...data }));
+          try {
+            localStorage.setItem('lunova_contact_info_v1', JSON.stringify(data));
+          } catch {}
+        }
+      }
+    }, (error) => {
+      console.warn('[Firestore] Contact info connection status:', error?.message || error);
+    });
+
+    const handleStorageUpdate = () => {
+      try {
+        const saved = localStorage.getItem('lunova_contact_info_v1');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setContactInfo((prev) => ({ ...prev, ...parsed }));
+        }
+      } catch {}
+    };
+
+    window.addEventListener('storage', handleStorageUpdate);
+    window.addEventListener('lunova_contact_info_updated', handleStorageUpdate as EventListener);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('storage', handleStorageUpdate);
+      window.removeEventListener('lunova_contact_info_updated', handleStorageUpdate as EventListener);
+    };
   }, []);
 
   // Categories (Moon Collection & Infinity Collection)
@@ -537,6 +574,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const updateContactInfo = (newInfo: Partial<StoreContactInfo>) => {
     setContactInfo((prev) => {
       const updated = { ...prev, ...newInfo };
+      try {
+        localStorage.setItem('lunova_contact_info_v1', JSON.stringify(updated));
+      } catch {}
+      setDoc(doc(db, 'settings', 'contact_info'), updated, { merge: true }).catch((err) => {
+        console.warn('[Firestore] Saved contact details locally:', err?.message || err);
+      });
+      window.dispatchEvent(new CustomEvent('lunova_contact_info_updated'));
       return updated;
     });
     addToast('Store contact details updated successfully', 'success');
@@ -548,11 +592,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addToast('Please enter a valid WhatsApp contact number.', 'error');
       return;
     }
-    setContactInfo((prev) => ({
-      ...prev,
+    updateContactInfo({
       whatsappNumber: trimmed,
-      phone: prev.phone || trimmed
-    }));
+      phone: contactInfo.phone || trimmed
+    });
     addToast(`Store WhatsApp contact number updated to "${trimmed}"`, 'success');
   };
 

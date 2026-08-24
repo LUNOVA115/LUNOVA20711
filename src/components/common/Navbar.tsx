@@ -21,7 +21,9 @@ import {
   ArrowRight,
   ExternalLink,
   Moon,
-  Lock
+  Lock,
+  Download,
+  Smartphone
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -40,7 +42,8 @@ export const Navbar: React.FC = () => {
     setIsCustomerAuthModalOpen,
     setIsCustomerOrdersModalOpen,
     contactInfo,
-    instagramSettings
+    instagramSettings,
+    addToast
   } = useStore();
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -355,19 +358,37 @@ export const Navbar: React.FC = () => {
               )}
             </div>
 
-            {/* 5. CRESCENT / HALF-MOON THEME TOGGLE (Day Mode: Soft Beige / Night Mode: Soft Dark Gray) */}
-            <button
-              onClick={toggleTheme}
-              className="relative p-2 sm:p-2.5 rounded-xl border border-zinc-800/80 bg-zinc-900/80 hover:bg-zinc-800/90 hover:border-amber-400/40 text-zinc-300 hover:text-amber-200 transition-all flex items-center justify-center cursor-pointer shadow-sm group"
-              title={isDay ? "Switch to Night Mode (Soft Dark Gray)" : "Switch to Day Mode (Soft Beige)"}
-              aria-label="Toggle Theme Mode"
-            >
-              <Moon className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${
-                isDay 
-                  ? 'text-amber-600 fill-amber-500/20 rotate-[-12deg]' 
-                  : 'text-zinc-300 group-hover:text-amber-300 fill-amber-400/10'
-              }`} />
-            </button>
+            {/* 5. TOP-RIGHT CONTROLS: DOWNLOAD APP (STACKED DIRECTLY ABOVE THEME TOGGLE) */}
+            <div className="flex flex-col items-end justify-center space-y-1">
+              {/* ELEGANT MINIMAL DOWNLOAD APP BUTTON */}
+              <a
+                href="/downloads/LUNOVA-Luxury-App.apk"
+                download="LUNOVA-Luxury-App.apk"
+                onClick={() => {
+                  addToast('Downloading official LUNOVA Android App (v2.4)...', 'success');
+                }}
+                className="group px-2.5 py-1 rounded-lg border border-amber-400/40 bg-gradient-to-r from-amber-400/10 via-amber-300/15 to-amber-500/10 hover:from-amber-400/20 hover:to-amber-500/20 text-amber-300 hover:text-amber-200 text-[10px] font-mono font-medium tracking-wide flex items-center space-x-1.5 shadow-sm shadow-amber-400/10 transition-all cursor-pointer whitespace-nowrap"
+                title="Download LUNOVA Mobile App (Android APK)"
+              >
+                <Smartphone className="w-3 h-3 text-amber-400 group-hover:scale-110 transition-transform shrink-0" />
+                <span className="font-semibold uppercase tracking-wider text-[9px] sm:text-[10px]">Download App</span>
+                <Download className="w-2.5 h-2.5 text-amber-300 group-hover:translate-y-0.5 transition-transform shrink-0" />
+              </a>
+
+              {/* CRESCENT / HALF-MOON THEME TOGGLE (Preserved directly below) */}
+              <button
+                onClick={toggleTheme}
+                className="relative p-2 sm:p-2.5 rounded-xl border border-zinc-800/80 bg-zinc-900/80 hover:bg-zinc-800/90 hover:border-amber-400/40 text-zinc-300 hover:text-amber-200 transition-all flex items-center justify-center cursor-pointer shadow-sm group"
+                title={isDay ? "Switch to Night Mode (Soft Dark Gray)" : "Switch to Day Mode (Soft Beige)"}
+                aria-label="Toggle Theme Mode"
+              >
+                <Moon className={`w-4 h-4 transition-all duration-300 group-hover:scale-110 ${
+                  isDay 
+                    ? 'text-amber-600 fill-amber-500/20 rotate-[-12deg]' 
+                    : 'text-zinc-300 group-hover:text-amber-300 fill-amber-400/10'
+                }`} />
+              </button>
+            </div>
 
           </div>
         </div>
@@ -433,6 +454,26 @@ export const Navbar: React.FC = () => {
                 <span>✦ Contact Us & Concierge</span>
                 <Mail className="w-3.5 h-3.5 text-zinc-500" />
               </button>
+
+              {/* 5. Download Official Mobile App */}
+              <a
+                href="/downloads/LUNOVA-Luxury-App.apk"
+                download="LUNOVA-Luxury-App.apk"
+                onClick={() => {
+                  addToast('Downloading official LUNOVA Android App (v2.4)...', 'success');
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full py-3 px-3.5 rounded-xl bg-gradient-to-r from-amber-400/15 via-amber-300/10 to-amber-500/15 border border-amber-400/35 text-amber-300 font-bold flex items-center justify-between cursor-pointer group"
+              >
+                <span className="flex items-center space-x-2">
+                  <Smartphone className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+                  <span>Download Official App</span>
+                </span>
+                <span className="text-[10px] bg-amber-400 text-zinc-950 px-2 py-0.5 rounded-full font-mono font-bold flex items-center space-x-1">
+                  <Download className="w-3 h-3" />
+                  <span>APK v2.4</span>
+                </span>
+              </a>
 
               {/* Mobile Quick Action Buttons */}
               <div className="grid grid-cols-3 gap-2 pt-2">

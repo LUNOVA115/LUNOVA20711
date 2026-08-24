@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { AdminLayout } from '../../components/admin/AdminLayout';
 import { AdminInstagramConnectCard } from '../../components/admin/AdminInstagramConnectCard';
@@ -113,6 +113,16 @@ export const AdminSettingsPage: React.FC = () => {
   const [instagramAccountTitle, setInstagramAccountTitle] = useState(instagramSettings?.accountName || 'LUNOVA Home Decors');
   const [contactHours, setContactHours] = useState(contactInfo?.hours || 'Mon – Sat, 9:00 AM – 6:00 PM PKT / EST');
   const [contactAddress, setContactAddress] = useState(contactInfo?.address || '750 Madison Avenue, New York, NY / Lahore Atelier');
+
+  useEffect(() => {
+    if (contactInfo) {
+      if (contactInfo.email) setContactEmail(contactInfo.email);
+      if (contactInfo.phone) setContactPhone(contactInfo.phone);
+      if (contactInfo.whatsappNumber) setContactWhatsapp(contactInfo.whatsappNumber);
+      if (contactInfo.hours) setContactHours(contactInfo.hours);
+      if (contactInfo.address) setContactAddress(contactInfo.address);
+    }
+  }, [contactInfo]);
 
   // Payment Gateways Settings Local State
   const [easypaisaEnabled, setEasypaisaEnabled] = useState(paymentSettings?.easypaisaEnabled ?? true);
@@ -230,6 +240,22 @@ export const AdminSettingsPage: React.FC = () => {
       return;
     }
     updateInstagramPage(instagramHandle.trim(), instagramAccountTitle.trim());
+  };
+
+  const handleSaveContactQuick = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    updateContactInfo({
+      email: contactEmail.trim(),
+      phone: contactPhone.trim(),
+      whatsappNumber: contactWhatsapp.trim(),
+      hours: contactHours.trim(),
+      address: contactAddress.trim(),
+      instagramHandle: `@${instagramHandle.replace(/^@+/, '').trim()}`,
+      instagramUrl: `https://instagram.com/${instagramHandle.replace(/^@+/, '').trim()}`
+    });
+    if (contactWhatsapp.trim()) {
+      updateWhatsAppNumber(contactWhatsapp.trim());
+    }
   };
 
   const handleSaveSettings = (e: React.FormEvent) => {
@@ -1375,12 +1401,22 @@ export const AdminSettingsPage: React.FC = () => {
 
           {/* Contact Details Settings */}
           <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+            <div className="flex flex-wrap items-center justify-between border-b border-zinc-800 pb-4 gap-2">
               <h3 className="text-base font-semibold uppercase tracking-wider text-white flex items-center space-x-2">
                 <Phone className="w-4 h-4 text-amber-400" />
-                <span>Store Contact Details (Phone & Email)</span>
+                <span>Store Contact Details (Phone, Email, Hours & Address)</span>
               </h3>
-              <span className="text-[11px] text-amber-300 font-mono">Synced to Live Site</span>
+              <div className="flex items-center space-x-3">
+                <span className="text-[11px] text-amber-300 font-mono hidden sm:inline">Synced Live</span>
+                <button
+                  type="button"
+                  onClick={() => handleSaveContactQuick()}
+                  className="px-3.5 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-zinc-950 font-mono font-bold text-xs flex items-center space-x-1.5 shadow-md shadow-amber-400/10 transition-all cursor-pointer"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Save Contact Details</span>
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

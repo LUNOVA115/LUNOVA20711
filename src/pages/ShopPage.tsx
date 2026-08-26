@@ -4,7 +4,6 @@ import { ProductGrid } from '../components/common/ProductGrid';
 import { 
   Filter, 
   RotateCcw, 
-  Search, 
   Star, 
   SlidersHorizontal, 
   Sparkles,
@@ -128,118 +127,67 @@ export const ShopPage: React.FC = () => {
       {/* Main Filter & Control Bar */}
       <div className="p-5 sm:p-6 rounded-3xl bg-zinc-950/80 border border-zinc-800/90 shadow-2xl backdrop-blur-xl space-y-6">
         
-        {/* Top Search & Sort Row */}
+        {/* Top Status & Sort Row with Maximum Price on Far Right */}
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
           
-          {/* Search Bar Input */}
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={filters.search}
-              onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
-              placeholder="Search by name, material, illumination mode..."
-              className="w-full pl-11 pr-4 py-3 bg-zinc-900 border border-zinc-800 rounded-2xl text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400 transition-colors"
-            />
+          {/* Results Count Display */}
+          <div className="flex items-center text-xs sm:text-sm text-zinc-200 font-semibold tracking-wide">
+            Showing {filteredProducts.length} results
           </div>
 
-          {/* Sort Dropdown */}
-          <div className="flex items-center space-x-3">
-            <div className="relative min-w-[190px]">
-              <select
-                value={filters.sortBy}
-                onChange={handleSortChange}
-                className="w-full appearance-none px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-2xl text-xs font-medium text-zinc-200 focus:outline-none focus:border-amber-400 pr-10 cursor-pointer"
-              >
-                <option value="bestseller">Sort by: Curated & Popular</option>
-                <option value="price-asc">Sort by: Price: Low to High</option>
-                <option value="price-desc">Sort by: Price: High to Low</option>
-                <option value="rating">Sort by: Highest Rated (5★)</option>
-                <option value="newest">Sort by: Newest Releases</option>
-              </select>
-              <ArrowUpDown className="w-3.5 h-3.5 text-zinc-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
+          {/* Right Group: Maximum Price Line & In Stock Only */}
+          <div className="flex flex-wrap items-center justify-end gap-4 sm:gap-6">
 
-            {/* Reset Filters Button */}
-            <button
-              onClick={resetFilters}
-              title="Reset all filters"
-              className="p-3 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:text-amber-300 rounded-2xl transition-colors text-zinc-400"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* Category Pills & Quick Filter Chips */}
-        <div className="flex items-center space-x-2 overflow-x-auto pb-1 text-xs">
-          <button
-            onClick={() => handleCategorySelect('all')}
-            className={`px-4 py-2 rounded-xl border transition-all shrink-0 font-medium ${
-              filters.category === 'all'
-                ? 'bg-amber-400 text-zinc-950 border-amber-400 font-bold shadow-lg shadow-amber-400/20'
-                : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
-            }`}
-          >
-            All Pieces ({products.filter((p) => p.status === 'active').length})
-          </button>
-
-          {categories.map((cat) => {
-            const count = products.filter(
-              (p) => p.category.toLowerCase() === cat.name.toLowerCase() && p.status === 'active'
-            ).length;
-            const isSelected = filters.category.toLowerCase() === cat.name.toLowerCase();
-
-            return (
-              <button
-                key={cat.id}
-                onClick={() => handleCategorySelect(cat.name)}
-                className={`px-4 py-2 rounded-xl border transition-all shrink-0 font-medium ${
-                  isSelected
-                    ? 'bg-amber-400 text-zinc-950 border-amber-400 font-bold shadow-lg shadow-amber-400/20'
-                    : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
-                }`}
-              >
-                {cat.name} ({count})
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Secondary Filter Controls (Price, Rating, In-Stock) */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-zinc-800/60 text-xs">
-          
-          {/* Price Range Slider */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-zinc-400">
-              <span className="font-semibold uppercase tracking-wider text-[10px]">Maximum Price:</span>
-              <span className="font-mono text-amber-300 font-bold">{formatPrice(filters.maxPrice)}</span>
-            </div>
-            <input
-              type="range"
-              min="200"
-              max="2500"
-              step="50"
-              value={filters.maxPrice}
-              onChange={(e) => setFilters((prev) => ({ ...prev, maxPrice: Number(e.target.value) }))}
-              className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-amber-400"
-            />
-          </div>
-
-          {/* Min Rating Filter */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-zinc-400">
-              <span className="font-semibold uppercase tracking-wider text-[10px]">Minimum Rating:</span>
-              <span className="font-mono text-amber-300 font-bold">
-                {filters.minRating === 0 ? 'Any Rating' : `${filters.minRating}★ & Above`}
+            {/* Maximum Price Line (Far Right, 1.5cm slider, price at far right) */}
+            <div className="flex items-center space-x-2 text-xs">
+              <span className="font-semibold uppercase tracking-wider text-[10px] text-zinc-400 whitespace-nowrap">
+                Max Price:
+              </span>
+              <input
+                type="range"
+                min="200"
+                max="2500"
+                step="50"
+                value={filters.maxPrice}
+                onChange={(e) => setFilters((prev) => ({ ...prev, maxPrice: Number(e.target.value) }))}
+                style={{ width: '1.5cm' }}
+                className="h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-amber-400 shrink-0"
+                title="Maximum Price"
+              />
+              <span className="font-mono text-amber-300 font-bold whitespace-nowrap">
+                {formatPrice(filters.maxPrice)}
               </span>
             </div>
+
+            {/* In Stock Only Checkbox */}
+            <label className="flex items-center space-x-1.5 cursor-pointer text-zinc-300 hover:text-white text-xs select-none">
+              <input
+                type="checkbox"
+                checked={filters.inStockOnly}
+                onChange={(e) => setFilters((prev) => ({ ...prev, inStockOnly: e.target.checked }))}
+                className="w-3 h-3 rounded border-zinc-700 bg-zinc-900 text-amber-400 focus:ring-0 focus:ring-offset-0 cursor-pointer accent-amber-400"
+              />
+              <span className="text-xs font-medium whitespace-nowrap">In Stock only</span>
+            </label>
+
+          </div>
+        </div>
+
+
+        {/* Secondary Filter Controls (Rating) */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-zinc-800/60 text-xs">
+          
+          {/* Min Rating Filter */}
+          <div className="flex items-center space-x-3">
+            <span className="font-semibold uppercase tracking-wider text-[10px] text-zinc-400 whitespace-nowrap">
+              Minimum Rating:
+            </span>
             <div className="flex items-center space-x-1.5">
               {[0, 4.5, 4.8, 4.9].map((rate) => (
                 <button
                   key={rate}
                   onClick={() => setFilters((prev) => ({ ...prev, minRating: rate }))}
-                  className={`flex-1 py-1.5 rounded-lg border text-center font-mono ${
+                  className={`px-3 py-1.5 rounded-lg border text-center font-mono ${
                     filters.minRating === rate
                       ? 'bg-zinc-800 border-amber-400 text-amber-300'
                       : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
@@ -249,19 +197,6 @@ export const ShopPage: React.FC = () => {
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* In-Stock Toggle */}
-          <div className="flex items-center justify-between sm:justify-end space-x-3 pt-4 sm:pt-0">
-            <label className="flex items-center space-x-2.5 cursor-pointer text-zinc-300 hover:text-white">
-              <input
-                type="checkbox"
-                checked={filters.inStockOnly}
-                onChange={(e) => setFilters((prev) => ({ ...prev, inStockOnly: e.target.checked }))}
-                className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-amber-400 focus:ring-0 focus:ring-offset-0 cursor-pointer"
-              />
-              <span className="text-xs font-medium">Vault Ready (In-Stock Only)</span>
-            </label>
           </div>
         </div>
       </div>

@@ -18,14 +18,19 @@ echo -e "${CYAN}${BOLD}     LUNOVA - GitHub Sync & Deployment Assistant   ${NC}"
 echo -e "${CYAN}${BOLD}====================================================${NC}"
 echo ""
 
-# 1. Ensure Git is initialized
-if [ ! -d ".git" ]; then
-    echo -e "${YELLOW}⚠️ Git repository not found. Initializing...${NC}"
+# 1. Ensure Git is properly initialized
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+    echo -e "${YELLOW}⚠️ Git repository not initialized or invalid. Initializing...${NC}"
+    rm -rf .git
     git init
     git branch -m main
     echo -e "${GREEN}✓ Git repository initialized with default branch 'main'.${NC}"
 else
-    echo -e "${GREEN}✓ Local Git repository is initialized.${NC}"
+    CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "")
+    if [ -z "$CURRENT_BRANCH" ]; then
+        git branch -m main
+    fi
+    echo -e "${GREEN}✓ Local Git repository is initialized on branch '$(git branch --show-current)'.${NC}"
 fi
 
 # 2. Check and configure Git Identity (Local)
@@ -36,12 +41,14 @@ if [ -z "$CURRENT_USER" ] || [ -z "$CURRENT_EMAIL" ]; then
     echo -e "\n${YELLOW}👤 Configuring your Git Identity (Local to this project):${NC}"
     
     if [ -z "$CURRENT_USER" ]; then
-        read -r -p "Enter your GitHub Username: " GIT_USER
+        read -r -p "Enter your GitHub Username [Default: LUNOVA Developer]: " GIT_USER
+        if [ -z "$GIT_USER" ]; then GIT_USER="LUNOVA Developer"; fi
         git config user.name "$GIT_USER"
     fi
     
     if [ -z "$CURRENT_EMAIL" ]; then
-        read -r -p "Enter your GitHub Email: " GIT_EMAIL
+        read -r -p "Enter your GitHub Email [Default: dev@lunova.app]: " GIT_EMAIL
+        if [ -z "$GIT_EMAIL" ]; then GIT_EMAIL="dev@lunova.app"; fi
         git config user.email "$GIT_EMAIL"
     fi
     echo -e "${GREEN}✓ Git Identity updated (Username: $(git config user.name), Email: $(git config user.email)).${NC}"
@@ -134,20 +141,41 @@ echo -e "\n${BLUE}🚀 Pushing changes to branch '$TARGET_BRANCH' on origin...${
 
 # Run git push, masking credentials if any error output happens
 if git push -u "$AUTH_REMOTE_URL" "$TARGET_BRANCH" 2>/tmp/git_push_err; then
-    echo -e "\n${GREEN}${BOLD}🎉 SUCCESS! Your latest changes have been pushed to GitHub!${NC}"
-    # Save the authenticated remote temporarily so subsequent fast pushes work in this session,
-    # or keep the origin clean so tokens are not stored plain-text in .git/config
+    PUSH_SUCCESS=true
+else
+    PUSH_SUCCESS=false
+fi
+
+if [ "$PUSH_SUCCESS" = false ]; then
+    ERR_MSG=$(cat /tmp/git_push_err)
+    if echo "$ERR_MSG" | grep -qE "rejected|non-fast-forward|behind"; then
+        echo -e "\n${YELLOW}⚠️ Standard push rejected because remote branch has different commits.${NC}"
+        echo -e "Would you like to force update branch '$TARGET_BRANCH' with your latest Google AI Studio code? (Y/n):"
+        read -r FORCE_PUSH_ANS
+        if [[ ! "$FORCE_PUSH_ANS" =~ ^[Nn]$ ]]; then
+            echo -e "${BLUE}🚀 Force-pushing latest AI Studio code to GitHub...${NC}"
+            if git push -u "$AUTH_REMOTE_URL" "$TARGET_BRANCH" --force 2>/tmp/git_push_err; then
+                PUSH_SUCCESS=true
+            fi
+        fi
+    fi
+fi
+
+if [ "$PUSH_SUCCESS" = true ]; then
+    echo -e "\n${GREEN}${BOLD}🎉 SUCCESS! Your latest Google AI Studio changes have been pushed to GitHub!${NC}"
+    echo -e "${GREEN}⚡ Netlify will automatically detect this commit and publish the updated site in ~1-2 minutes.${NC}"
+    
+    # Save the authenticated remote temporarily so subsequent fast pushes work in this session
     read -r -p "Save these credentials locally for this session? (y/N): " SAVE_CREDS
     if [[ "$SAVE_CREDS" =~ ^[Yy]$ ]]; then
         git remote set-url origin "$AUTH_REMOTE_URL"
-        echo -e "${YELLOW}⚠️ Saved to local .git/config. Keep your workspace private!${NC}"
+        echo -e "${YELLOW}⚠️ Saved to local .git/config.${NC}"
     else
-        # Keep clean URL
         git remote set-url origin "https://${REMOTE_CLEAN}"
     fi
+    rm -f /tmp/git_push_err
 else
     echo -e "\n${RED}❌ Push failed! Here is the error output from Git:${NC}"
-    # Mask any potential leak of token in error logs
     sed "s/${AUTH_TOKEN}/[REDACTED_TOKEN]/g" /tmp/git_push_err
     rm -f /tmp/git_push_err
     exit 1

@@ -68,16 +68,12 @@ export const HomePage: React.FC = () => {
 
           {/* Refined Headline */}
           <h1 className="text-xl sm:text-3xl font-serif tracking-[0.08em] text-zinc-100 font-light max-w-xl mx-auto drop-shadow-lg">
-            {homeSettings?.heroTitle ? (
-              homeSettings.heroTitle
-            ) : (
-              <>Illuminate Your <span className="text-gold-gradient font-medium">Imagination.</span></>
-            )}
+            Illuminate Your <span className="text-gold-gradient font-medium">Imagination.</span>
           </h1>
 
           {/* Architectural Sub-copy */}
           <p className="text-base sm:text-lg text-zinc-200 max-w-2xl mx-auto font-light leading-relaxed drop-shadow">
-            {homeSettings?.heroSubtitle || "Where refined design meets modern luxury, LUNOVA brings timeless pieces crafted to transform ordinary spaces into something truly exceptional."}
+            Where refined design meets modern luxury, LUNOVA brings timeless pieces crafted to transform ordinary spaces into something truly exceptional.
           </p>
 
           {/* Action Buttons */}

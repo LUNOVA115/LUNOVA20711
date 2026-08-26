@@ -774,10 +774,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const saved = localStorage.getItem('lunova_home_settings_v1');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.heroTitle === 'Curated Cosmic Interiors') {
+        if (!parsed.heroTitle || parsed.heroTitle === 'Curated Cosmic Interiors' || parsed.heroTitle.includes('Moon Lamp')) {
           parsed.heroTitle = 'Illuminate Your Imagination.';
         }
-        if (parsed.heroSubtitle && parsed.heroSubtitle.includes('Explore celestial shapes')) {
+        if (!parsed.heroSubtitle || parsed.heroSubtitle.includes('Explore celestial shapes') || parsed.heroSubtitle.includes('NASA Altimetry')) {
           parsed.heroSubtitle = 'Where refined design meets modern luxury, LUNOVA brings timeless pieces crafted to transform ordinary spaces into something truly exceptional.';
         }
         return parsed;

@@ -7,6 +7,7 @@ import blueTable3D from '../assets/images/blue_table_3d_1787243999313.jpg';
 import warmMoon3D from '../assets/images/warm_moon_lamp_3d_1787244011352.jpg';
 import craterMoon3D from '../assets/images/crater_moon_lamp_3d_1787244024356.jpg';
 import coolMoon3D from '../assets/images/cool_moon_lamp_3d_1787244036106.jpg';
+import heroBg3D from '../assets/images/lunova_logo_hero_bg_1787707939122.jpg';
 
 // Image 1: 3D Infinity Mirror Coffee Table – Golden
 export const IMAGE_1_GOLD_TABLE = goldTable3D;
@@ -32,6 +33,9 @@ export const IMAGE_7_COOL_WHITE_MOON = coolMoon3D;
 // Image 8: 3D Infinity Mirror Table Lifestyle
 export const IMAGE_8_LIFESTYLE_TABLE = goldTable3D;
 
+// Official LUNOVA Hero Background Image
+export const IMAGE_HERO_BG = heroBg3D;
+
 export const PRODUCT_IMAGE_MAP: Record<string, string> = {
   'image-1': IMAGE_1_GOLD_TABLE,
   'image-2': IMAGE_2_BLUE_TABLE,
@@ -41,6 +45,7 @@ export const PRODUCT_IMAGE_MAP: Record<string, string> = {
   'image-6': IMAGE_6_DETAILED_LUNAR,
   'image-7': IMAGE_7_COOL_WHITE_MOON,
   'image-8': IMAGE_8_LIFESTYLE_TABLE,
+  'hero-bg': IMAGE_HERO_BG,
 };
 
 /**
@@ -56,6 +61,10 @@ export const resolveProductImage = (imgSrc: string): string => {
   }
   
   const lower = imgSrc.toLowerCase();
+
+  if (lower.includes('hero_bg') || lower.includes('lunova_hero') || lower.includes('hero-bg')) {
+    return IMAGE_HERO_BG;
+  }
   
   // Map keywords or paths to the imported active build-resolved asset variables
   if (lower.includes('gold_table_3d') || lower.includes('gold-table') || lower.includes('image-1') || lower.includes('image-8')) {

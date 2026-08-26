@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { 
-  Mail, 
+  Mail,
   Phone, 
   Clock, 
   Send, 
@@ -17,7 +17,8 @@ export const ContactPage: React.FC = () => {
   const { 
     addToast, 
     contactInfo, 
-    instagramSettings
+    instagramSettings,
+    adminUser
   } = useStore();
   
   const [formData, setFormData] = useState({
@@ -89,23 +90,30 @@ export const ContactPage: React.FC = () => {
             {/* Directory Details List */}
             <div className="space-y-5 text-sm pt-2 border-t border-zinc-800/80">
               
-              {/* Email */}
-              <div className="flex items-start space-x-3.5 group/item">
-                <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-amber-400 shrink-0 mt-0.5">
-                  <Mail className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider">
-                    Email Address
+              {/* Email Address - VISIBLE ONLY ON ADMIN SIDE */}
+              {adminUser && (
+                <div className="flex items-start space-x-3.5 group/item">
+                  <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 shrink-0 mt-0.5">
+                    <Mail className="w-4 h-4" />
                   </div>
-                  <a 
-                    href={`mailto:${email}`} 
-                    className="text-zinc-200 hover:text-amber-300 transition-colors text-xs font-mono break-all font-medium mt-0.5 block"
-                  >
-                    {email}
-                  </a>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider">
+                        Email Address
+                      </span>
+                      <span className="px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[9px] font-mono font-bold">
+                        ADMIN ONLY
+                      </span>
+                    </div>
+                    <a 
+                      href={`mailto:${email}`} 
+                      className="text-amber-300 hover:text-amber-200 transition-colors text-xs font-mono break-all font-medium mt-0.5 block"
+                    >
+                      {email}
+                    </a>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Phone */}
               <div className="flex items-start space-x-3.5 group/item">

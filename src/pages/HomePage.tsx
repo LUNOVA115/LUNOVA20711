@@ -41,36 +41,33 @@ export const HomePage: React.FC = () => {
       {/* =========================================================================
           HERO SECTION: CINEMATIC ATMOSPHERIC ARCHITECTURE
       ========================================================================= */}
-      <section className="relative min-h-[90vh] flex items-center justify-center pt-8 sm:pt-14 pb-16 px-4 sm:px-6 lg:px-8">
+      <section className="relative min-h-[85vh] flex items-center justify-center pt-12 sm:pt-20 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         
         {/* Dynamic Interactive Radial Lighting Glow */}
         <div 
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] sm:w-[900px] h-[600px] sm:h-[900px] rounded-full blur-3xl pointer-events-none transition-all duration-700 -z-10 animate-pulse-glow"
           style={{
             background: `radial-gradient(circle, ${haloColor} 0%, rgba(8, 9, 13, 0) 70%)`,
-            opacity: 0.9
+            opacity: 0.85
           }}
         />
 
         <div className="max-w-4xl mx-auto w-full text-center space-y-8 relative z-10">
           
-          {/* Centered Luxury LUNOVA Logo Typography */}
-          <div className="flex flex-col items-center justify-center space-y-2 pt-2 pb-1">
-            {/* LUNOVA Typography */}
-            <div className="flex flex-col items-center space-y-1">
-              <span className="text-3xl sm:text-5xl font-serif tracking-[0.3em] text-white uppercase leading-none font-bold">
-                LU<span className="text-gold-gradient">NOVA</span>
-              </span>
-              <div className="flex items-center space-x-3 text-[9px] sm:text-[10px] tracking-[0.3em] font-mono text-zinc-400 uppercase pt-1">
-                <span className="text-amber-400 font-semibold">HANDMADE HOME DECOR</span>
-                <span className="w-1 h-1 rounded-full bg-zinc-600" />
-                <span>EST. 2024</span>
-              </div>
+          {/* Centered Luxury LUNOVA Header */}
+          <div className="flex flex-col items-center justify-center space-y-2">
+            <span className="text-3xl sm:text-5xl font-serif tracking-[0.3em] text-white uppercase font-bold drop-shadow-md">
+              LU<span className="text-gold-gradient">NOVA</span>
+            </span>
+            <div className="flex items-center space-x-3 text-[9px] sm:text-[11px] tracking-[0.3em] font-mono text-zinc-300 uppercase">
+              <span className="text-amber-400 font-semibold drop-shadow">HANDMADE HOME DECOR</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80" />
+              <span className="text-zinc-200">EST. 2024</span>
             </div>
           </div>
 
-          {/* Refined Small Headline */}
-          <h1 className="text-lg sm:text-2xl font-serif tracking-[0.08em] text-zinc-200 font-light max-w-xl mx-auto">
+          {/* Refined Headline */}
+          <h1 className="text-xl sm:text-3xl font-serif tracking-[0.08em] text-zinc-100 font-light max-w-xl mx-auto drop-shadow-lg">
             {homeSettings?.heroTitle ? (
               homeSettings.heroTitle
             ) : (
@@ -79,16 +76,16 @@ export const HomePage: React.FC = () => {
           </h1>
 
           {/* Architectural Sub-copy */}
-          <p className="text-base sm:text-lg text-zinc-300 max-w-2xl mx-auto font-light leading-relaxed">
+          <p className="text-base sm:text-lg text-zinc-200 max-w-2xl mx-auto font-light leading-relaxed drop-shadow">
             {homeSettings?.heroSubtitle || "Where refined design meets modern luxury, LUNOVA brings timeless pieces crafted to transform ordinary spaces into something truly exceptional."}
           </p>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-3">
             {/* Shop All Collections Button */}
             <button
               onClick={() => navigate('/collections')}
-              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:from-amber-300 hover:to-amber-200 text-zinc-950 text-xs font-mono font-bold tracking-[0.2em] uppercase transition-all duration-300 shadow-xl shadow-amber-400/25 hover:shadow-amber-400/40 hover:scale-105 flex items-center justify-center space-x-2 group cursor-pointer"
+              className="w-full sm:w-auto px-9 py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:from-amber-300 hover:to-amber-200 text-zinc-950 text-xs font-mono font-bold tracking-[0.2em] uppercase transition-all duration-300 shadow-xl shadow-amber-400/35 hover:shadow-amber-400/50 hover:scale-105 flex items-center justify-center space-x-2 group cursor-pointer"
               title="Shop All Collections"
             >
               <span>Shop All Collections</span>
@@ -103,114 +100,120 @@ export const HomePage: React.FC = () => {
           CURATED COLLECTIONS EDITORIAL
       ========================================================================= */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Two-Column Header */}
-        <div className="flex flex-row items-center justify-between mb-8 pb-4 border-b border-zinc-800/60">
-          <h2 className="text-xl sm:text-3xl font-serif text-white tracking-tight font-normal">
-            Refined Artisanal Creations
-          </h2>
-          <button
-            onClick={() => {
-              if (resetFilters) {
-                resetFilters();
-              } else {
-                setFilters((prev) => ({ ...prev, category: 'all', search: '', inStockOnly: false, minRating: 0 }));
-              }
-              navigate('/shop');
-            }}
-            className="text-xs sm:text-sm font-mono tracking-widest uppercase text-amber-300 hover:text-amber-200 flex items-center space-x-1.5 group cursor-pointer transition-colors shrink-0"
-          >
-            <span>Explore All Collections</span>
-            <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-zinc-950/95 border border-zinc-800/90 rounded-3xl p-6 sm:p-10 shadow-2xl backdrop-blur-md relative overflow-hidden">
           
-          {/* Collection 1: Moon Lamp Series */}
-          <div 
-            onClick={() => navigate('/collections/moon')}
-            className="group relative rounded-3xl overflow-hidden bg-[#0A0B10] border border-zinc-800/80 hover:border-amber-400/50 p-8 sm:p-12 cursor-pointer transition-all duration-500 shadow-2xl flex flex-col justify-between min-h-[460px]"
-          >
-            <div className="absolute inset-0 bg-radial from-amber-500/10 via-transparent to-transparent opacity-40 group-hover:opacity-100 transition-opacity duration-500" />
-            
-            <div className="relative z-10 flex items-start justify-between">
-              <div>
-                <span className="px-3 py-1 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-300 text-[10px] font-mono uppercase font-bold tracking-widest">
-                  Series I • Cartography
-                </span>
-                <h3 className="text-2xl sm:text-3xl font-serif text-white mt-3 group-hover:text-amber-300 transition-colors">
-                  The Moon Collection
-                </h3>
-              </div>
-              <div className="p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-amber-400 group-hover:bg-amber-400 group-hover:text-zinc-950 transition-colors">
-                <Moon className="w-5 h-5" />
-              </div>
-            </div>
+          {/* Subtle Ambient Background Light */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
 
-            {/* Visual Centerpiece */}
-            <div className="relative z-10 w-48 h-48 sm:w-60 sm:h-60 mx-auto my-6 transform group-hover:scale-110 transition-transform duration-700 ease-out">
-              <img
-                src={moonImage}
-                alt="Moon Lamp Collection"
-                className="w-full h-full object-contain filter drop-shadow-[0_15px_35px_rgba(245,158,11,0.25)]"
-              />
-            </div>
-
-            <div className="relative z-10 flex items-center justify-between pt-4 border-t border-zinc-800/80">
-              <span className="text-xs font-mono text-zinc-400">
-                Precision NASA Altimetry • 3D Basalt Polymer
-              </span>
-              <span className="text-xs font-mono uppercase tracking-widest text-amber-300 flex items-center space-x-1 group-hover:translate-x-1 transition-transform">
-                <span>View Archive</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </span>
-            </div>
+          {/* Two-Column Header */}
+          <div className="flex flex-row items-center justify-between mb-8 pb-4 border-b border-zinc-800/60 relative z-10">
+            <h2 className="text-xl sm:text-3xl font-serif text-white tracking-tight font-normal">
+              Refined Artisanal Creations
+            </h2>
+            <button
+              onClick={() => {
+                if (resetFilters) {
+                  resetFilters();
+                } else {
+                  setFilters((prev) => ({ ...prev, category: 'all', search: '', inStockOnly: false, minRating: 0 }));
+                }
+                navigate('/shop');
+              }}
+              className="text-xs sm:text-sm font-mono tracking-widest uppercase text-amber-300 hover:text-amber-200 flex items-center space-x-1.5 group cursor-pointer transition-colors shrink-0"
+            >
+              <span>Explore All Collections</span>
+              <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
 
-          {/* Collection 2: Infinity Mirror Table Series */}
-          <div 
-            onClick={() => navigate('/collections/infinity')}
-            className="group relative rounded-3xl overflow-hidden bg-[#0A0B10] border border-zinc-800/80 hover:border-sky-400/50 p-8 sm:p-12 cursor-pointer transition-all duration-500 shadow-2xl flex flex-col justify-between min-h-[460px]"
-          >
-            <div className="absolute inset-0 bg-radial from-sky-500/10 via-transparent to-transparent opacity-40 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 relative z-10">
             
-            <div className="relative z-10 flex items-start justify-between">
-              <div>
-                <span className="px-3 py-1 rounded-full bg-sky-400/15 border border-sky-400/30 text-sky-300 text-[10px] font-mono uppercase font-bold tracking-widest">
-                  Series II • Hyper-Depth
+            {/* Collection 1: Moon Lamp Series */}
+            <div 
+              onClick={() => navigate('/collections/moon')}
+              className="group relative rounded-3xl overflow-hidden bg-[#0A0B10] border border-zinc-800/80 hover:border-amber-400/50 p-8 sm:p-12 cursor-pointer transition-all duration-500 shadow-2xl flex flex-col justify-between min-h-[460px]"
+            >
+              <div className="absolute inset-0 bg-radial from-amber-500/10 via-transparent to-transparent opacity-40 group-hover:opacity-100 transition-opacity duration-500" />
+              
+              <div className="relative z-10 flex items-start justify-between">
+                <div>
+                  <span className="px-3 py-1 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-300 text-[10px] font-mono uppercase font-bold tracking-widest">
+                    Series I • Cartography
+                  </span>
+                  <h3 className="text-2xl sm:text-3xl font-serif text-white mt-3 group-hover:text-amber-300 transition-colors">
+                    The Moon Collection
+                  </h3>
+                </div>
+                <div className="p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-amber-400 group-hover:bg-amber-400 group-hover:text-zinc-950 transition-colors">
+                  <Moon className="w-5 h-5" />
+                </div>
+              </div>
+
+              {/* Visual Centerpiece */}
+              <div className="relative z-10 w-48 h-48 sm:w-60 sm:h-60 mx-auto my-6 transform group-hover:scale-110 transition-transform duration-700 ease-out">
+                <img
+                  src={moonImage}
+                  alt="Moon Lamp Collection"
+                  className="w-full h-full object-contain filter drop-shadow-[0_15px_35px_rgba(245,158,11,0.25)]"
+                />
+              </div>
+
+              <div className="relative z-10 flex items-center justify-between pt-4 border-t border-zinc-800/80">
+                <span className="text-xs font-mono text-zinc-400">
+                  Precision NASA Altimetry • 3D Basalt Polymer
                 </span>
-                <h3 className="text-2xl sm:text-3xl font-serif text-white mt-3 group-hover:text-sky-300 transition-colors">
-                  The Infinity Collection
-                </h3>
-              </div>
-              <div className="p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-sky-400 group-hover:bg-sky-400 group-hover:text-zinc-950 transition-colors">
-                <Layers className="w-5 h-5" />
+                <span className="text-xs font-mono uppercase tracking-widest text-amber-300 flex items-center space-x-1 group-hover:translate-x-1 transition-transform">
+                  <span>View Archive</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </span>
               </div>
             </div>
 
-            {/* Visual Centerpiece */}
-            <div className="relative z-10 w-48 h-48 sm:w-60 sm:h-60 mx-auto my-6 transform group-hover:scale-110 transition-transform duration-700 ease-out">
-              <img
-                src={infinityImage}
-                alt="Infinity Mirror Collection"
-                className="w-full h-full object-contain filter drop-shadow-[0_15px_35px_rgba(56,189,248,0.25)]"
-              />
+            {/* Collection 2: Infinity Mirror Table Series */}
+            <div 
+              onClick={() => navigate('/collections/infinity')}
+              className="group relative rounded-3xl overflow-hidden bg-[#0A0B10] border border-zinc-800/80 hover:border-sky-400/50 p-8 sm:p-12 cursor-pointer transition-all duration-500 shadow-2xl flex flex-col justify-between min-h-[460px]"
+            >
+              <div className="absolute inset-0 bg-radial from-sky-500/10 via-transparent to-transparent opacity-40 group-hover:opacity-100 transition-opacity duration-500" />
+              
+              <div className="relative z-10 flex items-start justify-between">
+                <div>
+                  <span className="px-3 py-1 rounded-full bg-sky-400/15 border border-sky-400/30 text-sky-300 text-[10px] font-mono uppercase font-bold tracking-widest">
+                    Series II • Hyper-Depth
+                  </span>
+                  <h3 className="text-2xl sm:text-3xl font-serif text-white mt-3 group-hover:text-sky-300 transition-colors">
+                    The Infinity Collection
+                  </h3>
+                </div>
+                <div className="p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-sky-400 group-hover:bg-sky-400 group-hover:text-zinc-950 transition-colors">
+                  <Layers className="w-5 h-5" />
+                </div>
+              </div>
+
+              {/* Visual Centerpiece */}
+              <div className="relative z-10 w-48 h-48 sm:w-60 sm:h-60 mx-auto my-6 transform group-hover:scale-110 transition-transform duration-700 ease-out">
+                <img
+                  src={infinityImage}
+                  alt="Infinity Mirror Collection"
+                  className="w-full h-full object-contain filter drop-shadow-[0_15px_35px_rgba(56,189,248,0.25)]"
+                />
+              </div>
+
+              <div className="relative z-10 flex items-center justify-between pt-4 border-t border-zinc-800/80">
+                <span className="text-xs font-mono text-zinc-400">
+                  Dielectric Optical Abyss • 6061 Aerospace Aluminum
+                </span>
+                <span className="text-xs font-mono uppercase tracking-widest text-sky-300 flex items-center space-x-1 group-hover:translate-x-1 transition-transform">
+                  <span>View Archive</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </span>
+              </div>
             </div>
 
-            <div className="relative z-10 flex items-center justify-between pt-4 border-t border-zinc-800/80">
-              <span className="text-xs font-mono text-zinc-400">
-                Dielectric Optical Abyss • 6061 Aerospace Aluminum
-              </span>
-              <span className="text-xs font-mono uppercase tracking-widest text-sky-300 flex items-center space-x-1 group-hover:translate-x-1 transition-transform">
-                <span>View Archive</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </span>
-            </div>
           </div>
 
         </div>
-
-
       </section>
 
     </div>

@@ -184,12 +184,6 @@ export const CustomerFloatingContactWidget: React.FC = () => {
           {/* Synced Contact Info Card */}
           <div className="pt-2 border-t border-zinc-800/80 space-y-1.5 text-[10px] text-zinc-300">
             <div className="flex items-center space-x-2 text-zinc-300">
-              <Mail className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <a href={`mailto:${contactInfo?.email || 'support@lunova.luxury'}`} className="hover:text-amber-300 transition-colors truncate">
-                {contactInfo?.email || 'support@lunova.luxury'}
-              </a>
-            </div>
-            <div className="flex items-center space-x-2 text-zinc-300">
               <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
               <span className="truncate">{contactInfo?.hours || 'Mon – Sat, 9:00 AM – 6:00 PM PKT / EST'}</span>
             </div>

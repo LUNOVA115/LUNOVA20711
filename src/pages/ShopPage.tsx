@@ -39,8 +39,16 @@ export const ShopPage: React.FC = () => {
       }
 
       // Category
-      if (filters.category !== 'all' && p.category.toLowerCase() !== filters.category.toLowerCase()) {
-        return false;
+      if (filters.category !== 'all') {
+        const catFilter = filters.category.toLowerCase();
+        const prodCat = p.category.toLowerCase();
+        if (catFilter.includes('moon') && !prodCat.includes('moon')) {
+          return false;
+        } else if (catFilter.includes('infinity') && !prodCat.includes('infinity')) {
+          return false;
+        } else if (!catFilter.includes('moon') && !catFilter.includes('infinity') && prodCat !== catFilter) {
+          return false;
+        }
       }
 
       // Price
@@ -76,9 +84,9 @@ export const ShopPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-10 text-zinc-100">
       
-      {/* Header Banner */}
-      <div className="text-center max-w-3xl mx-auto space-y-4">
-        <div className="inline-flex items-center space-x-2 text-xs font-mono text-amber-300 uppercase tracking-widest px-3 py-1 bg-zinc-900/80 border border-amber-400/30 rounded-full">
+      {/* Header Banner inside a soft light-black / dark charcoal rectangular box */}
+      <div className="text-center max-w-3xl mx-auto space-y-4 p-6 sm:p-10 bg-zinc-900/80 border border-zinc-800/80 rounded-2xl sm:rounded-3xl shadow-xl backdrop-blur-sm">
+        <div className="inline-flex items-center space-x-2 text-xs font-mono text-amber-300 uppercase tracking-widest px-3 py-1 bg-zinc-950/80 border border-amber-400/30 rounded-full">
           <Sparkles className="w-3.5 h-3.5 text-amber-400" />
           <span>FULL VAULT CATALOGUE</span>
         </div>
@@ -88,6 +96,33 @@ export const ShopPage: React.FC = () => {
         <p className="text-sm sm:text-base text-zinc-400 font-light max-w-2xl mx-auto leading-relaxed">
           Explore <strong className="font-semibold text-zinc-200">celestial shapes, artistic forms, and endless reflections</strong> — beautifully crafted to bring <strong className="font-semibold text-zinc-200">quiet luxury, modern elegance, and a distinctive character</strong> to every space.
         </p>
+      </div>
+
+      {/* 3 Rectangular Category Boxes in One Horizontal Row (Left-aligned & Compact) */}
+      <div className="flex flex-row items-center justify-start gap-2.5 sm:gap-3 overflow-x-auto pb-1 pt-1">
+        {[
+          { label: 'All Categories', value: 'all' },
+          { label: 'Moon Collections', value: 'Moon Collection' },
+          { label: 'Infinity Collections', value: 'Infinity Collection' }
+        ].map((item) => {
+          const isSelected = item.value === 'all'
+            ? filters.category === 'all'
+            : filters.category.toLowerCase().includes(item.value.toLowerCase().split(' ')[0]);
+
+          return (
+            <button
+              key={item.label}
+              onClick={() => handleCategorySelect(item.value)}
+              className={`px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-lg border text-center transition-all duration-300 cursor-pointer whitespace-nowrap text-[11px] sm:text-xs font-medium tracking-wide shadow-sm ${
+                isSelected
+                  ? 'bg-[#f2ece1] text-zinc-950 border-[#f2ece1] font-bold shadow-amber-900/20 scale-[1.02]'
+                  : 'bg-zinc-900/90 border-zinc-800/90 text-zinc-300 hover:text-white hover:bg-zinc-800/90 hover:border-zinc-700'
+              }`}
+            >
+              {item.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Main Filter & Control Bar */}

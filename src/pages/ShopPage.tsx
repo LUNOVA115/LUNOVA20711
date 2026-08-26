@@ -83,10 +83,10 @@ export const ShopPage: React.FC = () => {
           <span>FULL VAULT CATALOGUE</span>
         </div>
         <h1 className="text-3xl sm:text-5xl font-light text-white tracking-tight">
-          Curated Architectural Decor
+          Curated Cosmic Interiors
         </h1>
-        <p className="text-sm sm:text-base text-zinc-400 font-light max-w-xl mx-auto">
-          Explore precision 3D lunar topographical reliefs and bottomless optical infinity mirror tables.
+        <p className="text-sm sm:text-base text-zinc-400 font-light max-w-2xl mx-auto leading-relaxed">
+          Explore <strong className="font-semibold text-zinc-200">celestial shapes, artistic forms, and endless reflections</strong> — beautifully crafted to bring <strong className="font-semibold text-zinc-200">quiet luxury, modern elegance, and a distinctive character</strong> to every space.
         </p>
       </div>
 

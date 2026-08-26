@@ -556,7 +556,7 @@ export const Navbar: React.FC = () => {
         )}
       </header>
 
-      {/* Side Drawer Navigation Overlay (HOME, SHOP with dynamic categories, CONTACT ADMIN) */}
+      {/* Side Drawer Navigation Overlay (HOME, SHOP with dynamic categories, ATELIER CONCIERGE) */}
       <HamburgerDrawer 
         isOpen={isDrawerOpen} 
         onClose={() => setIsDrawerOpen(false)} 

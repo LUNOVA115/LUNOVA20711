@@ -313,7 +313,7 @@ export const HamburgerDrawer: React.FC<HamburgerDrawerProps> = ({ isOpen, onClos
                 </span>
               </div>
 
-              {/* CONTACT ADMIN Main Box */}
+              {/* ATELIER CONCIERGE Main Box */}
               <div className="bg-zinc-900/70 border border-zinc-800/80 rounded-2xl overflow-hidden">
                 
                 {/* Section Header */}
@@ -327,7 +327,7 @@ export const HamburgerDrawer: React.FC<HamburgerDrawerProps> = ({ isOpen, onClos
                     </div>
                     <div>
                       <h3 className="font-mono text-sm font-bold uppercase tracking-[0.2em] text-white">
-                        CONTACT ADMIN
+                        ATELIER CONCIERGE
                       </h3>
                       <p className="text-[11px] font-sans text-zinc-400 mt-0.5">
                         Direct Customer Care & Support Channels

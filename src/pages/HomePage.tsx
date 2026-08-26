@@ -15,7 +15,7 @@ import {
 } from '../data/productImages';
 
 export const HomePage: React.FC = () => {
-  const { navigate, products, addToast } = useStore();
+  const { navigate, products, homeSettings, resetFilters, setFilters } = useStore();
 
   // Dynamically retrieve the flagship or first product of each category to display synchronized images
   const moonProduct = useMemo(() => {
@@ -71,12 +71,16 @@ export const HomePage: React.FC = () => {
 
           {/* Refined Small Headline */}
           <h1 className="text-lg sm:text-2xl font-serif tracking-[0.08em] text-zinc-200 font-light max-w-xl mx-auto">
-            Illuminate Your <span className="text-gold-gradient font-medium">Imagination.</span>
+            {homeSettings?.heroTitle ? (
+              homeSettings.heroTitle
+            ) : (
+              <>Illuminate Your <span className="text-gold-gradient font-medium">Imagination.</span></>
+            )}
           </h1>
 
           {/* Architectural Sub-copy */}
           <p className="text-base sm:text-lg text-zinc-300 max-w-2xl mx-auto font-light leading-relaxed">
-            Where refined design meets modern luxury, LUNOVA brings timeless pieces crafted to transform ordinary spaces into something truly exceptional.
+            {homeSettings?.heroSubtitle || "Where refined design meets modern luxury, LUNOVA brings timeless pieces crafted to transform ordinary spaces into something truly exceptional."}
           </p>
 
           {/* Action Buttons */}
@@ -99,16 +103,25 @@ export const HomePage: React.FC = () => {
           CURATED COLLECTIONS EDITORIAL
       ========================================================================= */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-          <span className="text-xs font-mono uppercase tracking-[0.3em] text-amber-400 block">
-            TWO ARCHITECTURAL REALMS
-          </span>
-          <h2 className="text-3xl sm:text-5xl font-serif text-white">
-            Curated Collections
+        {/* Two-Column Header */}
+        <div className="flex flex-row items-center justify-between mb-8 pb-4 border-b border-zinc-800/60">
+          <h2 className="text-xl sm:text-3xl font-serif text-white tracking-tight font-normal">
+            Refined Artisanal Creations
           </h2>
-          <p className="text-xs sm:text-sm text-zinc-400 font-light leading-relaxed">
-            From the high-tactile topography of our celestial sphere series to the infinite geometric depth of our optical tables.
-          </p>
+          <button
+            onClick={() => {
+              if (resetFilters) {
+                resetFilters();
+              } else {
+                setFilters((prev) => ({ ...prev, category: 'all', search: '', inStockOnly: false, minRating: 0 }));
+              }
+              navigate('/shop');
+            }}
+            className="text-xs sm:text-sm font-mono tracking-widest uppercase text-amber-300 hover:text-amber-200 flex items-center space-x-1.5 group cursor-pointer transition-colors shrink-0"
+          >
+            <span>Explore All Collections</span>
+            <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform" />
+          </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

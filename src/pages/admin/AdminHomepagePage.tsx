@@ -40,8 +40,8 @@ export const AdminHomepagePage: React.FC = () => {
   const { homeSettings, updateHomeSettings, products, addToast, navigate } = useStore();
 
   const [heroCustomImage, setHeroCustomImage] = useState<string>(homeSettings.heroCustomImage || IMAGE_3_WARM_MOON);
-  const [heroTitle, setHeroTitle] = useState(homeSettings.heroTitle || 'Elevate Your Space with Atmospheric Light');
-  const [heroSubtitle, setHeroSubtitle] = useState(homeSettings.heroSubtitle || 'Curated sculptural illuminations, hyper-depth infinity tables, and celestial art designed for modern luxury living.');
+  const [heroTitle, setHeroTitle] = useState(homeSettings.heroTitle || 'Illuminate Your Imagination.');
+  const [heroSubtitle, setHeroSubtitle] = useState(homeSettings.heroSubtitle || 'Where refined design meets modern luxury, LUNOVA brings timeless pieces crafted to transform ordinary spaces into something truly exceptional.');
   const [heroBadge, setHeroBadge] = useState(homeSettings.heroBadge || '✦ 2026 ARCHITECTURAL ARCHIVE');
   const [featuredProductId, setFeaturedProductId] = useState(homeSettings.featuredProductId || products[0]?.id || 'prod-001');
   const [ctaText, setCtaText] = useState('Explore Collection');
@@ -92,14 +92,14 @@ export const AdminHomepagePage: React.FC = () => {
 
   const handleResetDefaults = () => {
     setHeroCustomImage(IMAGE_3_WARM_MOON);
-    setHeroTitle('Elevate Your Space with Atmospheric Light');
-    setHeroSubtitle('Curated sculptural illuminations, hyper-depth infinity tables, and celestial art designed for modern luxury living.');
+    setHeroTitle('Illuminate Your Imagination.');
+    setHeroSubtitle('Where refined design meets modern luxury, LUNOVA brings timeless pieces crafted to transform ordinary spaces into something truly exceptional.');
     setHeroBadge('✦ 2026 ARCHITECTURAL ARCHIVE');
     setFeaturedProductId('prod-001');
     updateHomeSettings({
       heroCustomImage: IMAGE_3_WARM_MOON,
-      heroTitle: 'Elevate Your Space with Atmospheric Light',
-      heroSubtitle: 'Curated sculptural illuminations, hyper-depth infinity tables, and celestial art designed for modern luxury living.',
+      heroTitle: 'Illuminate Your Imagination.',
+      heroSubtitle: 'Where refined design meets modern luxury, LUNOVA brings timeless pieces crafted to transform ordinary spaces into something truly exceptional.',
       heroBadge: '✦ 2026 ARCHITECTURAL ARCHIVE',
       featuredProductId: 'prod-001'
     });

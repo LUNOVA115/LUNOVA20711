@@ -115,7 +115,7 @@ export const AdminLoginPage: React.FC = () => {
                 spellCheck={false}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="workp7384@gmail.com or admin@lunova.luxury"
+                placeholder="admin@lunova.luxury"
                 className="w-full pl-11 pr-4 py-3.5 bg-zinc-900/90 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-amber-400 transition-colors font-mono"
               />
             </div>

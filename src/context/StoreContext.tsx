@@ -772,12 +772,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [homeSettings, setHomeSettings] = useState<HomeSettings>(() => {
     try {
       const saved = localStorage.getItem('lunova_home_settings_v1');
-      return saved ? JSON.parse(saved) : {
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.heroTitle === 'Curated Cosmic Interiors') {
+          parsed.heroTitle = 'Illuminate Your Imagination.';
+        }
+        if (parsed.heroSubtitle && parsed.heroSubtitle.includes('Explore celestial shapes')) {
+          parsed.heroSubtitle = 'Where refined design meets modern luxury, LUNOVA brings timeless pieces crafted to transform ordinary spaces into something truly exceptional.';
+        }
+        return parsed;
+      }
+      return {
         featuredProductId: 'prod-003',
         heroCustomImage: '',
         heroBadge: 'Museum Edition',
-        heroTitle: 'LUNOVA 3D Moon Lamp',
-        heroSubtitle: 'Sub-Millimeter NASA Altimetry Topography Relief with Circadian Lighting Control.',
+        heroTitle: 'Illuminate Your Imagination.',
+        heroSubtitle: 'Where refined design meets modern luxury, LUNOVA brings timeless pieces crafted to transform ordinary spaces into something truly exceptional.',
         secondaryShowcaseImage: '',
         lifestyleImage: ''
       };
@@ -786,8 +796,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         featuredProductId: 'prod-003',
         heroCustomImage: '',
         heroBadge: 'Museum Edition',
-        heroTitle: 'LUNOVA 3D Moon Lamp',
-        heroSubtitle: 'Sub-Millimeter NASA Altimetry Topography Relief with Circadian Lighting Control.',
+        heroTitle: 'Illuminate Your Imagination.',
+        heroSubtitle: 'Where refined design meets modern luxury, LUNOVA brings timeless pieces crafted to transform ordinary spaces into something truly exceptional.',
         secondaryShowcaseImage: '',
         lifestyleImage: ''
       };

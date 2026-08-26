@@ -10,6 +10,7 @@ import { CheckoutModal } from './components/common/CheckoutModal';
 import { CustomerAuthModal } from './components/common/CustomerAuthModal';
 import { CustomerOrdersModal } from './components/common/CustomerOrdersModal';
 import { CustomerFloatingContactWidget } from './components/common/CustomerFloatingContactWidget';
+import { ComparePanel } from './components/common/ComparePanel';
 
 // Public Pages
 import { HomePage } from './pages/HomePage';
@@ -171,6 +172,9 @@ const AppContent: React.FC = () => {
 
       {/* Customer Floating WhatsApp & Instagram Contact Widget */}
       {!isAdminRoute && <CustomerFloatingContactWidget />}
+
+      {/* Side-by-Side Product Comparison Panel */}
+      {!isAdminRoute && <ComparePanel />}
 
       {/* Public Footer */}
       {!isAdminRoute && <Footer />}

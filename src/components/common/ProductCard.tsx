@@ -10,9 +10,10 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, featuredLayout = false }) => {
-  const { navigate, addToCart, toggleWishlist, isInWishlist, formatPrice } = useStore();
+  const { navigate, addToCart, toggleWishlist, isInWishlist, toggleCompare, isInCompare, formatPrice } = useStore();
 
   const isSaved = isInWishlist(product.id);
+  const isCompared = isInCompare(product.id);
   const isOutOfStock = product.stock <= 0;
 
   const handleCardClick = () => {
@@ -31,6 +32,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, featuredLayou
     toggleWishlist(product.id);
   };
 
+  const handleCompare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleCompare(product.id);
+  };
+
   return (
     <div
       onClick={handleCardClick}
@@ -46,8 +52,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, featuredLayou
         <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-amber-400/40 group-hover:border-amber-400 transition-colors" />
       </div>
 
-      {/* Top Badges & Wishlist Trigger */}
-      <div className="relative z-10 flex items-center justify-between gap-2 mb-3">
+      {/* Top Badges & Wishlist / Compare Triggers */}
+      <div className="relative z-10 flex items-start justify-between gap-2 mb-3">
         <div className="flex flex-wrap gap-1.5 items-center">
           {product.bestseller && (
             <span className="px-2.5 py-0.5 text-[10px] uppercase font-bold tracking-widest bg-gradient-to-r from-amber-400/20 to-amber-500/20 text-amber-300 border border-amber-400/40 rounded-full backdrop-blur-md flex items-center space-x-1">
@@ -67,17 +73,47 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, featuredLayou
           )}
         </div>
 
-        <button
-          onClick={handleWishlist}
-          aria-label={isSaved ? "Remove from wishlist" : "Add to wishlist"}
-          className={`p-2 rounded-full backdrop-blur-md transition-all duration-300 ${
-            isSaved
-              ? 'bg-amber-400 text-zinc-950 shadow-lg shadow-amber-400/40 scale-105'
-              : 'bg-zinc-900/80 text-zinc-400 hover:text-white hover:bg-zinc-800 border border-zinc-800 hover:border-amber-400/40'
-          }`}
-        >
-          <Heart className={`w-3.5 h-3.5 ${isSaved ? 'fill-zinc-950' : ''}`} />
-        </button>
+        {/* Top-Right Buttons Column: Heart Icon on Top, Horizontal Equalizer Directly Below */}
+        <div className="flex flex-col items-center gap-1.5 shrink-0">
+          <button
+            onClick={handleWishlist}
+            aria-label={isSaved ? "Remove from wishlist" : "Add to wishlist"}
+            title={isSaved ? "Remove from wishlist" : "Add to wishlist"}
+            className={`p-2 rounded-full backdrop-blur-md transition-all duration-300 ${
+              isSaved
+                ? 'bg-amber-400 text-zinc-950 shadow-lg shadow-amber-400/40 scale-105'
+                : 'bg-zinc-900/80 text-zinc-400 hover:text-white hover:bg-zinc-800 border border-zinc-800 hover:border-amber-400/40'
+            }`}
+          >
+            <Heart className={`w-3.5 h-3.5 ${isSaved ? 'fill-zinc-950' : ''}`} />
+          </button>
+
+          <button
+            onClick={handleCompare}
+            aria-label="Compare Side by Side"
+            title="Compare Side by Side"
+            className={`p-2 rounded-full backdrop-blur-md transition-all duration-300 relative group/compare ${
+              isCompared
+                ? 'bg-amber-400 text-zinc-950 shadow-lg shadow-amber-400/40 scale-105 border border-amber-300'
+                : 'bg-zinc-900/80 text-zinc-400 hover:text-white hover:bg-zinc-800 border border-zinc-800 hover:border-amber-400/40'
+            }`}
+          >
+            {/* Small Horizontal Equalizer Icon (3 lines with staggered slider notches) */}
+            <svg className="w-3.5 h-3.5 stroke-current" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="15" y1="4" x2="15" y2="8" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="9" y1="10" x2="9" y2="14" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+              <line x1="17" y1="16" x2="17" y2="20" />
+            </svg>
+
+            {/* Hover Tooltip Label */}
+            <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 hidden group-hover/compare:block px-2.5 py-1 bg-zinc-950/95 text-zinc-200 text-[10px] font-mono whitespace-nowrap rounded-md border border-zinc-800 shadow-xl z-30 pointer-events-none">
+              Compare Side by Side
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Product Image Frame with Museum Exhibition Pedestal Glow */}

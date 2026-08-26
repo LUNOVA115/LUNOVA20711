@@ -144,6 +144,16 @@ interface StoreContextType {
   wishlistCount: number;
   toggleWishlist: (productId: string) => void;
   isInWishlist: (productId: string) => boolean;
+
+  // Comparison State
+  compareList: string[];
+  compareCount: number;
+  toggleCompare: (productId: string) => boolean;
+  isInCompare: (productId: string) => boolean;
+  removeFromCompare: (productId: string) => void;
+  clearCompare: () => void;
+  isCompareOpen: boolean;
+  setIsCompareOpen: (open: boolean) => void;
   
   // UI Panels
   isCartOpen: boolean;
@@ -459,6 +469,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     localStorage.setItem('lunova_wishlist_v1', JSON.stringify(wishlist));
   }, [wishlist]);
+
+  // Comparison State
+  const [compareList, setCompareList] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('lunova_compare_v1');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isCompareOpen, setIsCompareOpen] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('lunova_compare_v1', JSON.stringify(compareList));
+  }, [compareList]);
 
   // Admin Auth (Restricted to Authorized Administrators Only)
   const [adminUser, setAdminUser] = useState<AdminUser | null>(() => {
@@ -906,6 +931,43 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const isInWishlist = (productId: string) => wishlist.includes(productId);
+
+  // Comparison actions
+  const toggleCompare = (productId: string): boolean => {
+    const prod = products.find((p) => p.id === productId);
+    const prodName = prod ? prod.name : 'Piece';
+    if (compareList.includes(productId)) {
+      setCompareList((prev) => prev.filter((id) => id !== productId));
+      addToast(`Removed "${prodName}" from comparison list`, 'info');
+      return true;
+    } else {
+      if (compareList.length >= 3) {
+        addToast('Maximum limit of 3 products for side-by-side comparison reached.', 'warning');
+        return false;
+      }
+      setCompareList((prev) => [...prev, productId]);
+      setIsCompareOpen(true);
+      addToast(`Added "${prodName}" to side-by-side comparison (${compareList.length + 1}/3)`, 'success');
+      return true;
+    }
+  };
+
+  const isInCompare = (productId: string) => compareList.includes(productId);
+
+  const removeFromCompare = (productId: string) => {
+    const prod = products.find((p) => p.id === productId);
+    setCompareList((prev) => prev.filter((id) => id !== productId));
+    if (prod) {
+      addToast(`Removed "${prod.name}" from comparison`, 'info');
+    }
+  };
+
+  const clearCompare = () => {
+    setCompareList([]);
+    addToast('Cleared side-by-side comparison list', 'info');
+  };
+
+  const compareCount = compareList.length;
 
   // Coupons
   const applyCoupon = (code: string) => {
@@ -1509,6 +1571,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         wishlistCount,
         toggleWishlist,
         isInWishlist,
+        compareList,
+        compareCount,
+        toggleCompare,
+        isInCompare,
+        removeFromCompare,
+        clearCompare,
+        isCompareOpen,
+        setIsCompareOpen,
         isCartOpen,
         setIsCartOpen,
         isSearchOpen,

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useStore } from '../context/StoreContext';
 import { ProductGrid } from '../components/common/ProductGrid';
 import { 
@@ -9,11 +9,25 @@ import {
   Sparkles,
   ArrowUpDown,
   Grid,
-  Check
+  Check,
+  ChevronDown
 } from 'lucide-react';
 
 export const ShopPage: React.FC = () => {
   const { products, categories, filters, setFilters, resetFilters, formatPrice } = useStore();
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
+
+  // Close sort dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
+        setIsSortOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleCategorySelect = (catName: string) => {
     setFilters((prev) => ({ ...prev, category: catName }));
@@ -81,26 +95,26 @@ export const ShopPage: React.FC = () => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-10 text-zinc-100">
+    <div className="w-full max-w-[calc(100%-1cm)] mx-auto py-8 sm:py-12 space-y-6 text-zinc-100">
       
       {/* Header Banner inside a soft light-black / dark charcoal rectangular box */}
-      <div className="text-center w-full mx-auto space-y-2.5 py-4 sm:py-6 px-6 sm:px-10 bg-zinc-900/80 border border-zinc-800/80 rounded-2xl sm:rounded-3xl shadow-xl backdrop-blur-sm">
-        <div className="inline-flex items-center space-x-2 text-xs font-mono text-amber-300 uppercase tracking-widest px-3 py-1 bg-zinc-950/80 border border-amber-400/30 rounded-full">
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+      <div className="text-center w-full mx-auto space-y-2 py-3.5 sm:py-5 px-4 sm:px-8 bg-zinc-900/80 border border-zinc-800/80 rounded-2xl shadow-xl backdrop-blur-sm">
+        <div className="inline-flex items-center space-x-2 text-[11px] font-mono text-amber-300 uppercase tracking-widest px-2.5 py-0.5 bg-zinc-950/80 border border-amber-400/30 rounded-full">
+          <Sparkles className="w-3 h-3 text-amber-400" />
           <span>FULL VAULT CATALOGUE</span>
         </div>
-        <h1 className="text-3xl sm:text-5xl font-light text-white tracking-tight">
+        <h1 className="text-2xl sm:text-4xl font-light text-white tracking-tight">
           Curated Cosmic Interiors
         </h1>
-        <p className="text-sm sm:text-base text-zinc-400 font-light max-w-2xl mx-auto leading-relaxed">
+        <p className="text-xs sm:text-sm text-zinc-400 font-light max-w-2xl mx-auto leading-relaxed">
           Explore <strong className="font-semibold text-zinc-200">celestial shapes, artistic forms, and endless reflections</strong> — beautifully crafted to bring <strong className="font-semibold text-zinc-200">quiet luxury, modern elegance, and a distinctive character</strong> to every space.
         </p>
       </div>
 
-      {/* 3 Rectangular Category Boxes in One Horizontal Row (Left-aligned & Compact) */}
-      <div className="flex flex-row items-center justify-start gap-2.5 sm:gap-3 overflow-x-auto pb-1 pt-1">
+      {/* 3 Rectangular Category Boxes in One Horizontal Row (Left-aligned & Compact, Short Height) */}
+      <div className="w-full flex flex-row items-center justify-start gap-2 overflow-x-auto pb-0.5 pt-0.5">
         {[
-          { label: 'All Categories', value: 'all' },
+          { label: `All Categories (${products.filter((p) => p.status === 'active').length})`, value: 'all' },
           { label: 'Moon Collections', value: 'Moon Collection' },
           { label: 'Infinity Collections', value: 'Infinity Collection' }
         ].map((item) => {
@@ -112,9 +126,9 @@ export const ShopPage: React.FC = () => {
             <button
               key={item.label}
               onClick={() => handleCategorySelect(item.value)}
-              className={`px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-lg border text-center transition-all duration-300 cursor-pointer whitespace-nowrap text-[11px] sm:text-xs font-medium tracking-wide shadow-sm ${
+              className={`px-3 py-1 rounded-md border text-center transition-all duration-300 cursor-pointer whitespace-nowrap text-[11px] font-medium tracking-wide shadow-sm ${
                 isSelected
-                  ? 'bg-[#f2ece1] text-zinc-950 border-[#f2ece1] font-bold shadow-amber-900/20 scale-[1.02]'
+                  ? 'bg-[#f2ece1] text-zinc-950 border-[#f2ece1] font-bold shadow-amber-900/20 scale-[1.01]'
                   : 'bg-zinc-900/90 border-zinc-800/90 text-zinc-300 hover:text-white hover:bg-zinc-800/90 hover:border-zinc-700'
               }`}
             >
@@ -124,8 +138,8 @@ export const ShopPage: React.FC = () => {
         })}
       </div>
 
-      {/* Main Filter & Control Bar */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-zinc-950/80 border border-zinc-800/90 shadow-2xl backdrop-blur-xl space-y-6">
+      {/* Main Filter & Control Bar (Shorter in height & wider) */}
+      <div className="w-full py-2 sm:py-2.5 px-3.5 sm:px-5 rounded-2xl bg-zinc-950/80 border border-zinc-800/90 shadow-2xl backdrop-blur-xl">
         
         {/* Top Status & Sort Row with Maximum Price on Far Right */}
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
@@ -150,7 +164,7 @@ export const ShopPage: React.FC = () => {
                 step="50"
                 value={filters.maxPrice}
                 onChange={(e) => setFilters((prev) => ({ ...prev, maxPrice: Number(e.target.value) }))}
-                style={{ width: '1.5cm' }}
+                style={{ width: '3cm' }}
                 className="h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-amber-400 shrink-0"
                 title="Maximum Price"
               />
@@ -170,45 +184,61 @@ export const ShopPage: React.FC = () => {
               <span className="text-xs font-medium whitespace-nowrap">In Stock only</span>
             </label>
 
-          </div>
-        </div>
+            {/* Sort Dropdown */}
+            <div className="flex items-center space-x-1.5 text-xs relative" ref={sortRef}>
+              <span className="font-semibold text-zinc-400 whitespace-nowrap">Sort:</span>
+              
+              <button
+                type="button"
+                onClick={() => setIsSortOpen(!isSortOpen)}
+                className="flex items-center justify-between space-x-2 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-xs font-medium text-zinc-200 hover:border-zinc-700 focus:outline-none focus:border-amber-400 transition-colors cursor-pointer whitespace-nowrap"
+              >
+                <span>
+                  {
+                    [
+                      { label: 'Popularity & Rating', value: 'bestseller' },
+                      { label: 'Newest Arrivals', value: 'newest' },
+                      { label: 'Price: Low to High', value: 'price-asc' },
+                      { label: 'Price: High to Low', value: 'price-desc' }
+                    ].find((o) => o.value === filters.sortBy)?.label || 'Popularity & Rating'
+                  }
+                </span>
+                <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform duration-200 ${isSortOpen ? 'rotate-180' : ''}`} />
+              </button>
 
-
-        {/* Secondary Filter Controls (Rating) */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-zinc-800/60 text-xs">
-          
-          {/* Min Rating Filter */}
-          <div className="flex items-center space-x-3">
-            <span className="font-semibold uppercase tracking-wider text-[10px] text-zinc-400 whitespace-nowrap">
-              Minimum Rating:
-            </span>
-            <div className="flex items-center space-x-1.5">
-              {[0, 4.5, 4.8, 4.9].map((rate) => (
-                <button
-                  key={rate}
-                  onClick={() => setFilters((prev) => ({ ...prev, minRating: rate }))}
-                  className={`px-3 py-1.5 rounded-lg border text-center font-mono ${
-                    filters.minRating === rate
-                      ? 'bg-zinc-800 border-amber-400 text-amber-300'
-                      : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  {rate === 0 ? 'All' : `${rate}★`}
-                </button>
-              ))}
+              {isSortOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-max min-w-full bg-zinc-900/95 border border-zinc-800 rounded-xl shadow-2xl backdrop-blur-xl z-50 py-1.5 overflow-hidden text-xs">
+                  {[
+                    { label: 'Popularity & Rating', value: 'bestseller' },
+                    { label: 'Newest Arrivals', value: 'newest' },
+                    { label: 'Price: Low to High', value: 'price-asc' },
+                    { label: 'Price: High to Low', value: 'price-desc' }
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        setFilters((prev) => ({ ...prev, sortBy: opt.value as any }));
+                        setIsSortOpen(false);
+                      }}
+                      className={`w-full text-left px-3.5 py-2 transition-colors flex items-center justify-between space-x-3 whitespace-nowrap cursor-pointer ${
+                        filters.sortBy === opt.value
+                          ? 'bg-zinc-800/80 text-amber-300 font-semibold'
+                          : 'text-zinc-300 hover:bg-zinc-800/50 hover:text-white'
+                      }`}
+                    >
+                      <span>{opt.label}</span>
+                      {filters.sortBy === opt.value && (
+                        <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+
           </div>
         </div>
-      </div>
-
-      {/* Result Status Count */}
-      <div className="flex items-center justify-between text-xs text-zinc-400 px-2">
-        <span>
-          Displaying <strong className="text-white font-mono">{filteredProducts.length}</strong> architectural piece(s)
-        </span>
-        {filters.category !== 'all' && (
-          <span className="text-amber-300">Filtered to {filters.category}</span>
-        )}
       </div>
 
       {/* Products Grid */}

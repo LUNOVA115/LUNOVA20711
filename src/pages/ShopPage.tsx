@@ -85,7 +85,7 @@ export const ShopPage: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-10 text-zinc-100">
       
       {/* Header Banner inside a soft light-black / dark charcoal rectangular box */}
-      <div className="text-center max-w-3xl mx-auto space-y-4 p-6 sm:p-10 bg-zinc-900/80 border border-zinc-800/80 rounded-2xl sm:rounded-3xl shadow-xl backdrop-blur-sm">
+      <div className="text-center w-full mx-auto space-y-2.5 py-4 sm:py-6 px-6 sm:px-10 bg-zinc-900/80 border border-zinc-800/80 rounded-2xl sm:rounded-3xl shadow-xl backdrop-blur-sm">
         <div className="inline-flex items-center space-x-2 text-xs font-mono text-amber-300 uppercase tracking-widest px-3 py-1 bg-zinc-950/80 border border-amber-400/30 rounded-full">
           <Sparkles className="w-3.5 h-3.5 text-amber-400" />
           <span>FULL VAULT CATALOGUE</span>

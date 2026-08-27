@@ -3,8 +3,6 @@ import { useStore } from '../../context/StoreContext';
 import { useTheme } from '../../context/ThemeContext';
 import { CurrencySelector } from './CurrencySelector';
 import { HamburgerDrawer } from './HamburgerDrawer';
-import { AppDownloadModal } from './AppDownloadModal';
-import { handleAppDownload } from '../../utils/appStore';
 import { 
   Search, 
   ShoppingBag, 
@@ -24,9 +22,7 @@ import {
   ArrowRight,
   ExternalLink,
   Moon,
-  Lock,
-  Download,
-  Smartphone
+  Lock
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -53,15 +49,6 @@ export const Navbar: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
-  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
-
-  const handleDownloadClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setMobileMenuOpen(false);
-    handleAppDownload({
-      onDesktopFallback: () => setIsDownloadModalOpen(true)
-    });
-  };
 
   const accountRef = useRef<HTMLDivElement>(null);
 
@@ -271,7 +258,74 @@ export const Navbar: React.FC = () => {
               {isAccountOpen && (
                 <div className="absolute right-0 mt-2.5 w-64 bg-[#0c0d12]/98 backdrop-blur-2xl border border-zinc-800/90 rounded-2xl p-2 shadow-2xl shadow-black/90 space-y-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 text-xs">
                   
-                  {customerUser ? (
+                  {/* 1. AUTHENTICATED ADMINISTRATOR */}
+                  {adminUser ? (
+                    <div className="space-y-1.5">
+                      <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between">
+                        <div className="truncate">
+                          <div className="font-semibold text-amber-200 truncate">{adminUser.name}</div>
+                          <div className="text-[10px] text-zinc-400 truncate font-mono">{adminUser.email}</div>
+                        </div>
+                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-bold border border-amber-400/40 shrink-0 font-mono">
+                          {adminUser.role || 'Admin'}
+                        </span>
+                      </div>
+
+                      {/* Admin Control Panel Button */}
+                      <button
+                        onClick={() => {
+                          setIsAccountOpen(false);
+                          handleNav('/admin/dashboard');
+                        }}
+                        className="w-full flex items-center space-x-3 p-2.5 rounded-xl bg-gradient-to-r from-amber-400/15 via-amber-400/25 to-amber-500/15 hover:from-amber-400/25 hover:to-amber-500/30 border border-amber-400/40 text-left transition-all text-amber-200 hover:text-white group cursor-pointer shadow-sm"
+                      >
+                        <div className="p-2 rounded-lg bg-amber-400 text-zinc-950 font-bold shrink-0 shadow-sm">
+                          <LayoutDashboard className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-white group-hover:text-amber-300 transition-colors">Admin Control Panel</div>
+                          <div className="text-[10px] text-zinc-300">Manage catalog, orders & settings</div>
+                        </div>
+                      </button>
+
+                      {/* Admin Quick Management Links */}
+                      <div className="grid grid-cols-2 gap-1.5 pt-1">
+                        <button
+                          onClick={() => {
+                            setIsAccountOpen(false);
+                            handleNav('/admin/products');
+                          }}
+                          className="p-2 rounded-lg bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 hover:border-amber-400/30 text-left text-[11px] text-zinc-300 hover:text-amber-300 transition-all cursor-pointer flex items-center space-x-1.5"
+                        >
+                          <Package className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          <span className="truncate">Products</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsAccountOpen(false);
+                            handleNav('/admin/orders');
+                          }}
+                          className="p-2 rounded-lg bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 hover:border-amber-400/30 text-left text-[11px] text-zinc-300 hover:text-amber-300 transition-all cursor-pointer flex items-center space-x-1.5"
+                        >
+                          <ShoppingBag className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          <span className="truncate">Orders</span>
+                        </button>
+                      </div>
+
+                      {/* Admin Sign Out */}
+                      <button
+                        onClick={() => {
+                          setIsAccountOpen(false);
+                          adminLogout();
+                        }}
+                        className="w-full flex items-center space-x-3 p-2 rounded-xl hover:bg-rose-500/10 text-zinc-400 hover:text-rose-300 text-left transition-all cursor-pointer pt-2 mt-1 border-t border-zinc-800/60"
+                      >
+                        <LogOut className="w-4 h-4 text-zinc-500 hover:text-rose-400" />
+                        <span>Sign Out of Admin</span>
+                      </button>
+                    </div>
+                  ) : customerUser ? (
+                    /* 2. AUTHENTICATED CUSTOMER (Zero admin links or buttons) */
                     <div className="space-y-1.5">
                       <div className="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between">
                         <div className="truncate">
@@ -311,6 +365,7 @@ export const Navbar: React.FC = () => {
                       </button>
                     </div>
                   ) : (
+                    /* 3. GUEST / UNREGISTERED USER */
                     <div className="space-y-1.5">
                       <button
                         onClick={() => {
@@ -343,27 +398,20 @@ export const Navbar: React.FC = () => {
                           <div className="text-[10px] text-zinc-400">Check courier delivery status</div>
                         </div>
                       </button>
-                    </div>
-                  )}
 
-                  {/* ONLY VISIBLE IF ACTIVELY AUTHENTICATED AS ADMIN */}
-                  {adminUser && (
-                    <div className="pt-2 mt-2 border-t border-zinc-800/80">
-                      <button
-                        onClick={() => {
-                          setIsAccountOpen(false);
-                          handleNav('/admin/dashboard');
-                        }}
-                        className="w-full flex items-center space-x-3 p-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-left transition-all text-amber-300 group cursor-pointer"
-                      >
-                        <div className="p-2 rounded-lg bg-amber-500/20 border border-amber-500/40 shrink-0">
-                          <LayoutDashboard className="w-4 h-4 text-amber-300" />
-                        </div>
-                        <div>
-                          <div className="font-bold text-amber-200">Admin Control Panel</div>
-                          <div className="text-[10px] text-zinc-400 font-mono">Logged in as {adminUser.name}</div>
-                        </div>
-                      </button>
+                      <div className="pt-2 mt-1 border-t border-zinc-800/60">
+                        <button
+                          onClick={() => {
+                            setIsAccountOpen(false);
+                            handleNav('/admin/login');
+                          }}
+                          className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-lg text-[10px] font-mono text-zinc-500 hover:text-amber-300 hover:bg-zinc-850 transition-all text-left cursor-pointer"
+                          title="Administrator Control Sign In"
+                        >
+                          <Lock className="w-3 h-3 text-zinc-500" />
+                          <span>Staff / Admin Login</span>
+                        </button>
+                      </div>
                     </div>
                   )}
 
@@ -448,21 +496,6 @@ export const Navbar: React.FC = () => {
               >
                 <span>✦ Contact Us & Concierge</span>
                 <Mail className="w-3.5 h-3.5 text-zinc-500" />
-              </button>
-
-              {/* 5. Download Official Mobile App */}
-              <button
-                onClick={handleDownloadClick}
-                className="w-full py-3 px-3.5 rounded-xl bg-gradient-to-r from-amber-400/15 via-amber-300/10 to-amber-500/15 border border-amber-400/35 text-amber-300 font-bold flex items-center justify-between cursor-pointer group"
-              >
-                <span className="flex items-center space-x-2">
-                  <Smartphone className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
-                  <span>Download Official App</span>
-                </span>
-                <span className="text-[10px] bg-amber-400 text-zinc-950 px-2 py-0.5 rounded-full font-mono font-bold flex items-center space-x-1">
-                  <Download className="w-3 h-3" />
-                  <span>iOS & Android</span>
-                </span>
               </button>
 
               {/* Mobile Quick Action Buttons */}
@@ -566,12 +599,6 @@ export const Navbar: React.FC = () => {
       <HamburgerDrawer 
         isOpen={isDrawerOpen} 
         onClose={() => setIsDrawerOpen(false)} 
-      />
-
-      {/* App Download Selection Modal */}
-      <AppDownloadModal 
-        isOpen={isDownloadModalOpen} 
-        onClose={() => setIsDownloadModalOpen(false)} 
       />
     </>
   );

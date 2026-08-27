@@ -11,6 +11,7 @@ import { CustomerAuthModal } from './components/common/CustomerAuthModal';
 import { CustomerOrdersModal } from './components/common/CustomerOrdersModal';
 import { CustomerFloatingContactWidget } from './components/common/CustomerFloatingContactWidget';
 import { ComparePanel } from './components/common/ComparePanel';
+import { AppDownloadSection } from './components/common/AppDownloadSection';
 
 // Public Pages
 import { HomePage } from './pages/HomePage';
@@ -175,6 +176,9 @@ const AppContent: React.FC = () => {
 
       {/* Side-by-Side Product Comparison Panel */}
       {!isAdminRoute && <ComparePanel />}
+
+      {/* App Download Section (Bottom-most main content section immediately above the footer) */}
+      {!isAdminRoute && <AppDownloadSection />}
 
       {/* Public Footer */}
       {!isAdminRoute && <Footer />}

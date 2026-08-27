@@ -14,7 +14,8 @@ import {
   Layers,
   ArrowRight,
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  LayoutDashboard
 } from 'lucide-react';
 
 interface HamburgerDrawerProps {
@@ -31,7 +32,8 @@ export const HamburgerDrawer: React.FC<HamburgerDrawerProps> = ({ isOpen, onClos
     filters, 
     setFilters, 
     contactInfo, 
-    instagramSettings 
+    instagramSettings,
+    adminUser 
   } = useStore();
 
   const [shopExpanded, setShopExpanded] = useState(true);
@@ -131,6 +133,44 @@ export const HamburgerDrawer: React.FC<HamburgerDrawerProps> = ({ isOpen, onClos
           {/* Scrollable Main Navigation Content */}
           <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 scrollbar-thin scrollbar-thumb-amber-500/20">
             
+            {/* =========================================================================
+                ADMIN ONLY: ADMIN CONTROL PANEL
+            ========================================================================= */}
+            {adminUser && (
+              <div className="space-y-1 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-amber-400 font-bold">
+                    ADMIN PRIVILEGE
+                  </span>
+                  <span className="text-[9px] font-mono font-bold bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-400/30">
+                    {adminUser.role || 'Super Admin'}
+                  </span>
+                </div>
+                <button
+                  onClick={() => {
+                    navigate('/admin/dashboard');
+                    onClose();
+                  }}
+                  className="w-full p-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 text-left flex items-center justify-between transition-all duration-200 group cursor-pointer shadow-lg shadow-amber-400/20 mt-1.5"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 rounded-lg bg-zinc-950 text-amber-400">
+                      <LayoutDashboard className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="font-mono text-xs font-bold uppercase tracking-wider leading-tight">
+                        Admin Control Panel
+                      </h3>
+                      <p className="text-[10px] text-zinc-800 font-sans mt-0.5">
+                        Manage catalog, inventory & orders
+                      </p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-zinc-950 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
+            )}
+
             {/* =========================================================================
                 OPTION 1: HOME
             ========================================================================= */}

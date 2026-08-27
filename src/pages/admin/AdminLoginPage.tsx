@@ -172,7 +172,50 @@ export const AdminLoginPage: React.FC = () => {
           </button>
         </form>
 
-        <div className="text-center pt-4">
+        {/* Quick Admin Credential Selection */}
+        <div className="pt-3 border-t border-zinc-800/80 space-y-2">
+          <div className="text-[10px] text-zinc-400 uppercase tracking-wider font-mono flex items-center justify-between">
+            <span>Authorized Admin Profiles (1-Click Fill):</span>
+            <span className="text-amber-400/80">Pass: lunova2026</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('admin@lunova.luxury');
+                setPassword('lunova2026');
+                setError('');
+              }}
+              className="p-2.5 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 hover:border-amber-400/40 text-left transition-all group cursor-pointer"
+            >
+              <div className="font-semibold text-white truncate text-[11px] group-hover:text-amber-300">
+                Julian Thorne (Super Admin)
+              </div>
+              <div className="text-[9px] text-zinc-400 font-mono truncate">
+                admin@lunova.luxury
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('workp7384@gmail.com');
+                setPassword('lunova2026');
+                setError('');
+              }}
+              className="p-2.5 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 hover:border-amber-400/40 text-left transition-all group cursor-pointer"
+            >
+              <div className="font-semibold text-white truncate text-[11px] group-hover:text-amber-300">
+                Store Principal (Super Admin)
+              </div>
+              <div className="text-[9px] text-zinc-400 font-mono truncate">
+                workp7384@gmail.com
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div className="text-center pt-2">
           <button
             onClick={() => navigate('/')}
             className="text-xs text-zinc-500 hover:text-white transition-colors uppercase tracking-wider font-mono cursor-pointer"

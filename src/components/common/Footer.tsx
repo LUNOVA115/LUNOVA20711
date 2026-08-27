@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
-import { AppDownloadModal } from './AppDownloadModal';
-import { handleAppDownload } from '../../utils/appStore';
 import { 
   Lock,
   MessageCircle,
@@ -10,9 +8,7 @@ import {
   ArrowRight,
   Instagram,
   Facebook,
-  Twitter,
-  Smartphone,
-  Download
+  Twitter
 } from 'lucide-react';
 
 export const Footer: React.FC = () => {
@@ -26,15 +22,6 @@ export const Footer: React.FC = () => {
     instagramSettings,
     addToast
   } = useStore();
-
-  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
-
-  const handleDownloadClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    handleAppDownload({
-      onDesktopFallback: () => setIsDownloadModalOpen(true)
-    });
-  };
 
   const [subscribeEmail, setSubscribeEmail] = React.useState('');
 
@@ -214,17 +201,6 @@ export const Footer: React.FC = () => {
                     <span className="group-hover:translate-x-0.5 transition-transform">View All Collections</span>
                   </button>
                 </li>
-                <li className="pt-2">
-                  <button
-                    onClick={handleDownloadClick}
-                    className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-zinc-950 text-xs font-sans font-extrabold uppercase tracking-wider shadow-md shadow-amber-500/20 hover:scale-105 transition-all duration-200 cursor-pointer border border-amber-300/80 active:scale-95"
-                    title="Download Official LUNOVA Mobile App"
-                  >
-                    <Smartphone className="w-3.5 h-3.5 text-zinc-950 shrink-0 stroke-[2.5]" />
-                    <span className="font-extrabold text-[11px] tracking-wider text-zinc-950">DOWNLOAD APP</span>
-                    <Download className="w-3.5 h-3.5 text-zinc-950 shrink-0 stroke-[2.5]" />
-                  </button>
-                </li>
               </ul>
             </div>
 
@@ -346,11 +322,11 @@ export const Footer: React.FC = () => {
         {/* Bottom Legal & Copyright Bar */}
         <div className="pt-8 border-t border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] font-mono text-zinc-400">
           <div className="flex items-center space-x-2">
-            {adminUser && (
+            {!customerUser && (
               <button
                 onClick={() => navigate('/admin/login')}
-                className="p-1 rounded hover:bg-zinc-800/80 transition-colors text-amber-400/80 hover:text-amber-300 cursor-pointer mr-1"
-                title="Secure Atelier Gateway"
+                className="p-1 rounded hover:bg-zinc-800/80 transition-colors text-zinc-600 hover:text-amber-400 cursor-pointer mr-1"
+                title="Staff / Admin Gateway"
               >
                 <Lock className="w-3.5 h-3.5" />
               </button>
@@ -381,11 +357,6 @@ export const Footer: React.FC = () => {
         </div>
 
       </div>
-
-      <AppDownloadModal 
-        isOpen={isDownloadModalOpen} 
-        onClose={() => setIsDownloadModalOpen(false)} 
-      />
     </footer>
   );
 };

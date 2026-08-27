@@ -1,15 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useStore } from '../context/StoreContext';
 import { TwinklingStars } from '../components/common/TwinklingStars';
-import { AppDownloadModal } from '../components/common/AppDownloadModal';
-import { handleAppDownload } from '../utils/appStore';
 import { 
   ArrowRight, 
   Sparkles, 
   Moon, 
-  Layers,
-  Smartphone,
-  Download
+  Layers
 } from 'lucide-react';
 import { 
   IMAGE_1_GOLD_TABLE, 
@@ -18,13 +14,6 @@ import {
 
 export const HomePage: React.FC = () => {
   const { navigate, products, homeSettings, resetFilters, setFilters } = useStore();
-  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
-
-  const handleDownloadClick = () => {
-    handleAppDownload({
-      onDesktopFallback: () => setIsDownloadModalOpen(true)
-    });
-  };
 
   // Dynamically retrieve the flagship or first product of each category to display synchronized images
   const moonProduct = useMemo(() => {
@@ -220,50 +209,6 @@ export const HomePage: React.FC = () => {
 
         </div>
       </section>
-
-      {/* =========================================================================
-          DOWNLOAD OFFICIAL MOBILE APP SECTION
-      ========================================================================= */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-r from-zinc-950 via-[#0d0e14] to-zinc-950 border border-amber-400/30 rounded-3xl p-8 sm:p-12 shadow-2xl relative overflow-hidden flex flex-col items-center text-center space-y-6">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-          
-          <div className="inline-flex items-center space-x-2 text-[10px] font-mono text-amber-300 uppercase tracking-[0.25em] px-3.5 py-1.5 bg-amber-400/10 border border-amber-400/30 rounded-full">
-            <Smartphone className="w-3.5 h-3.5 text-amber-400" />
-            <span>LUNOVA LUXURY MOBILE EXPERIENCE</span>
-          </div>
-
-          <h2 className="text-2xl sm:text-4xl font-serif text-white tracking-tight">
-            Install the LUNOVA App on iOS & Android
-          </h2>
-
-          <p className="text-sm sm:text-base text-zinc-300 font-light max-w-xl mx-auto">
-            Experience real-time lighting synchronization, custom ambient atmospheres, and exclusive artisanal drops right from your smartphone.
-          </p>
-
-          <div className="pt-2">
-            <button
-              onClick={handleDownloadClick}
-              className="px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:from-amber-300 hover:to-amber-200 text-zinc-950 text-xs font-mono font-extrabold uppercase tracking-[0.2em] shadow-xl shadow-amber-400/35 hover:shadow-amber-400/50 hover:scale-105 flex items-center justify-center space-x-3 transition-all duration-300 cursor-pointer border border-amber-300/80"
-              title="Download Official LUNOVA Mobile App"
-            >
-              <Smartphone className="w-4 h-4 text-zinc-950 shrink-0 stroke-[2.5]" />
-              <span>DOWNLOAD APP</span>
-              <Download className="w-4 h-4 text-zinc-950 shrink-0 stroke-[2.5]" />
-            </button>
-          </div>
-
-          <span className="text-xs font-mono text-zinc-400">
-            Available on the Google Play Store & Apple App Store • Version 2.4.0
-          </span>
-        </div>
-      </section>
-
-      {/* App Download Selection Modal for Desktop/Unsupported Devices */}
-      <AppDownloadModal 
-        isOpen={isDownloadModalOpen} 
-        onClose={() => setIsDownloadModalOpen(false)} 
-      />
 
     </div>
   );

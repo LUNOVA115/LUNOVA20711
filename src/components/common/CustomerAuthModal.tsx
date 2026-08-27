@@ -9,7 +9,8 @@ export const CustomerAuthModal: React.FC = () => {
     customerLogin,
     customerRegister,
     customerUser,
-    customers
+    customers,
+    navigate
   } = useStore();
 
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -242,8 +243,19 @@ export const CustomerAuthModal: React.FC = () => {
           </div>
         )}
 
-        <div className="text-center pt-1 text-[11px] text-zinc-500">
-          Customer accounts are exclusively for browsing, purchasing & order tracking.
+        <div className="text-center pt-2 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-zinc-400">
+          <span>Client VIP Portal</span>
+          <button
+            type="button"
+            onClick={() => {
+              setIsCustomerAuthModalOpen(false);
+              navigate('/admin/login');
+            }}
+            className="text-amber-400/80 hover:text-amber-300 transition-colors flex items-center space-x-1 font-mono cursor-pointer"
+          >
+            <Lock className="w-3 h-3 text-amber-400/80" />
+            <span>Admin Sign In</span>
+          </button>
         </div>
 
       </div>

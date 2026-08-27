@@ -243,19 +243,8 @@ export const CustomerAuthModal: React.FC = () => {
           </div>
         )}
 
-        <div className="text-center pt-2 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-zinc-400">
-          <span>Client VIP Portal</span>
-          <button
-            type="button"
-            onClick={() => {
-              setIsCustomerAuthModalOpen(false);
-              navigate('/admin/login');
-            }}
-            className="text-amber-400/80 hover:text-amber-300 transition-colors flex items-center space-x-1 font-mono cursor-pointer"
-          >
-            <Lock className="w-3 h-3 text-amber-400/80" />
-            <span>Admin Sign In</span>
-          </button>
+        <div className="text-center pt-2 border-t border-zinc-800/80 text-[11px] text-zinc-500 font-mono">
+          Client VIP Authentication Portal
         </div>
 
       </div>

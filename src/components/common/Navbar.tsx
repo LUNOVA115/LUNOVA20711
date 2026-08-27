@@ -399,19 +399,7 @@ export const Navbar: React.FC = () => {
                         </div>
                       </button>
 
-                      <div className="pt-2 mt-1 border-t border-zinc-800/60">
-                        <button
-                          onClick={() => {
-                            setIsAccountOpen(false);
-                            handleNav('/admin/login');
-                          }}
-                          className="w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-lg text-[10px] font-mono text-zinc-500 hover:text-amber-300 hover:bg-zinc-850 transition-all text-left cursor-pointer"
-                          title="Administrator Control Sign In"
-                        >
-                          <Lock className="w-3 h-3 text-zinc-500" />
-                          <span>Staff / Admin Login</span>
-                        </button>
-                      </div>
+                
                     </div>
                   )}
 

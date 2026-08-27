@@ -15,7 +15,7 @@ import {
 } from '../data/productImages';
 
 export const HomePage: React.FC = () => {
-  const { navigate, products, homeSettings, resetFilters, setFilters } = useStore();
+  const { navigate, products, categories, homeSettings, resetFilters, setFilters } = useStore();
 
   // Dynamically retrieve the flagship or first product of each category to display synchronized images
   const moonProduct = useMemo(() => {
@@ -124,89 +124,64 @@ export const HomePage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 relative z-10">
-            
-            {/* Collection 1: Moon Lamp Series */}
-            <div 
-              onClick={() => navigate('/collections/moon')}
-              className="group relative rounded-3xl overflow-hidden bg-[#0A0B10] border border-zinc-800/80 hover:border-amber-400/50 p-8 sm:p-12 cursor-pointer transition-all duration-500 shadow-2xl flex flex-col justify-between min-h-[460px]"
-            >
-              <div className="absolute inset-0 bg-radial from-amber-500/10 via-transparent to-transparent opacity-40 group-hover:opacity-100 transition-opacity duration-500" />
-              
-              <div className="relative z-10 flex items-start justify-between">
-                <div>
-                  <span className="px-3 py-1 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-300 text-[10px] font-mono uppercase font-bold tracking-widest">
-                    Series I • Cartography
-                  </span>
-                  <h3 className="text-2xl sm:text-3xl font-serif text-white mt-3 group-hover:text-amber-300 transition-colors">
-                    The Moon Collection
-                  </h3>
+            {categories.map((cat, idx) => {
+              const catProducts = products.filter(
+                p => p.category.toLowerCase() === cat.name.toLowerCase() || p.category.toLowerCase() === cat.slug.toLowerCase()
+              );
+              const uniqueSubs = Array.from(new Set(catProducts.map(p => p.subcategory).filter(Boolean)));
+              const subCount = cat.subcategories?.length || uniqueSubs.length || (idx === 0 ? 4 : 3);
+              const catImage = cat.image || (cat.slug === 'moon' ? moonImage : infinityImage);
+              const isEven = idx % 2 === 0;
+              const accentColor = isEven ? 'amber' : 'sky';
+
+              return (
+                <div 
+                  key={cat.id || idx}
+                  onClick={() => navigate(`/collections/${cat.slug}`)}
+                  className={`group relative rounded-3xl overflow-hidden bg-[#0A0B10] border border-zinc-800/80 hover:border-${accentColor}-400/50 p-8 sm:p-12 cursor-pointer transition-all duration-500 shadow-2xl flex flex-col justify-between min-h-[480px]`}
+                >
+                  <div className={`absolute inset-0 bg-radial from-${accentColor}-500/10 via-transparent to-transparent opacity-40 group-hover:opacity-100 transition-opacity duration-500`} />
+                  
+                  <div className="relative z-10 flex items-start justify-between">
+                    <div>
+                      <span className={`px-3 py-1 rounded-full bg-${accentColor}-400/15 border border-${accentColor}-400/30 text-${accentColor}-300 text-[10px] font-mono uppercase font-bold tracking-widest`}>
+                        Series {idx + 1} • {cat.slug.toUpperCase()}
+                      </span>
+                      <h3 className={`text-2xl sm:text-3xl font-serif text-white mt-3 group-hover:text-${accentColor}-300 transition-colors`}>
+                        {cat.name}
+                      </h3>
+                      {/* Subcategories count display */}
+                      <div className="mt-2.5 inline-flex items-center space-x-2 px-3 py-1 rounded-xl bg-zinc-900/90 border border-zinc-800 text-xs font-mono">
+                        <span className="text-zinc-400 uppercase tracking-wider font-semibold">Subcategories</span>
+                        <span className={`text-${accentColor}-300 font-bold`}>{subCount}</span>
+                      </div>
+                    </div>
+                    <div className={`p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-${accentColor}-400 group-hover:bg-${accentColor}-400 group-hover:text-zinc-950 transition-colors`}>
+                      {idx === 0 ? <Moon className="w-5 h-5" /> : <Layers className="w-5 h-5" />}
+                    </div>
+                  </div>
+
+                  {/* Visual Centerpiece */}
+                  <div className="relative z-10 w-48 h-48 sm:w-60 sm:h-60 mx-auto my-6 transform group-hover:scale-110 transition-transform duration-700 ease-out">
+                    <img
+                      src={catImage}
+                      alt={cat.name}
+                      className="w-full h-full object-contain filter drop-shadow-[0_15px_35px_rgba(245,158,11,0.25)]"
+                    />
+                  </div>
+
+                  <div className="relative z-10 flex items-center justify-between pt-4 border-t border-zinc-800/80">
+                    <span className="text-xs font-mono text-zinc-400 truncate max-w-[240px] sm:max-w-xs">
+                      {cat.description || 'Mastercrafted Artisanal Living Edition'}
+                    </span>
+                    <span className={`text-xs font-mono uppercase tracking-widest text-${accentColor}-300 flex items-center space-x-1 group-hover:translate-x-1 transition-transform shrink-0`}>
+                      <span>View Archive</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </span>
+                  </div>
                 </div>
-                <div className="p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-amber-400 group-hover:bg-amber-400 group-hover:text-zinc-950 transition-colors">
-                  <Moon className="w-5 h-5" />
-                </div>
-              </div>
-
-              {/* Visual Centerpiece */}
-              <div className="relative z-10 w-48 h-48 sm:w-60 sm:h-60 mx-auto my-6 transform group-hover:scale-110 transition-transform duration-700 ease-out">
-                <img
-                  src={moonImage}
-                  alt="Moon Lamp Collection"
-                  className="w-full h-full object-contain filter drop-shadow-[0_15px_35px_rgba(245,158,11,0.25)]"
-                />
-              </div>
-
-              <div className="relative z-10 flex items-center justify-between pt-4 border-t border-zinc-800/80">
-                <span className="text-xs font-mono text-zinc-400">
-                  Precision NASA Altimetry • 3D Basalt Polymer
-                </span>
-                <span className="text-xs font-mono uppercase tracking-widest text-amber-300 flex items-center space-x-1 group-hover:translate-x-1 transition-transform">
-                  <span>View Archive</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </span>
-              </div>
-            </div>
-
-            {/* Collection 2: Infinity Mirror Table Series */}
-            <div 
-              onClick={() => navigate('/collections/infinity')}
-              className="group relative rounded-3xl overflow-hidden bg-[#0A0B10] border border-zinc-800/80 hover:border-sky-400/50 p-8 sm:p-12 cursor-pointer transition-all duration-500 shadow-2xl flex flex-col justify-between min-h-[460px]"
-            >
-              <div className="absolute inset-0 bg-radial from-sky-500/10 via-transparent to-transparent opacity-40 group-hover:opacity-100 transition-opacity duration-500" />
-              
-              <div className="relative z-10 flex items-start justify-between">
-                <div>
-                  <span className="px-3 py-1 rounded-full bg-sky-400/15 border border-sky-400/30 text-sky-300 text-[10px] font-mono uppercase font-bold tracking-widest">
-                    Series II • Hyper-Depth
-                  </span>
-                  <h3 className="text-2xl sm:text-3xl font-serif text-white mt-3 group-hover:text-sky-300 transition-colors">
-                    The Infinity Collection
-                  </h3>
-                </div>
-                <div className="p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-sky-400 group-hover:bg-sky-400 group-hover:text-zinc-950 transition-colors">
-                  <Layers className="w-5 h-5" />
-                </div>
-              </div>
-
-              {/* Visual Centerpiece */}
-              <div className="relative z-10 w-48 h-48 sm:w-60 sm:h-60 mx-auto my-6 transform group-hover:scale-110 transition-transform duration-700 ease-out">
-                <img
-                  src={infinityImage}
-                  alt="Infinity Mirror Collection"
-                  className="w-full h-full object-contain filter drop-shadow-[0_15px_35px_rgba(56,189,248,0.25)]"
-                />
-              </div>
-
-              <div className="relative z-10 flex items-center justify-between pt-4 border-t border-zinc-800/80">
-                <span className="text-xs font-mono text-zinc-400">
-                  Dielectric Optical Abyss • 6061 Aerospace Aluminum
-                </span>
-                <span className="text-xs font-mono uppercase tracking-widest text-sky-300 flex items-center space-x-1 group-hover:translate-x-1 transition-transform">
-                  <span>View Archive</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </span>
-              </div>
-            </div>
-
+              );
+            })}
           </div>
 
         </div>

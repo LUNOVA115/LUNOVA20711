@@ -3,6 +3,8 @@ import { useStore } from '../../context/StoreContext';
 import { useTheme } from '../../context/ThemeContext';
 import { CurrencySelector } from './CurrencySelector';
 import { HamburgerDrawer } from './HamburgerDrawer';
+import { AppDownloadModal } from './AppDownloadModal';
+import { handleAppDownload } from '../../utils/appStore';
 import { 
   Search, 
   ShoppingBag, 
@@ -51,6 +53,15 @@ export const Navbar: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+
+  const handleDownloadClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setMobileMenuOpen(false);
+    handleAppDownload({
+      onDesktopFallback: () => setIsDownloadModalOpen(true)
+    });
+  };
 
   const accountRef = useRef<HTMLDivElement>(null);
 
@@ -440,13 +451,8 @@ export const Navbar: React.FC = () => {
               </button>
 
               {/* 5. Download Official Mobile App */}
-              <a
-                href="/downloads/LUNOVA-Luxury-App.apk"
-                download="LUNOVA-Luxury-App.apk"
-                onClick={() => {
-                  addToast('Downloading official LUNOVA Android App (v2.4)...', 'success');
-                  setMobileMenuOpen(false);
-                }}
+              <button
+                onClick={handleDownloadClick}
                 className="w-full py-3 px-3.5 rounded-xl bg-gradient-to-r from-amber-400/15 via-amber-300/10 to-amber-500/15 border border-amber-400/35 text-amber-300 font-bold flex items-center justify-between cursor-pointer group"
               >
                 <span className="flex items-center space-x-2">
@@ -455,9 +461,9 @@ export const Navbar: React.FC = () => {
                 </span>
                 <span className="text-[10px] bg-amber-400 text-zinc-950 px-2 py-0.5 rounded-full font-mono font-bold flex items-center space-x-1">
                   <Download className="w-3 h-3" />
-                  <span>APK v2.4</span>
+                  <span>iOS & Android</span>
                 </span>
-              </a>
+              </button>
 
               {/* Mobile Quick Action Buttons */}
               <div className="grid grid-cols-3 gap-2 pt-2">
@@ -560,6 +566,12 @@ export const Navbar: React.FC = () => {
       <HamburgerDrawer 
         isOpen={isDrawerOpen} 
         onClose={() => setIsDrawerOpen(false)} 
+      />
+
+      {/* App Download Selection Modal */}
+      <AppDownloadModal 
+        isOpen={isDownloadModalOpen} 
+        onClose={() => setIsDownloadModalOpen(false)} 
       />
     </>
   );

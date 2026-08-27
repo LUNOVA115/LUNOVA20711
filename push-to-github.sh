@@ -163,7 +163,7 @@ fi
 
 if [ "$PUSH_SUCCESS" = true ]; then
     echo -e "\n${GREEN}${BOLD}🎉 SUCCESS! Your latest Google AI Studio changes have been pushed to GitHub!${NC}"
-    echo -e "${GREEN}⚡ Netlify will automatically detect this commit and publish the updated site in ~1-2 minutes.${NC}"
+    echo -e "${GREEN}⚡ Cloudflare Pages & Netlify will automatically detect this commit and publish the updated site in ~1-2 minutes.${NC}"
     
     # Save the authenticated remote temporarily so subsequent fast pushes work in this session
     read -r -p "Save these credentials locally for this session? (y/N): " SAVE_CREDS

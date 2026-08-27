@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
+import { AppDownloadModal } from './AppDownloadModal';
+import { handleAppDownload } from '../../utils/appStore';
 import { 
   Lock,
   MessageCircle,
@@ -24,6 +26,15 @@ export const Footer: React.FC = () => {
     instagramSettings,
     addToast
   } = useStore();
+
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+
+  const handleDownloadClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    handleAppDownload({
+      onDesktopFallback: () => setIsDownloadModalOpen(true)
+    });
+  };
 
   const [subscribeEmail, setSubscribeEmail] = React.useState('');
 
@@ -204,19 +215,15 @@ export const Footer: React.FC = () => {
                   </button>
                 </li>
                 <li className="pt-2">
-                  <a
-                    href="/downloads/LUNOVA-Luxury-App.apk"
-                    download="LUNOVA-Luxury-App.apk"
-                    onClick={() => {
-                      addToast('Downloading official LUNOVA Android App (v2.4)...', 'success');
-                    }}
+                  <button
+                    onClick={handleDownloadClick}
                     className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-zinc-950 text-xs font-sans font-extrabold uppercase tracking-wider shadow-md shadow-amber-500/20 hover:scale-105 transition-all duration-200 cursor-pointer border border-amber-300/80 active:scale-95"
-                    title="Download Official LUNOVA Mobile App (APK)"
+                    title="Download Official LUNOVA Mobile App"
                   >
                     <Smartphone className="w-3.5 h-3.5 text-zinc-950 shrink-0 stroke-[2.5]" />
                     <span className="font-extrabold text-[11px] tracking-wider text-zinc-950">DOWNLOAD APP</span>
                     <Download className="w-3.5 h-3.5 text-zinc-950 shrink-0 stroke-[2.5]" />
-                  </a>
+                  </button>
                 </li>
               </ul>
             </div>
@@ -374,6 +381,11 @@ export const Footer: React.FC = () => {
         </div>
 
       </div>
+
+      <AppDownloadModal 
+        isOpen={isDownloadModalOpen} 
+        onClose={() => setIsDownloadModalOpen(false)} 
+      />
     </footer>
   );
 };

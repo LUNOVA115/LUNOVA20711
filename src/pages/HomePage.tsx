@@ -95,95 +95,87 @@ export const HomePage: React.FC = () => {
       {/* =========================================================================
           CURATED COLLECTIONS EDITORIAL
       ========================================================================= */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-zinc-950/95 border border-zinc-800/90 rounded-3xl p-6 sm:p-10 shadow-2xl backdrop-blur-md relative overflow-hidden">
-          
-          {/* Subtle Ambient Background Light */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        {/* Two-Column Header */}
+        <div className="flex flex-row items-center justify-between pb-4 border-b border-zinc-800/60">
+          <h2 className="text-xl sm:text-3xl font-serif text-white tracking-tight font-normal">
+            Refined Artisanal Creations
+          </h2>
+          <button
+            onClick={() => {
+              if (resetFilters) {
+                resetFilters();
+              } else {
+                setFilters((prev) => ({ ...prev, category: 'all', search: '', inStockOnly: false, minRating: 0 }));
+              }
+              navigate('/shop');
+            }}
+            className="text-xs sm:text-sm font-mono tracking-widest uppercase text-amber-300 hover:text-amber-200 flex items-center space-x-1.5 group cursor-pointer transition-colors shrink-0"
+          >
+            <span>Explore All Collections</span>
+            <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
 
-          {/* Two-Column Header */}
-          <div className="flex flex-row items-center justify-between mb-8 pb-4 border-b border-zinc-800/60 relative z-10">
-            <h2 className="text-xl sm:text-3xl font-serif text-white tracking-tight font-normal">
-              Refined Artisanal Creations
-            </h2>
-            <button
-              onClick={() => {
-                if (resetFilters) {
-                  resetFilters();
-                } else {
-                  setFilters((prev) => ({ ...prev, category: 'all', search: '', inStockOnly: false, minRating: 0 }));
-                }
-                navigate('/shop');
-              }}
-              className="text-xs sm:text-sm font-mono tracking-widest uppercase text-amber-300 hover:text-amber-200 flex items-center space-x-1.5 group cursor-pointer transition-colors shrink-0"
-            >
-              <span>Explore All Collections</span>
-              <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {categories.map((cat, idx) => {
+            const catProducts = products.filter(
+              p => p.category.toLowerCase() === cat.name.toLowerCase() || p.category.toLowerCase() === cat.slug.toLowerCase()
+            );
+            const uniqueSubs = Array.from(new Set(catProducts.map(p => p.subcategory).filter(Boolean)));
+            const subCount = cat.subcategories?.length || uniqueSubs.length || (idx === 0 ? 4 : 3);
+            const catImage = cat.image || (cat.slug === 'moon' ? moonImage : infinityImage);
+            const isEven = idx % 2 === 0;
+            const accentColor = isEven ? 'amber' : 'sky';
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 relative z-10">
-            {categories.map((cat, idx) => {
-              const catProducts = products.filter(
-                p => p.category.toLowerCase() === cat.name.toLowerCase() || p.category.toLowerCase() === cat.slug.toLowerCase()
-              );
-              const uniqueSubs = Array.from(new Set(catProducts.map(p => p.subcategory).filter(Boolean)));
-              const subCount = cat.subcategories?.length || uniqueSubs.length || (idx === 0 ? 4 : 3);
-              const catImage = cat.image || (cat.slug === 'moon' ? moonImage : infinityImage);
-              const isEven = idx % 2 === 0;
-              const accentColor = isEven ? 'amber' : 'sky';
-
-              return (
-                <div 
-                  key={cat.id || idx}
-                  onClick={() => navigate(`/collections/${cat.slug}`)}
-                  className={`group relative rounded-3xl overflow-hidden bg-[#0A0B10] border border-zinc-800/80 hover:border-${accentColor}-400/50 p-8 sm:p-12 cursor-pointer transition-all duration-500 shadow-2xl flex flex-col justify-between min-h-[480px]`}
-                >
-                  <div className={`absolute inset-0 bg-radial from-${accentColor}-500/10 via-transparent to-transparent opacity-40 group-hover:opacity-100 transition-opacity duration-500`} />
-                  
-                  <div className="relative z-10 flex items-start justify-between">
-                    <div>
-                      <span className={`px-3 py-1 rounded-full bg-${accentColor}-400/15 border border-${accentColor}-400/30 text-${accentColor}-300 text-[10px] font-mono uppercase font-bold tracking-widest`}>
-                        Series {idx + 1} • {cat.slug.toUpperCase()}
-                      </span>
-                      <h3 className={`text-2xl sm:text-3xl font-serif text-white mt-3 group-hover:text-${accentColor}-300 transition-colors`}>
-                        {cat.name}
-                      </h3>
-                      {/* Subcategories count display */}
-                      <div className="mt-2.5 inline-flex items-center space-x-2 px-3 py-1 rounded-xl bg-zinc-900/90 border border-zinc-800 text-xs font-mono">
-                        <span className="text-zinc-400 uppercase tracking-wider font-semibold">Subcategories</span>
-                        <span className={`text-${accentColor}-300 font-bold`}>{subCount}</span>
-                      </div>
-                    </div>
-                    <div className={`p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-${accentColor}-400 group-hover:bg-${accentColor}-400 group-hover:text-zinc-950 transition-colors`}>
-                      {idx === 0 ? <Moon className="w-5 h-5" /> : <Layers className="w-5 h-5" />}
+            return (
+              <div 
+                key={cat.id || idx}
+                onClick={() => navigate(`/collections/${cat.slug}`)}
+                className={`group relative rounded-3xl overflow-hidden bg-[#0A0B10] border border-zinc-800/80 hover:border-${accentColor}-400/50 p-8 sm:p-12 cursor-pointer transition-all duration-500 shadow-2xl flex flex-col justify-between min-h-[480px]`}
+              >
+                <div className={`absolute inset-0 bg-radial from-${accentColor}-500/10 via-transparent to-transparent opacity-40 group-hover:opacity-100 transition-opacity duration-500`} />
+                
+                <div className="relative z-10 flex items-start justify-between">
+                  <div>
+                    <span className={`px-3 py-1 rounded-full bg-${accentColor}-400/15 border border-${accentColor}-400/30 text-${accentColor}-300 text-[10px] font-mono uppercase font-bold tracking-widest`}>
+                      Series {idx + 1} • {cat.slug.toUpperCase()}
+                    </span>
+                    <h3 className={`text-2xl sm:text-3xl font-serif text-white mt-3 group-hover:text-${accentColor}-300 transition-colors`}>
+                      {cat.name}
+                    </h3>
+                    {/* Subcategories count display */}
+                    <div className="mt-2.5 inline-flex items-center space-x-2 px-3 py-1 rounded-xl bg-zinc-900/90 border border-zinc-800 text-xs font-mono">
+                      <span className="text-zinc-400 uppercase tracking-wider font-semibold">Subcategories</span>
+                      <span className={`text-${accentColor}-300 font-bold`}>{subCount}</span>
                     </div>
                   </div>
-
-                  {/* Visual Centerpiece */}
-                  <div className="relative z-10 w-48 h-48 sm:w-60 sm:h-60 mx-auto my-6 transform group-hover:scale-110 transition-transform duration-700 ease-out">
-                    <img
-                      src={catImage}
-                      alt={cat.name}
-                      className="w-full h-full object-contain filter drop-shadow-[0_15px_35px_rgba(245,158,11,0.25)]"
-                    />
-                  </div>
-
-                  <div className="relative z-10 flex items-center justify-between pt-4 border-t border-zinc-800/80">
-                    <span className="text-xs font-mono text-zinc-400 truncate max-w-[240px] sm:max-w-xs">
-                      {cat.description || 'Mastercrafted Artisanal Living Edition'}
-                    </span>
-                    <span className={`text-xs font-mono uppercase tracking-widest text-${accentColor}-300 flex items-center space-x-1 group-hover:translate-x-1 transition-transform shrink-0`}>
-                      <span>View Archive</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </span>
+                  <div className={`p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-${accentColor}-400 group-hover:bg-${accentColor}-400 group-hover:text-zinc-950 transition-colors`}>
+                    {idx === 0 ? <Moon className="w-5 h-5" /> : <Layers className="w-5 h-5" />}
                   </div>
                 </div>
-              );
-            })}
-          </div>
 
+                {/* Visual Centerpiece */}
+                <div className="relative z-10 w-48 h-48 sm:w-60 sm:h-60 mx-auto my-6 transform group-hover:scale-110 transition-transform duration-700 ease-out">
+                  <img
+                    src={catImage}
+                    alt={cat.name}
+                    className="w-full h-full object-contain filter drop-shadow-[0_15px_35px_rgba(245,158,11,0.25)]"
+                  />
+                </div>
+
+                <div className="relative z-10 flex items-center justify-between pt-4 border-t border-zinc-800/80">
+                  <span className="text-xs font-mono text-zinc-400 truncate max-w-[240px] sm:max-w-xs">
+                    {cat.description || 'Mastercrafted Artisanal Living Edition'}
+                  </span>
+                  <span className={`text-xs font-mono uppercase tracking-widest text-${accentColor}-300 flex items-center space-x-1 group-hover:translate-x-1 transition-transform shrink-0`}>
+                    <span>View Archive</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 

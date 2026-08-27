@@ -25,8 +25,8 @@ export const CollectionsPage: React.FC = () => {
 
       {/* Categories Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {categories.map((category) => (
-          <CollectionCard key={category.id} category={category} />
+        {categories.map((category, idx) => (
+          <CollectionCard key={category.id} category={category} index={idx} />
         ))}
       </div>
     </div>

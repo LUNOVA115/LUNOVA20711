@@ -5,7 +5,9 @@ import {
   ArrowRight, 
   Sparkles, 
   Moon, 
-  Layers
+  Layers,
+  ShieldCheck,
+  Award
 } from 'lucide-react';
 import { 
   IMAGE_1_GOLD_TABLE, 
@@ -205,6 +207,37 @@ export const HomePage: React.FC = () => {
               </div>
             </div>
 
+          </div>
+
+        </div>
+      </section>
+
+      {/* =========================================================================
+          ATELIER GUARANTEES & CRAFT SUPPORT
+      ========================================================================= */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <div className="bg-zinc-950/80 border border-zinc-800/80 rounded-2xl p-4 sm:p-5 flex items-center space-x-4 shadow-md backdrop-blur-md relative overflow-hidden group hover:border-amber-400/40 transition-all duration-300">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-xl pointer-events-none" />
+            <div className="p-2.5 rounded-xl bg-amber-400/10 border border-amber-400/30 text-amber-400 shrink-0 group-hover:scale-105 transition-transform">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-serif text-white tracking-wide">30-Day Guarantee</h3>
+              <p className="text-xs text-zinc-400 font-sans mt-0.5">Hassle-free artisanal returns</p>
+            </div>
+          </div>
+
+          <div className="bg-zinc-950/80 border border-zinc-800/80 rounded-2xl p-4 sm:p-5 flex items-center space-x-4 shadow-md backdrop-blur-md relative overflow-hidden group hover:border-amber-400/40 transition-all duration-300">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-xl pointer-events-none" />
+            <div className="p-2.5 rounded-xl bg-amber-400/10 border border-amber-400/30 text-amber-400 shrink-0 group-hover:scale-105 transition-transform">
+              <Award className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-serif text-white tracking-wide">Lifetime Craft Support</h3>
+              <p className="text-xs text-zinc-400 font-sans mt-0.5">100% authentic craftsmanship</p>
+            </div>
           </div>
 
         </div>

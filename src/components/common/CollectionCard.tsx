@@ -34,17 +34,11 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({ category, index 
 
       <div className="relative z-10 flex items-start justify-between">
         <div>
-          <span className={`px-3 py-1 rounded-full bg-${accentColor}-400/15 border border-${accentColor}-400/30 text-${accentColor}-300 text-[10px] font-mono uppercase font-bold tracking-widest`}>
-            Series {index + 1} • {category.slug.toUpperCase()}
-          </span>
+
           <h3 className={`text-2xl sm:text-3xl font-serif text-white mt-3 group-hover:text-${accentColor}-300 transition-colors`}>
             {category.name}
           </h3>
-          {/* Subcategories count display */}
-          <div className="mt-2.5 inline-flex items-center space-x-2 px-3 py-1 rounded-xl bg-zinc-900/90 border border-zinc-800 text-xs font-mono">
-            <span className="text-zinc-400 uppercase tracking-wider font-semibold">Subcategories</span>
-            <span className={`text-${accentColor}-300 font-bold`}>{subCount}</span>
-          </div>
+
         </div>
         <div className={`p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-${accentColor}-400 group-hover:bg-${accentColor}-400 group-hover:text-zinc-950 transition-colors`}>
           {index === 0 ? <Moon className="w-5 h-5" /> : <Layers className="w-5 h-5" />}

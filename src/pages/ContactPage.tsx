@@ -10,7 +10,9 @@ import {
   Instagram, 
   ExternalLink,
   MessageCircle,
-  ArrowRight
+  ArrowRight,
+  Sparkles,
+  HelpCircle
 } from 'lucide-react';
 
 export const ContactPage: React.FC = () => {
@@ -65,14 +67,14 @@ export const ContactPage: React.FC = () => {
   ];
 
   return (
-    <div className="w-[calc(100%-1cm)] mx-[0.5cm] py-6 sm:py-8 text-zinc-100">
+    <div className="w-full max-w-[calc(100%-2in)] mx-auto py-8 sm:py-10 text-zinc-100">
       
       {/* Page Header */}
-      <div className="text-center max-w-2xl mx-auto mb-6 space-y-1.5">
+      <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
         <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-amber-400 font-semibold block">
           ATELIER SUPPORT & CONCIERGE
         </span>
-        <h1 className="text-2xl sm:text-3xl font-serif text-white font-light tracking-tight">
+        <h1 className="text-2xl sm:text-4xl font-serif text-white font-light tracking-tight">
           Get in Touch
         </h1>
         <p className="text-xs sm:text-sm text-zinc-400 font-light leading-relaxed">
@@ -80,265 +82,275 @@ export const ContactPage: React.FC = () => {
         </p>
       </div>
 
-      {/* Two-Column Contact Section (Reduced Height & Full Width with 0.5cm margins) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
-        
-        {/* LEFT COLUMN: Dark Contact-Information Card */}
-        <div className="lg:col-span-5 bg-[#0b0c10] border border-zinc-800/90 rounded-xl p-4 sm:p-5 shadow-2xl flex flex-col justify-between relative overflow-hidden group">
-          {/* Ambient Glow Accent */}
-          <div className="absolute -top-24 -left-24 w-60 h-60 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* 1. TOP SECTION: LUNOVA Concierge */}
+      <div className="bg-[#0b0c10] border border-zinc-800/90 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden group">
+        {/* Ambient Glow Accent */}
+        <div className="absolute -top-24 -left-24 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-80 h-80 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative z-10 space-y-3.5">
-            {/* Card Header */}
+        <div className="relative z-10 space-y-6">
+          {/* Card Header & WhatsApp Action */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
             <div>
-              <span className="text-[9px] font-mono uppercase tracking-[0.25em] text-amber-400/90 font-bold block mb-0.5">
+              <span className="text-[9px] font-mono uppercase tracking-[0.25em] text-amber-400/90 font-bold block mb-1">
                 DIRECT CLIENT RELATIONS
               </span>
-              <h2 className="text-lg sm:text-xl font-serif text-white font-normal">
+              <h2 className="text-xl sm:text-2xl font-serif text-white font-normal">
                 LUNOVA Concierge
               </h2>
-              <p className="text-[11px] text-zinc-400 mt-0.5 font-light leading-relaxed">
+              <p className="text-xs text-zinc-400 mt-0.5 font-light leading-relaxed">
                 Dedicated assistance for bespoke architectural illuminations & custom orders.
               </p>
             </div>
-
-            {/* Directory Details List */}
-            <div className="space-y-2.5 text-xs pt-2 border-t border-zinc-800/80">
-              
-              {/* Email Address - VISIBLE ONLY ON ADMIN SIDE */}
-              {adminUser && (
-                <div className="flex items-start space-x-2.5 group/item">
-                  <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 shrink-0 mt-0.5">
-                    <Mail className="w-3 h-3" />
-                  </div>
-                  <div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-[9px] text-zinc-400 font-mono uppercase tracking-wider">
-                        Email Address
-                      </span>
-                      <span className="px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[8px] font-mono font-bold">
-                        ADMIN ONLY
-                      </span>
-                    </div>
-                    <a 
-                      href={`mailto:${email}`} 
-                      className="text-amber-300 hover:text-amber-200 transition-colors text-[11px] font-mono break-all font-medium mt-0.5 block"
-                    >
-                      {email}
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {/* Phone */}
-              <div className="flex items-start space-x-2.5 group/item">
-                <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-amber-400 shrink-0 mt-0.5">
-                  <Phone className="w-3 h-3" />
-                </div>
-                <div>
-                  <div className="text-[9px] text-zinc-400 font-mono uppercase tracking-wider">
-                    Mobile Hotline
-                  </div>
-                  <a 
-                    href={`tel:${phone.replace(/[^0-9+]/g, '')}`} 
-                    className="text-zinc-200 hover:text-amber-300 transition-colors text-[11px] font-mono font-medium mt-0.5 block"
-                  >
-                    {phone}
-                  </a>
-                </div>
-              </div>
-
-              {/* Instagram */}
-              <div className="flex items-start space-x-2.5 group/item">
-                <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-pink-400 shrink-0 mt-0.5">
-                  <Instagram className="w-3 h-3" />
-                </div>
-                <div>
-                  <div className="text-[9px] text-zinc-400 font-mono uppercase tracking-wider">
-                    Official Instagram
-                  </div>
-                  <a 
-                    href={instagramUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="text-zinc-200 hover:text-pink-300 transition-colors text-[11px] font-mono font-medium mt-0.5 inline-flex items-center space-x-1"
-                  >
-                    <span>@{instagramHandle}</span>
-                    <ExternalLink className="w-2.5 h-2.5 text-pink-400/80" />
-                  </a>
-                </div>
-              </div>
-
-              {/* Hours */}
-              <div className="flex items-start space-x-2.5 group/item">
-                <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-amber-400 shrink-0 mt-0.5">
-                  <Clock className="w-3 h-3" />
-                </div>
-                <div>
-                  <div className="text-[9px] text-zinc-400 font-mono uppercase tracking-wider">
-                    Concierge Hours
-                  </div>
-                  <div className="text-zinc-200 text-[11px] font-sans mt-0.5">
-                    {hours}
-                  </div>
-                </div>
-              </div>
-
-              {/* Location */}
-              <div className="flex items-start space-x-2.5 group/item pt-0.5">
-                <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-amber-400 shrink-0 mt-0.5">
-                  <MapPin className="w-3 h-3" />
-                </div>
-                <div>
-                  <div className="text-[9px] text-zinc-400 font-mono uppercase tracking-wider">
-                    Atelier & Showroom
-                  </div>
-                  <div className="text-zinc-200 text-[11px] font-sans mt-0.5 leading-snug">
-                    {address}
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          {/* Bottom WhatsApp CTA Button */}
-          <div className="relative z-10 mt-3 pt-3 border-t border-zinc-800/80">
+            
             <a
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-zinc-950 font-mono font-bold text-[11px] uppercase tracking-widest flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/20 transition-all duration-200 cursor-pointer group hover:scale-[1.005]"
+              className="py-2.5 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-zinc-950 font-mono font-bold text-xs uppercase tracking-widest flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/20 transition-all duration-200 cursor-pointer group hover:scale-[1.01] shrink-0"
             >
-              <MessageCircle className="w-3.5 h-3.5 fill-zinc-950" />
+              <MessageCircle className="w-4 h-4 fill-zinc-950" />
               <span>Chat on WhatsApp →</span>
             </a>
           </div>
-        </div>
 
-        {/* RIGHT COLUMN: Light Contact-Form Card */}
-        <div className="lg:col-span-7 bg-[#F5F2EB] text-zinc-900 rounded-xl p-4 sm:p-5 shadow-2xl border border-stone-200/80 flex flex-col justify-between relative">
-          
-          <div>
-            {/* Card Header */}
-            <div className="mb-3 pb-2 border-b border-stone-300/60">
-              <span className="text-[9px] font-mono uppercase tracking-[0.25em] text-stone-500 font-bold block mb-0.5">
-                ELECTRONIC BRIEF
-              </span>
-              <h2 className="text-lg sm:text-xl font-serif text-zinc-900 font-normal">
-                Send a Message
-              </h2>
+          {/* Directory Details Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+            
+            {/* Phone */}
+            <div className="flex items-start space-x-3 p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/70">
+              <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-amber-400 shrink-0">
+                <Phone className="w-3.5 h-3.5" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider">
+                  Mobile Hotline
+                </div>
+                <a 
+                  href={`tel:${phone.replace(/[^0-9+]/g, '')}`} 
+                  className="text-zinc-200 hover:text-amber-300 transition-colors text-xs font-mono font-medium mt-1 block truncate"
+                >
+                  {phone}
+                </a>
+              </div>
             </div>
 
-            {submitted ? (
-              <div className="py-6 text-center space-y-2">
-                <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
-                <h3 className="text-lg font-serif text-zinc-900">Thank You</h3>
-                <p className="text-xs text-stone-600 max-w-md mx-auto">
-                  Your message has been received by our client concierge. We will respond to <strong className="text-zinc-900">{formData.email}</strong> shortly.
-                </p>
-                <button
-                  onClick={() => {
-                    setSubmitted(false);
-                    setFormData({ name: '', email: '', message: '' });
-                  }}
-                  className="mt-2 px-4 py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-amber-300 text-[11px] font-mono font-bold uppercase tracking-widest transition-colors cursor-pointer"
-                >
-                  Send Another Message
-                </button>
+            {/* Instagram */}
+            <div className="flex items-start space-x-3 p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/70">
+              <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-pink-400 shrink-0">
+                <Instagram className="w-3.5 h-3.5" />
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-3">
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* Your Name */}
-                  <div>
-                    <label className="block text-[9px] font-mono uppercase tracking-wider text-stone-600 font-bold mb-1">
-                      Your Name
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Eleanor Vance"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3 py-2 bg-white border border-stone-300 rounded-lg text-zinc-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 transition-all font-sans text-xs shadow-sm"
-                    />
-                  </div>
-
-                  {/* Email Address */}
-                  <div>
-                    <label className="block text-[9px] font-mono uppercase tracking-wider text-stone-600 font-bold mb-1">
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      placeholder="e.g. eleanor@atelier.com"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-3 py-2 bg-white border border-stone-300 rounded-lg text-zinc-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 transition-all font-sans text-xs shadow-sm"
-                    />
-                  </div>
+              <div className="min-w-0">
+                <div className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider">
+                  Official Instagram
                 </div>
+                <a 
+                  href={instagramUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-zinc-200 hover:text-pink-300 transition-colors text-xs font-mono font-medium mt-1 inline-flex items-center space-x-1 truncate"
+                >
+                  <span className="truncate">@{instagramHandle}</span>
+                  <ExternalLink className="w-3 h-3 text-pink-400/80 shrink-0" />
+                </a>
+              </div>
+            </div>
 
-                {/* Message */}
+            {/* Hours */}
+            <div className="flex items-start space-x-3 p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/70">
+              <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-amber-400 shrink-0">
+                <Clock className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <div className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider">
+                  Concierge Hours
+                </div>
+                <div className="text-zinc-200 text-xs font-sans mt-1 leading-snug">
+                  {hours}
+                </div>
+              </div>
+            </div>
+
+            {/* Location */}
+            <div className="flex items-start space-x-3 p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800/70">
+              <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-amber-400 shrink-0">
+                <MapPin className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <div className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider">
+                  Atelier & Showroom
+                </div>
+                <div className="text-zinc-200 text-xs font-sans mt-1 leading-snug">
+                  {address}
+                </div>
+              </div>
+            </div>
+
+            {/* Email Address - VISIBLE ONLY ON ADMIN SIDE */}
+            {adminUser && (
+              <div className="sm:col-span-2 lg:col-span-4 flex items-start space-x-3 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30">
+                <div className="p-2 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-400 shrink-0">
+                  <Mail className="w-3.5 h-3.5" />
+                </div>
                 <div>
-                  <label className="block text-[9px] font-mono uppercase tracking-wider text-stone-600 font-bold mb-1">
-                    Message
+                  <div className="flex items-center space-x-2">
+                    <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider">
+                      Email Address
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[9px] font-mono font-bold">
+                      ADMIN ONLY
+                    </span>
+                  </div>
+                  <a 
+                    href={`mailto:${email}`} 
+                    className="text-amber-300 hover:text-amber-200 transition-colors text-xs font-mono break-all font-medium mt-1 block"
+                  >
+                    {email}
+                  </a>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      </div>
+
+      {/* 0.5 inch space between LUNOVA Concierge and Send a Message */}
+      <div className="h-[0.5in]" />
+
+      {/* 2. SECOND SECTION: Send a Message */}
+      <div className="bg-[#F5F2EB] text-zinc-900 rounded-2xl p-6 sm:p-8 shadow-2xl border border-stone-200/80 relative">
+        <div className="max-w-3xl mx-auto">
+          {/* Card Header */}
+          <div className="mb-5 pb-3 border-b border-stone-300/70 text-center sm:text-left">
+            <span className="text-[9px] font-mono uppercase tracking-[0.25em] text-stone-500 font-bold block mb-1">
+              ELECTRONIC BRIEF
+            </span>
+            <h2 className="text-xl sm:text-2xl font-serif text-zinc-900 font-normal">
+              Send a Message
+            </h2>
+            <p className="text-xs text-stone-600 font-light mt-0.5">
+              Submit your project details or inquiries directly to our engineering and design team.
+            </p>
+          </div>
+
+          {submitted ? (
+            <div className="py-8 text-center space-y-3">
+              <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
+              <h3 className="text-xl font-serif text-zinc-900">Thank You</h3>
+              <p className="text-sm text-stone-600 max-w-md mx-auto">
+                Your message has been received by our client concierge. We will respond to <strong className="text-zinc-900">{formData.email}</strong> shortly.
+              </p>
+              <button
+                onClick={() => {
+                  setSubmitted(false);
+                  setFormData({ name: '', email: '', message: '' });
+                }}
+                className="mt-3 px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-amber-300 text-xs font-mono font-bold uppercase tracking-widest transition-colors cursor-pointer"
+              >
+                Send Another Message
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Your Name */}
+                <div>
+                  <label className="block text-[10px] font-mono uppercase tracking-wider text-stone-700 font-bold mb-1.5">
+                    Your Name
                   </label>
-                  <textarea
-                    rows={2}
+                  <input
+                    type="text"
                     required
-                    placeholder="Specify your inquiry details, custom dimension requests, or installation timelines..."
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-stone-300 rounded-lg text-zinc-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 transition-all font-sans text-xs shadow-sm resize-none"
+                    placeholder="e.g. Eleanor Vance"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-zinc-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 transition-all font-sans text-xs shadow-sm"
                   />
                 </div>
 
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  className="w-full py-2.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-amber-300 font-mono font-bold text-[11px] uppercase tracking-widest flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer group hover:scale-[1.002]"
-                >
-                  <span>SEND MESSAGE →</span>
-                  <ArrowRight className="w-3 h-3 text-amber-400 group-hover:translate-x-1 transition-transform" />
-                </button>
+                {/* Email Address */}
+                <div>
+                  <label className="block text-[10px] font-mono uppercase tracking-wider text-stone-700 font-bold mb-1.5">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="e.g. eleanor@atelier.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-zinc-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 transition-all font-sans text-xs shadow-sm"
+                  />
+                </div>
+              </div>
 
-              </form>
-            )}
-          </div>
+              {/* Message */}
+              <div>
+                <label className="block text-[10px] font-mono uppercase tracking-wider text-stone-700 font-bold mb-1.5">
+                  Message
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="Specify your inquiry details, custom dimension requests, or installation timelines..."
+                  value={formData.message}
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-zinc-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 transition-all font-sans text-xs shadow-sm resize-none"
+                />
+              </div>
 
+              {/* Submit Button */}
+              <button
+                type="submit"
+                className="w-full py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-amber-300 font-mono font-bold text-xs uppercase tracking-widest flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer group hover:scale-[1.002]"
+              >
+                <span>SEND MESSAGE →</span>
+                <ArrowRight className="w-3.5 h-3.5 text-amber-400 group-hover:translate-x-1 transition-transform" />
+              </button>
+
+            </form>
+          )}
         </div>
-
       </div>
 
-      {/* Frequently Asked Questions Section (Directly below Contact sections with 1 cm vertical gap) */}
-      <div className="mt-[1cm] w-full bg-[#0b0c10] border border-zinc-800/90 rounded-xl p-4 sm:p-5 shadow-2xl backdrop-blur-xl">
-        <div className="mb-3 pb-2.5 border-b border-zinc-800/80 flex items-center space-x-3">
-          <span className="text-[9px] font-mono uppercase tracking-[0.25em] text-amber-400 font-bold block">
-            CLIENT INQUIRIES
-          </span>
-          <h2 className="text-lg sm:text-xl font-serif text-white font-normal">
-            Frequently Asked Questions
-          </h2>
+      {/* 0.5 inch space before FAQ section */}
+      <div className="h-[0.5in]" />
+
+      {/* 3. FAQ SECTION: Frameless / Cardless on Textured Background */}
+      <div className="w-full">
+        {/* Section Header */}
+        <div className="mb-8 pb-4 border-b border-zinc-800/80 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+          <div>
+            <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-amber-400 font-semibold block mb-1">
+              CURATED ANSWERS
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-serif text-white font-light tracking-tight">
+              Frequently Asked Questions
+            </h2>
+          </div>
+          <p className="text-xs text-zinc-400 font-light max-w-md">
+            Everything you need to know about our handcrafted collections, materials, and bespoke commissions.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {/* FAQs List rendered directly on textured page background without enclosing boxes/cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {faqs.map((faq, index) => (
             <div 
               key={index} 
-              className="bg-zinc-900/80 border border-zinc-800/80 rounded-lg p-3.5 flex flex-col justify-between hover:border-amber-400/30 transition-all"
+              className="space-y-2.5 pb-6 border-b border-zinc-800/50 md:border-b-0 md:border-r md:border-zinc-800/40 md:pr-8 last:border-b-0 md:last:border-r-0 md:last:pr-0"
             >
-              <div className="space-y-1.5">
-                <h3 className="text-xs font-semibold text-amber-300 leading-snug">
-                  {faq.question}
-                </h3>
-                <p className="text-[11px] text-zinc-300 font-light leading-relaxed">
-                  {faq.answer}
-                </p>
-              </div>
+              <h3 className="text-base sm:text-lg font-serif text-white font-normal flex items-start space-x-2.5">
+                <span className="text-amber-400/80 font-mono text-xs mt-1 shrink-0">
+                  0{index + 1}.
+                </span>
+                <span className="leading-snug">{faq.question}</span>
+              </h3>
+              <p className="text-xs sm:text-sm text-zinc-300 font-light leading-relaxed pl-6">
+                {faq.answer}
+              </p>
             </div>
           ))}
         </div>

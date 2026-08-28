@@ -108,8 +108,24 @@
 .theme-day .bg-\[\#050608\],
 .theme-day .bg-\[\#0a0b0e\],
 .theme-day .bg-\[\#0e0f14\],
+.theme-day .bg-\[\#0A0B10\],
+.theme-day .bg-\[\#0F1018\],
+.theme-day .bg-\[\#0B0C12\],
+.theme-day .bg-\[\#07080B\],
+.theme-day .bg-\[\#0d0e14\],
+.theme-day .bg-\[\#0d0e12\],
+.theme-day .bg-\[\#06070a\],
+.theme-day .bg-\[\#0e1017\],
+.theme-day .bg-\[\#12131A\],
+.theme-day .bg-\[\#090A10\],
+.theme-day .bg-\[\#121318\],
 .theme-day .bg-zinc-950 {
   background-color: #f5f2eb !important;
+}
+
+.theme-day [class*="bg-gradient-to-b"] {
+  background-image: none !important;
+  background-color: #eae5d9 !important;
 }
 
 .theme-day .bg-\[\#0c0d12\],

@@ -26,6 +26,7 @@ import {
   IMAGE_7_COOL_WHITE_MOON, 
   IMAGE_8_LIFESTYLE_TABLE 
 } from '../../data/productImages';
+import { optimizeImageFile } from '../../utils/imageOptimizer';
 
 const PRESET_ASSET_IMAGES = [
   { id: 'img-1', name: 'Golden Infinity Table', src: IMAGE_1_GOLD_TABLE },
@@ -103,23 +104,22 @@ export const AdminProductNewPage: React.FC = () => {
     addToast('Custom image URL added', 'success');
   };
 
-  const processFiles = (files: FileList | null) => {
+  const processFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    Array.from(files).forEach((file) => {
+    for (const file of Array.from(files)) {
       if (!file.type.startsWith('image/')) {
         addToast(`Skipped non-image "${file.name}"`, 'warning');
-        return;
+        continue;
       }
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const dataUrl = event.target?.result as string;
-        if (dataUrl) {
-          setImagesList((prev) => [...prev, dataUrl]);
-          addToast(`Uploaded "${file.name}"`, 'success');
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+      try {
+        const optimized = await optimizeImageFile(file, 1600, 1600, 0.86);
+        setImagesList((prev) => [...prev, optimized]);
+        addToast(`Optimized & attached "${file.name}"`, 'success');
+      } catch (err) {
+        console.error(err);
+        addToast(`Failed to process "${file.name}"`, 'error');
+      }
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,21 +127,20 @@ export const AdminProductNewPage: React.FC = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleReplaceFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleReplaceFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || replacingImageIndex === null) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      if (dataUrl) {
-        const updated = [...imagesList];
-        updated[replacingImageIndex] = dataUrl;
-        setImagesList(updated);
-        setReplacingImageIndex(null);
-        addToast(`Replaced Image #${replacingImageIndex + 1} with "${file.name}"`, 'success');
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const optimized = await optimizeImageFile(file, 1600, 1600, 0.86);
+      const updated = [...imagesList];
+      updated[replacingImageIndex] = optimized;
+      setImagesList(updated);
+      setReplacingImageIndex(null);
+      addToast(`Replaced Image #${replacingImageIndex + 1} with "${file.name}"`, 'success');
+    } catch (err) {
+      console.error(err);
+      addToast('Failed to replace image', 'error');
+    }
     if (replaceFileInputRef.current) replaceFileInputRef.current.value = '';
   };
 

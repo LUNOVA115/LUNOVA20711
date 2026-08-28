@@ -29,7 +29,10 @@ import {
   Maximize2,
   FolderOpen,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  DollarSign,
+  Percent,
+  Tag
 } from 'lucide-react';
 import { 
   IMAGE_1_GOLD_TABLE, 
@@ -92,6 +95,73 @@ export const AdminProductsPage: React.FC = () => {
   const [urlInput, setUrlInput] = useState('');
   const [previewZoomImage, setPreviewZoomImage] = useState<string | null>(null);
   const [isOptimizing, setIsOptimizing] = useState(false);
+
+  // Dedicated Quick Price Editor Modal
+  const [quickPriceProduct, setQuickPriceProduct] = useState<Product | null>(null);
+  const [quickPriceForm, setQuickPriceForm] = useState({
+    price: 0,
+    originalPrice: 0,
+    salePrice: 0,
+    isFlashDeal: false,
+    discountPercentage: 25,
+    note: ''
+  });
+
+  const handleOpenQuickPrice = (product: Product) => {
+    setQuickPriceProduct(product);
+    const orig = product.originalPrice || Math.round(product.price * 1.25);
+    const disc = product.discountPercentage || 25;
+    const sale = product.salePrice || Math.round(orig * (1 - disc / 100));
+    setQuickPriceForm({
+      price: product.price,
+      originalPrice: product.originalPrice || 0,
+      salePrice: sale,
+      isFlashDeal: !!product.isFlashDeal,
+      discountPercentage: disc,
+      note: ''
+    });
+  };
+
+  const handleSaveQuickPrice = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickPriceProduct) return;
+
+    const basePrice = Number(quickPriceForm.price);
+    const origPrice = quickPriceForm.originalPrice > 0 ? Number(quickPriceForm.originalPrice) : undefined;
+    const isFlash = quickPriceForm.isFlashDeal;
+    const discPct = Number(quickPriceForm.discountPercentage) || 25;
+    const sPrice = isFlash ? Number(quickPriceForm.salePrice) : undefined;
+
+    const todayDate = new Date().toISOString().split('T')[0];
+    const newRecord: PriceHistoryRecord = {
+      id: `ph-${quickPriceProduct.id}-${Date.now().toString(36)}`,
+      price: basePrice,
+      originalPrice: origPrice,
+      salePrice: sPrice,
+      date: todayDate,
+      changedBy: adminUser?.name || 'Store Admin',
+      note: quickPriceForm.note.trim() || `Price updated: ${formatPrice(sPrice || basePrice)}`
+    };
+
+    const existingHistory = quickPriceProduct.priceHistory || [];
+    const updatedHistory = [...existingHistory, newRecord].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    const updatedProduct: Product = {
+      ...quickPriceProduct,
+      price: basePrice,
+      originalPrice: origPrice,
+      salePrice: sPrice,
+      isFlashDeal: isFlash,
+      discountPercentage: isFlash ? discPct : undefined,
+      priceHistory: updatedHistory
+    };
+
+    updateProduct(updatedProduct);
+    addToast(`Price for "${quickPriceProduct.name}" updated and saved live!`, 'success');
+    setQuickPriceProduct(null);
+  };
 
   // New Product Form State
   const [formData, setFormData] = useState({
@@ -700,23 +770,42 @@ export const AdminProductsPage: React.FC = () => {
                         {/* 4. Price & History */}
                         <td className="py-3.5 px-4 font-mono whitespace-nowrap">
                           <div className="flex items-center space-x-2">
-                            <div>
-                              <div className="font-bold text-white text-sm">{formatPrice(p.salePrice || p.price)}</div>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenQuickPrice(p)}
+                              className="text-left group cursor-pointer hover:opacity-90"
+                              title="Click to quickly change price, sale price, or flash discount"
+                            >
+                              <div className="font-bold text-white text-sm group-hover:text-amber-300 flex items-center space-x-1 transition-colors">
+                                <span>{formatPrice(p.salePrice || p.price)}</span>
+                                <Edit3 className="w-3 h-3 text-zinc-500 group-hover:text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </div>
                               {p.originalPrice && p.originalPrice > (p.salePrice || p.price) && (
                                 <div className="text-[10px] text-zinc-500 line-through">
                                   {formatPrice(p.originalPrice)}
                                 </div>
                               )}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setPriceHistoryProduct(p)}
-                              className="px-2 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-mono font-bold flex items-center space-x-1 transition-all cursor-pointer group shadow-sm shrink-0"
-                              title="View Price History Line Graph"
-                            >
-                              <TrendingUp className="w-3 h-3 text-amber-400 group-hover:scale-110 transition-transform" />
-                              <span>History</span>
                             </button>
+                            <div className="flex items-center space-x-1">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenQuickPrice(p)}
+                                className="px-2 py-1 rounded-lg bg-zinc-900 hover:bg-amber-400/20 text-zinc-300 hover:text-amber-300 border border-zinc-700/80 hover:border-amber-400/40 text-[10px] font-mono font-bold flex items-center space-x-1 transition-all cursor-pointer shadow-sm shrink-0"
+                                title="Change Price / Set Discounts"
+                              >
+                                <DollarSign className="w-3 h-3 text-amber-400" />
+                                <span>Change Price</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPriceHistoryProduct(p)}
+                                className="px-2 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-mono font-bold flex items-center space-x-1 transition-all cursor-pointer group shadow-sm shrink-0"
+                                title="View Price History Line Graph"
+                              >
+                                <TrendingUp className="w-3 h-3 text-amber-400 group-hover:scale-110 transition-transform" />
+                                <span>History</span>
+                              </button>
+                            </div>
                           </div>
                         </td>
 
@@ -1170,6 +1259,243 @@ export const AdminProductsPage: React.FC = () => {
                 Done & Close Studio
               </button>
             </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: DEDICATED QUICK PRICE & DISCOUNT MANAGER
+      ========================================================================= */}
+      {quickPriceProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative bg-[#0c0d12] border border-amber-500/30 rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl space-y-6 text-zinc-100 max-h-[90vh] overflow-y-auto">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 rounded-2xl bg-amber-400/10 text-amber-400 border border-amber-400/30">
+                  <DollarSign className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white uppercase tracking-wider">
+                    Quick Price & Discount Editor
+                  </h3>
+                  <p className="text-xs text-amber-400 font-mono">
+                    {quickPriceProduct.name}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setQuickPriceProduct(null)}
+                className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-900 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Live Storefront Sync Banner */}
+            <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between text-xs">
+              <div className="flex items-center space-x-2 text-emerald-300">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>Price changes sync directly to Firestore & all live customer carts.</span>
+              </div>
+              <span className="text-[10px] font-mono text-emerald-400/80 uppercase font-bold">
+                Cloud Synced
+              </span>
+            </div>
+
+            {/* Price Form */}
+            <form onSubmit={handleSaveQuickPrice} className="space-y-4 text-xs">
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Standard Store Price */}
+                <div className="p-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 space-y-2">
+                  <label className="block text-zinc-300 font-bold uppercase tracking-wider text-[11px] flex items-center space-x-1.5">
+                    <Tag className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Selling Price ({currencyConfig.symbol}) *</span>
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    step="any"
+                    value={Math.round(quickPriceForm.price * currencyConfig.rateAgainstUSD)}
+                    onChange={(e) => {
+                      const activeVal = Number(e.target.value);
+                      const inUSD = activeVal / currencyConfig.rateAgainstUSD;
+                      setQuickPriceForm({ ...quickPriceForm, price: inUSD });
+                    }}
+                    className="w-full px-3.5 py-2.5 bg-zinc-950 border border-zinc-700 rounded-xl text-white font-mono text-base font-bold focus:outline-none focus:border-amber-400"
+                  />
+                  <div className="text-[10px] text-zinc-500 font-mono">
+                    Base: ${quickPriceForm.price.toFixed(2)} USD
+                  </div>
+                </div>
+
+                {/* Original MSRP / Strikethrough Price */}
+                <div className="p-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 space-y-2">
+                  <label className="block text-zinc-300 font-bold uppercase tracking-wider text-[11px] flex items-center space-x-1.5">
+                    <span>MSRP / Strikethrough ({currencyConfig.symbol})</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    placeholder="Optional original price"
+                    value={quickPriceForm.originalPrice > 0 ? Math.round(quickPriceForm.originalPrice * currencyConfig.rateAgainstUSD) : ''}
+                    onChange={(e) => {
+                      const activeVal = Number(e.target.value);
+                      const inUSD = activeVal ? activeVal / currencyConfig.rateAgainstUSD : 0;
+                      setQuickPriceForm({ ...quickPriceForm, originalPrice: inUSD });
+                    }}
+                    className="w-full px-3.5 py-2.5 bg-zinc-950 border border-zinc-700 rounded-xl text-white font-mono text-base focus:outline-none focus:border-amber-400"
+                  />
+                  <div className="text-[10px] text-zinc-500 font-mono">
+                    {quickPriceForm.originalPrice > 0 ? `Base: $${quickPriceForm.originalPrice.toFixed(2)} USD` : 'Leave empty if no strikethrough'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Flash Deal Toggle & Sale Price Section */}
+              <div className="p-4 rounded-2xl bg-zinc-900/70 border border-zinc-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center space-x-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={quickPriceForm.isFlashDeal}
+                      onChange={(e) => {
+                        const isNow = e.target.checked;
+                        const disc = quickPriceForm.discountPercentage || 25;
+                        const base = quickPriceForm.originalPrice || quickPriceForm.price;
+                        const sPrice = Math.round(base * (1 - disc / 100));
+                        setQuickPriceForm({
+                          ...quickPriceForm,
+                          isFlashDeal: isNow,
+                          salePrice: sPrice
+                        });
+                      }}
+                      className="w-4 h-4 rounded text-amber-400 bg-zinc-950 border-zinc-700"
+                    />
+                    <span className="font-bold text-white text-xs uppercase tracking-wider flex items-center space-x-1.5">
+                      <Zap className={`w-3.5 h-3.5 ${quickPriceForm.isFlashDeal ? 'fill-amber-400 text-amber-400' : 'text-zinc-500'}`} />
+                      <span>Activate Flash Deal Promotion</span>
+                    </span>
+                  </label>
+                  {quickPriceForm.isFlashDeal && (
+                    <span className="px-2 py-0.5 rounded-md bg-amber-400/20 border border-amber-400/40 text-amber-300 text-[10px] font-mono font-bold uppercase">
+                      Live on Flash Bar
+                    </span>
+                  )}
+                </div>
+
+                {quickPriceForm.isFlashDeal && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-zinc-800">
+                    <div>
+                      <label className="block text-zinc-400 font-semibold mb-1">
+                        Discount Percentage (%)
+                      </label>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="number"
+                          min="1"
+                          max="95"
+                          value={quickPriceForm.discountPercentage}
+                          onChange={(e) => {
+                            const disc = Number(e.target.value);
+                            const base = quickPriceForm.originalPrice || quickPriceForm.price;
+                            const sPrice = Math.round(base * (1 - disc / 100));
+                            setQuickPriceForm({
+                              ...quickPriceForm,
+                              discountPercentage: disc,
+                              salePrice: sPrice
+                            });
+                          }}
+                          className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-white font-mono focus:outline-none focus:border-amber-400"
+                        />
+                        <span className="text-zinc-400 font-mono font-bold">%</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-zinc-400 font-semibold mb-1">
+                        Flash Sale Price ({currencyConfig.symbol})
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        step="any"
+                        value={Math.round(quickPriceForm.salePrice * currencyConfig.rateAgainstUSD)}
+                        onChange={(e) => {
+                          const activeVal = Number(e.target.value);
+                          const inUSD = activeVal / currencyConfig.rateAgainstUSD;
+                          setQuickPriceForm({
+                            ...quickPriceForm,
+                            salePrice: inUSD
+                          });
+                        }}
+                        className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-xl text-amber-300 font-mono font-bold focus:outline-none focus:border-amber-400"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Price Note / Audit Log */}
+              <div>
+                <label className="block text-zinc-300 font-semibold uppercase tracking-wider mb-1.5">
+                  Change Note / Audit Log (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={quickPriceForm.note}
+                  onChange={(e) => setQuickPriceForm({ ...quickPriceForm, note: e.target.value })}
+                  placeholder="e.g. Seasonal architectural promotion / Manufacturer price adjustment"
+                  className="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-white font-medium focus:outline-none focus:border-amber-400"
+                />
+              </div>
+
+              {/* Customer Display Live Preview */}
+              <div className="p-4 rounded-2xl bg-black/40 border border-zinc-800 space-y-2">
+                <div className="text-[10px] uppercase font-mono tracking-wider text-zinc-500">
+                  Customer Storefront Live Preview
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="text-lg font-bold text-white font-mono">
+                    {formatPrice(quickPriceForm.isFlashDeal ? quickPriceForm.salePrice : quickPriceForm.price)}
+                  </div>
+                  {quickPriceForm.originalPrice > (quickPriceForm.isFlashDeal ? quickPriceForm.salePrice : quickPriceForm.price) && (
+                    <div className="text-xs text-zinc-500 line-through font-mono">
+                      {formatPrice(quickPriceForm.originalPrice)}
+                    </div>
+                  )}
+                  {quickPriceForm.isFlashDeal && (
+                    <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-400 text-zinc-950 text-[10px] font-mono font-bold uppercase">
+                      Save {quickPriceForm.discountPercentage}%
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex items-center justify-end space-x-3 pt-3 border-t border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => setQuickPriceProduct(null)}
+                  className="px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 font-semibold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold uppercase tracking-wider shadow-lg shadow-amber-400/20 cursor-pointer flex items-center space-x-2"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Save Price to Live Storefront</span>
+                </button>
+              </div>
+
+            </form>
 
           </div>
         </div>

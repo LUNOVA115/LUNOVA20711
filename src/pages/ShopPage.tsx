@@ -98,15 +98,15 @@ export const ShopPage: React.FC = () => {
     <div className="w-full max-w-[calc(100%-1cm)] mx-auto py-8 sm:py-12 space-y-6 text-zinc-100">
       
       {/* Header Banner inside a soft light-black / dark charcoal rectangular box */}
-      <div className="text-center w-full mx-auto space-y-2 py-3.5 sm:py-5 px-4 sm:px-8 bg-zinc-900/80 border border-zinc-800/80 rounded-2xl shadow-xl backdrop-blur-sm">
+      <div className="text-left w-full mx-auto flex flex-col items-start space-y-3 sm:space-y-3.5 py-5 sm:py-7 px-5 sm:px-8 bg-zinc-900/80 border border-zinc-800/80 rounded-2xl shadow-xl backdrop-blur-sm">
         <div className="inline-flex items-center space-x-2 text-[11px] font-mono text-amber-300 uppercase tracking-widest px-2.5 py-0.5 bg-zinc-950/80 border border-amber-400/30 rounded-full">
           <Sparkles className="w-3 h-3 text-amber-400" />
           <span>FULL VAULT CATALOGUE</span>
         </div>
-        <h1 className="text-2xl sm:text-4xl font-light text-white tracking-tight">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-white tracking-tight font-normal">
           Curated Cosmic Interiors
         </h1>
-        <p className="text-xs sm:text-sm text-zinc-400 font-light max-w-2xl mx-auto leading-relaxed">
+        <p className="text-xs sm:text-sm text-zinc-400 font-light max-w-3xl leading-relaxed">
           Explore <strong className="font-semibold text-zinc-200">celestial shapes, artistic forms, and endless reflections</strong> — beautifully crafted to bring <strong className="font-semibold text-zinc-200">quiet luxury, modern elegance, and a distinctive character</strong> to every space.
         </p>
       </div>

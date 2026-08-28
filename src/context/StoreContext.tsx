@@ -1382,7 +1382,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       createdAt: new Date().toISOString()
     };
     
-    // Persist to Firestore Cloud Database
+    // Immediate local state update for instant UI feedback
+    setProducts((prev) => [newProd, ...prev.filter((p) => p.id !== id)]);
+
+    // Persist to Firestore Cloud Database (live across deployed devices)
     setDoc(doc(db, 'products', id), newProd).catch((err) => {
       console.error('[Firestore] Error writing product:', err);
     });
@@ -1397,7 +1400,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       images: (updated.images || []).map((img) => resolveProductImage(img))
     };
 
-    // Persist to Firestore Cloud Database
+    // Immediate local state update for instant UI feedback
+    setProducts((prev) =>
+      prev.map((p) => (p.id === updated.id ? resolvedProduct : p))
+    );
+
+    // Persist to Firestore Cloud Database (live across deployed devices)
     setDoc(doc(db, 'products', updated.id), updated).catch((err) => {
       console.error('[Firestore] Error updating product:', err);
     });
@@ -1414,6 +1422,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const deleteProduct = (productId: string) => {
     const prod = products.find((p) => p.id === productId);
     
+    // Immediate local state update
+    setProducts((prev) => prev.filter((p) => p.id !== productId));
+
     // Delete from Firestore Cloud Database
     deleteDoc(doc(db, 'products', productId)).catch((err) => {
       console.error('[Firestore] Error deleting product:', err);

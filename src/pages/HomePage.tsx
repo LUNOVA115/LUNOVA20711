@@ -138,11 +138,12 @@ export const HomePage: React.FC = () => {
                 
                 <div className="relative z-10 flex items-start justify-between">
                   <div>
-
+                    <span className={`px-3 py-1 rounded-full bg-${accentColor}-400/15 border border-${accentColor}-400/30 text-${accentColor}-300 text-[10px] font-mono uppercase font-bold tracking-widest`}>
+                      Series {idx + 1} • {cat.slug.toUpperCase()}
+                    </span>
                     <h3 className={`text-2xl sm:text-3xl font-serif text-white mt-3 group-hover:text-${accentColor}-300 transition-colors`}>
                       {cat.name}
                     </h3>
-
                   </div>
                   <div className={`p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-${accentColor}-400 group-hover:bg-${accentColor}-400 group-hover:text-zinc-950 transition-colors`}>
                     {idx === 0 ? <Moon className="w-5 h-5" /> : <Layers className="w-5 h-5" />}
@@ -159,9 +160,14 @@ export const HomePage: React.FC = () => {
                 </div>
 
                 <div className="relative z-10 flex items-center justify-between pt-4 border-t border-zinc-800/80">
-                  <span className="text-xs font-mono text-zinc-400 truncate max-w-[240px] sm:max-w-xs">
-                    {cat.description || 'Mastercrafted Artisanal Living Edition'}
-                  </span>
+                  <div className="flex flex-col space-y-1.5 max-w-[260px] sm:max-w-xs">
+                    <span className="text-xs font-mono text-zinc-400 leading-relaxed">
+                      {cat.description || 'Mastercrafted Artisanal Living Edition'}
+                    </span>
+                    <span className={`text-[11px] font-mono text-${accentColor}-300 font-bold tracking-wider uppercase`}>
+                      Subcategories {subCount}
+                    </span>
+                  </div>
                   <span className={`text-xs font-mono uppercase tracking-widest text-${accentColor}-300 flex items-center space-x-1 group-hover:translate-x-1 transition-transform shrink-0`}>
                     <span>View Archive</span>
                     <ArrowRight className="w-3.5 h-3.5" />

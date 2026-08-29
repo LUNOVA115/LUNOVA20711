@@ -45,6 +45,7 @@ import {
   IMAGE_7_COOL_WHITE_MOON, 
   IMAGE_8_LIFESTYLE_TABLE 
 } from '../../data/productImages';
+import { optimizeImageFile } from '../../utils/imageOptimizer';
 
 const PRESET_ASSET_IMAGES = [
   { id: 'img-1', name: 'Golden Infinity Table', src: IMAGE_1_GOLD_TABLE },
@@ -299,38 +300,35 @@ export const AdminSettingsPage: React.FC = () => {
     addToast('Global Store Configurations, Currency & Payment Gateways saved successfully', 'success');
   };
 
-  const handleHeroFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleHeroFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      if (dataUrl) {
-        setHeroCustomImage(dataUrl);
-        addToast(`Uploaded custom Home Hero photo "${file.name}"`, 'success');
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const optimized = await optimizeImageFile(file, 1920, 1080, 0.85);
+      setHeroCustomImage(optimized);
+      addToast(`Uploaded custom Home Hero photo "${file.name}"`, 'success');
+    } catch (err) {
+      console.error(err);
+      addToast(`Failed to upload hero image`, 'error');
+    }
   };
 
-  const handleLifestyleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLifestyleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      if (dataUrl) {
-        setLifestyleImage(dataUrl);
-        addToast(`Uploaded custom Lifestyle Section photo "${file.name}"`, 'success');
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const optimized = await optimizeImageFile(file, 1600, 1200, 0.85);
+      setLifestyleImage(optimized);
+      addToast(`Uploaded custom Lifestyle Section photo "${file.name}"`, 'success');
+    } catch (err) {
+      console.error(err);
+      addToast(`Failed to upload lifestyle image`, 'error');
+    }
   };
 
   const handleResetData = () => {
-    if (window.confirm('Are you sure you want to reset all store catalog, orders, and customer data to default initial seeds?')) {
-      resetToDefaults();
-    }
+    resetToDefaults();
+    addToast('Store catalog and data reset to initial defaults.', 'info');
   };
 
   return (

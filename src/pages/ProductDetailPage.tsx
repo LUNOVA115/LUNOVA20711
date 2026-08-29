@@ -51,8 +51,25 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ productId 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [is3DMode, setIs3DMode] = useState(false);
   const [quantity, setQuantity] = useState(1);
-  const [selectedColorTemp, setSelectedColorTemp] = useState(product.colorTemperature || 'Warm Amber 2700K');
+  const [selectedColorTemp, setSelectedColorTemp] = useState(product?.colorTemperature || 'Warm Amber 2700K');
   const [activeTab, setActiveTab] = useState<'specs' | 'inbox' | 'shipping' | 'reviews'>('specs');
+
+  if (!product) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-20 text-center space-y-6 text-zinc-100">
+        <h2 className="text-2xl sm:text-3xl font-serif text-white">Piece Not Found</h2>
+        <p className="text-zinc-400 text-sm max-w-md mx-auto">
+          The requested archival piece may have been retired or its identifier updated.
+        </p>
+        <button
+          onClick={() => navigate('/shop')}
+          className="px-6 py-3 rounded-xl bg-amber-400 text-zinc-950 font-mono font-bold text-xs uppercase tracking-widest hover:bg-amber-300 transition-colors"
+        >
+          Explore All Available Pieces
+        </button>
+      </div>
+    );
+  }
 
   const rawPhone = contactInfo?.whatsappNumber || contactInfo?.phone || '+92 315 0360126';
   const cleanPhone = rawPhone.replace(/[^0-9]/g, '') || '923150360126';

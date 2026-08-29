@@ -444,7 +444,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           latestProduct.price !== item.product.price ||
           latestProduct.originalPrice !== item.product.originalPrice ||
           latestProduct.name !== item.product.name ||
-          latestProduct.images[0] !== item.product.images[0] ||
+          latestProduct.images?.[0] !== item.product.images?.[0] ||
           latestProduct.stock !== item.product.stock
         )) {
           changed = true;

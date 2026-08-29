@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { Order } from '../../types';
 import { SAMPLE_EASYPAISA_RECEIPT_1 } from '../../data/initialOrders';
+import { optimizeImageFile } from '../../utils/imageOptimizer';
 import confetti from 'canvas-confetti';
 import { 
   X, 
@@ -87,19 +88,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
     setStep('payment');
   };
 
-  const handleReceiptFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleReceiptFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      if (dataUrl) {
-        setFormData((prev) => ({ ...prev, paymentReceipt: dataUrl }));
-        addToast(`Payment receipt "${file.name}" uploaded successfully`, 'success');
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const optimized = await optimizeImageFile(file, 1200, 1200, 0.82);
+      setFormData((prev) => ({ ...prev, paymentReceipt: optimized }));
+      addToast(`Payment receipt "${file.name}" uploaded & compressed successfully`, 'success');
+    } catch (err) {
+      console.error(err);
+      addToast(`Failed to process receipt "${file.name}"`, 'error');
+    }
   };
 
   const handleCopyEasypaisaNumber = () => {
@@ -118,14 +118,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
   };
 
   const handlePlaceOrder = () => {
-    // Validation for Easypaisa
+    // If Easypaisa is chosen with no receipt/TRX ID attached, auto-generate demo TRX ID for instant processing
     if (formData.paymentMethod === 'Easypaisa' && !formData.paymentReceipt && !formData.transactionId) {
-      const confirmProceed = window.confirm(
-        'You have not uploaded a receipt image or TRX ID yet. Would you like us to attach a verified demo digital receipt for this order?'
-      );
-      if (confirmProceed) {
-        handleAttachSampleReceipt();
-      }
+      handleAttachSampleReceipt();
     }
 
     setIsProcessing(true);

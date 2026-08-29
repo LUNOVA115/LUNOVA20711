@@ -108,17 +108,9 @@ const AppContent: React.FC = () => {
     if (normalizedPath === '/collections') {
       return <CollectionsPage />;
     }
-    if (normalizedPath === '/collections/moon') {
-      return <CollectionDetailPage slug="moon" />;
-    }
-    if (normalizedPath === '/collections/infinity') {
-      return <CollectionDetailPage slug="infinity" />;
-    }
-    if (normalizedPath === '/collections/cosmic') {
-      return <CollectionDetailPage slug="cosmic" />;
-    }
-    if (normalizedPath === '/collections/futuristic-home') {
-      return <CollectionDetailPage slug="futuristic-home" />;
+    if (normalizedPath.startsWith('/collections/')) {
+      const collectionSlug = normalizedPath.replace('/collections/', '');
+      return <CollectionDetailPage slug={collectionSlug} />;
     }
     if (normalizedPath.startsWith('/product/')) {
       const productId = normalizedPath.replace('/product/', '');

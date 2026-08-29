@@ -11,14 +11,38 @@ interface CollectionDetailPageProps {
 export const CollectionDetailPage: React.FC<CollectionDetailPageProps> = ({ slug }) => {
   const { products, categories, navigate } = useStore();
 
-  let targetCategoryName = 'Moon Collection';
-  if (slug === 'infinity') targetCategoryName = 'Infinity Collection';
-  else if (slug === 'cosmic') targetCategoryName = 'Cosmic Decor';
-  else if (slug === 'futuristic-home') targetCategoryName = 'Futuristic Home';
+  // Try finding category by slug or name
+  const cleanSlug = (slug || '').toLowerCase().trim();
+  
+  let matchedCategory = categories.find((c) => 
+    c.slug?.toLowerCase() === cleanSlug || 
+    c.name?.toLowerCase().replace(/\s+/g, '-') === cleanSlug ||
+    c.name?.toLowerCase() === cleanSlug
+  );
 
-  const category = categories.find((c) => c.name.toLowerCase() === targetCategoryName.toLowerCase()) || categories[0];
+  // Legacy fallback mappings
+  if (!matchedCategory) {
+    if (cleanSlug === 'moon') matchedCategory = categories.find(c => c.name.toLowerCase().includes('moon'));
+    else if (cleanSlug === 'infinity') matchedCategory = categories.find(c => c.name.toLowerCase().includes('infinity'));
+    else if (cleanSlug === 'cosmic') matchedCategory = categories.find(c => c.name.toLowerCase().includes('cosmic'));
+    else if (cleanSlug === 'futuristic-home') matchedCategory = categories.find(c => c.name.toLowerCase().includes('futuristic') || c.name.toLowerCase().includes('home'));
+  }
+
+  const category = matchedCategory || categories[0] || {
+    id: 'cat-default',
+    name: slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' '),
+    slug: slug,
+    description: 'Exclusive artisanal series by LUNOVA.',
+    image: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=1200'
+  };
+
+  const targetCategoryName = category.name;
   const collectionProducts = products.filter(
-    (p) => p.category.toLowerCase() === targetCategoryName.toLowerCase() && p.status === 'active'
+    (p) => (
+      p.category?.toLowerCase() === targetCategoryName.toLowerCase() ||
+      p.category?.toLowerCase() === category.slug?.toLowerCase() ||
+      p.category?.toLowerCase().replace(/\s+/g, '-') === cleanSlug
+    ) && p.status === 'active'
   );
 
   return (

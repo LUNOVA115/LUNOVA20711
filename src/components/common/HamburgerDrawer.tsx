@@ -158,7 +158,7 @@ export const HamburgerDrawer: React.FC<HamburgerDrawerProps> = ({ isOpen, onClos
                       <LayoutDashboard className="w-4 h-4" />
                     </div>
                     <div>
-                      <h3 className="font-mono text-xs font-bold uppercase tracking-wider leading-tight">
+                      <h3 className="font-mono text-xs font-bold uppercase tracking-wider leading-tight text-zinc-950">
                         Admin Control Panel
                       </h3>
                       <p className="text-[10px] text-zinc-800 font-sans mt-0.5">

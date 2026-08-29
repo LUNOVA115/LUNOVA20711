@@ -312,6 +312,15 @@ export const Footer: React.FC = () => {
                     <span className="group-hover:translate-x-0.5 transition-transform">FAQs & Live Concierge</span>
                   </button>
                 </li>
+                <li className="pt-2 border-t border-zinc-800/60">
+                  <button 
+                    onClick={() => navigate(adminUser ? '/admin/dashboard' : '/admin/login')} 
+                    className="hover:text-amber-300 transition-colors text-left flex items-center space-x-2 group cursor-pointer text-amber-400/90 font-mono text-xs"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-amber-400 shrink-0 group-hover:scale-110 transition-transform" />
+                    <span className="group-hover:underline font-semibold">Admin Control Panel</span>
+                  </button>
+                </li>
               </ul>
             </div>
 
@@ -325,7 +334,7 @@ export const Footer: React.FC = () => {
             <span>© 2026 LUNOVA ATELIER. HANDCRAFTED IN PAKISTAN. ALL RIGHTS RESERVED.</span>
           </div>
 
-          <div className="flex items-center space-x-6">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
             <button 
               onClick={() => navigate('/about')} 
               className="hover:text-amber-300 text-zinc-400 transition-colors cursor-pointer"
@@ -343,6 +352,13 @@ export const Footer: React.FC = () => {
               className="hover:text-amber-300 text-zinc-400 transition-colors cursor-pointer"
             >
               Atelier Vault
+            </button>
+            <button 
+              onClick={() => navigate(adminUser ? '/admin/dashboard' : '/admin/login')} 
+              className="hover:text-amber-300 text-amber-400/90 transition-colors cursor-pointer inline-flex items-center space-x-1 font-semibold"
+            >
+              <ShieldCheck className="w-3 h-3 text-amber-400" />
+              <span>Admin Control Panel</span>
             </button>
           </div>
         </div>

@@ -189,7 +189,7 @@ export const Navbar: React.FC = () => {
             </nav>
           </div>
 
-          {/* RIGHT SIDE HEADER ICONS: Search, Wishlist, Cart, Customer Account */}
+          {/* RIGHT SIDE HEADER ICONS: Currency, Search, Wishlist, Cart, Customer Account */}
           <div className="flex items-center space-x-1.5 sm:space-x-2.5">
             
             {/* CURRENCY SELECTOR DROPDOWN */}
@@ -363,6 +363,23 @@ export const Navbar: React.FC = () => {
                         <LogOut className="w-4 h-4 text-zinc-500 hover:text-rose-400" />
                         <span>Sign Out</span>
                       </button>
+
+                      {/* Admin Login link for customer session */}
+                      <button
+                        onClick={() => {
+                          setIsAccountOpen(false);
+                          handleNav('/admin/login');
+                        }}
+                        className="w-full flex items-center space-x-3 p-2.5 rounded-xl hover:bg-zinc-800/80 border border-transparent hover:border-zinc-700/80 text-left transition-all text-zinc-200 hover:text-white group cursor-pointer mt-1"
+                      >
+                        <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 group-hover:border-amber-400/40 group-hover:bg-amber-400/10 transition-all shrink-0">
+                          <ShieldCheck className="w-4 h-4 text-zinc-400 group-hover:text-amber-400 transition-colors" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-100 group-hover:text-amber-300 transition-colors">Admin Login</div>
+                          <div className="text-[10px] text-zinc-400">Access control & management portal</div>
+                        </div>
+                      </button>
                     </div>
                   ) : (
                     /* 3. GUEST / UNREGISTERED USER */
@@ -399,7 +416,22 @@ export const Navbar: React.FC = () => {
                         </div>
                       </button>
 
-                
+                      {/* Admin Login Option directly below Track an Order */}
+                      <button
+                        onClick={() => {
+                          setIsAccountOpen(false);
+                          handleNav('/admin/login');
+                        }}
+                        className="w-full flex items-center space-x-3 p-2.5 rounded-xl hover:bg-zinc-800/80 border border-transparent hover:border-zinc-700/80 text-left transition-all text-zinc-200 hover:text-white group cursor-pointer"
+                      >
+                        <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 group-hover:border-amber-400/40 group-hover:bg-amber-400/10 transition-all shrink-0">
+                          <ShieldCheck className="w-4 h-4 text-zinc-400 group-hover:text-amber-400 transition-colors" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-100 group-hover:text-amber-300 transition-colors">Admin Login</div>
+                          <div className="text-[10px] text-zinc-400">Access control & management portal</div>
+                        </div>
+                      </button>
                     </div>
                   )}
 
@@ -558,7 +590,7 @@ export const Navbar: React.FC = () => {
                   </button>
                 )}
 
-                {/* Admin Portal access section on Mobile - ONLY VISIBLE WHEN LOGGED IN AS ADMIN */}
+                {/* Admin Dashboard access section on Mobile - ONLY VISIBLE WHEN LOGGED IN AS ADMIN */}
                 {adminUser && (
                   <div className="pt-2 border-t border-zinc-800/50">
                     <button

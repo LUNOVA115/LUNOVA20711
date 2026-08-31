@@ -68,6 +68,19 @@ export interface AuthorizedAdminRecord {
   updatedAt?: string;
 }
 
+export interface AdminAuthDoc {
+  masterPassHash: string;
+  isPasswordChanged: boolean;
+  adminName: string;
+  adminEmail: string;
+  adminRole: 'Super Admin' | 'Store Manager' | 'Editor';
+  authorizedEmails: string[];
+  admins: Record<string, AuthorizedAdminRecord>;
+  updatedAt: string;
+  description?: string;
+  lastChangedBy?: string;
+}
+
 /**
  * Generates initial default authorized admin accounts with salted SHA-256 hashed default passkeys.
  */
@@ -79,5 +92,24 @@ export async function getDefaultAdminRecords(): Promise<Record<string, Authorize
     'operations@lunova.luxury': { name: 'Elena Vance', role: 'Store Manager', passHash: defaultHash },
     'admin@lunovahome.com': { name: 'Store Master', role: 'Super Admin', passHash: defaultHash },
     'workp7384@gmail.com': { name: 'Store Principal', role: 'Super Admin', passHash: defaultHash }
+  };
+}
+
+/**
+ * Generates the central Administrator Authentication Document for Firestore.
+ */
+export async function getInitialAdminAuthDoc(): Promise<AdminAuthDoc> {
+  const defaultHash = await hashAdminPassword('lunova2026');
+  const initialAdmins = await getDefaultAdminRecords();
+  return {
+    masterPassHash: defaultHash,
+    isPasswordChanged: false,
+    adminName: 'Julian Thorne',
+    adminEmail: 'admin@lunova.luxury',
+    adminRole: 'Super Admin',
+    authorizedEmails: Object.keys(initialAdmins),
+    admins: initialAdmins,
+    updatedAt: new Date().toISOString(),
+    description: 'LUNOVA Central Administrator Authentication Registry'
   };
 }

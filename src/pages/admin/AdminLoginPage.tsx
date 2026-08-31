@@ -3,18 +3,17 @@ import { useStore } from '../../context/StoreContext';
 import { 
   ShieldCheck, 
   Lock, 
-  Mail, 
   ArrowRight, 
   AlertTriangle, 
   ShieldAlert, 
   LogOut, 
   Eye, 
-  EyeOff
+  EyeOff,
+  KeyRound
 } from 'lucide-react';
 
 export const AdminLoginPage: React.FC = () => {
   const { adminUser, adminLogin, navigate, customerUser, customerLogout } = useStore();
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -38,8 +37,8 @@ export const AdminLoginPage: React.FC = () => {
     }
 
     try {
-      // Authenticate immediately and redirect on success
-      const res = await adminLogin(email, password);
+      // Authenticate directly with website master password
+      const res = await adminLogin(password);
       setLoading(false);
       if (res.success) {
         navigate('/admin/dashboard');
@@ -59,7 +58,7 @@ export const AdminLoginPage: React.FC = () => {
       <div className="absolute w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-3xl pointer-events-none -top-20 -left-20" />
       <div className="absolute w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-3xl pointer-events-none -bottom-20 -right-20" />
 
-      <div className="relative bg-[#0b0c10]/95 border border-zinc-800/90 rounded-3xl p-6 sm:p-10 max-w-lg w-full shadow-2xl space-y-6 backdrop-blur-2xl">
+      <div className="relative bg-[#0b0c10]/95 border border-zinc-800/90 rounded-3xl p-6 sm:p-10 max-w-md w-full shadow-2xl space-y-6 backdrop-blur-2xl">
         
         {/* Brand Logo & Header */}
         <div className="text-center space-y-3">
@@ -70,13 +69,13 @@ export const AdminLoginPage: React.FC = () => {
           <div>
             <div className="inline-flex items-center space-x-1.5 px-3.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-mono uppercase tracking-wider mb-2 font-bold shadow-sm">
               <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-              <span>Multi-Device Admin Portal</span>
+              <span>Admin Access Portal</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-serif tracking-wide text-white font-semibold">
               LUNOVA <span className="font-sans font-light text-amber-300">Management</span>
             </h1>
             <p className="text-xs text-zinc-400 mt-1 max-w-sm mx-auto">
-              Secure administrative access authorized across all mobile, tablet, and desktop devices.
+              Enter the master website password to access the administrative control panel.
             </p>
           </div>
         </div>
@@ -89,7 +88,7 @@ export const AdminLoginPage: React.FC = () => {
               <span>Customer Session Active on Device</span>
             </div>
             <p className="text-zinc-300 text-[11px] leading-relaxed">
-              Signed in as client <strong className="text-white">{customerUser.name}</strong>. Signing in with administrator passkey will automatically activate the master management console.
+              Signed in as client <strong className="text-white">{customerUser.name}</strong>. Signing in with the administrator password will automatically activate the master management console.
             </p>
             <div className="flex items-center space-x-2 pt-1">
               <button
@@ -107,41 +106,25 @@ export const AdminLoginPage: React.FC = () => {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div>
-            <label className="block text-zinc-300 font-semibold uppercase tracking-wider mb-1.5 text-[11px]">
-              Administrator Email
-            </label>
-            <div className="relative">
-              <Mail className="w-4 h-4 text-zinc-500 absolute left-4 top-1/2 -translate-y-1/2" />
-              <input
-                type="email"
-                required
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@lunova.luxury"
-                className="w-full pl-11 pr-4 py-3.5 bg-zinc-900/90 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-amber-400 transition-colors font-mono"
-              />
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-zinc-300 font-semibold uppercase tracking-wider text-[11px]">
+                Website Admin Password
+              </label>
+              <span className="text-[10px] text-amber-400/80 font-mono">Master Passkey</span>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-zinc-300 font-semibold uppercase tracking-wider mb-1.5 text-[11px]">
-              Master Passkey / Password
-            </label>
             <div className="relative">
-              <Lock className="w-4 h-4 text-zinc-500 absolute left-4 top-1/2 -translate-y-1/2" />
+              <KeyRound className="w-4 h-4 text-zinc-500 absolute left-4 top-1/2 -translate-y-1/2" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
+                autoFocus
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck={false}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-11 pr-12 py-3.5 bg-zinc-900/90 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-amber-400 font-mono tracking-widest transition-colors"
+                placeholder="Enter password"
+                className="w-full pl-11 pr-12 py-3.5 bg-zinc-900/90 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-amber-400 font-mono tracking-wider transition-colors"
               />
               <button
                 type="button"
@@ -170,7 +153,7 @@ export const AdminLoginPage: React.FC = () => {
               <span>Verifying Credentials...</span>
             ) : (
               <>
-                <span>Sign In to Admin Control Panel</span>
+                <span>Enter Admin Control Panel</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -181,7 +164,7 @@ export const AdminLoginPage: React.FC = () => {
         <div className="pt-4 border-t border-zinc-800/80 text-center space-y-3">
           <div className="flex items-center justify-center space-x-2 text-[11px] text-zinc-400 font-mono">
             <Lock className="w-3.5 h-3.5 text-amber-400" />
-            <span>Encrypted Administrative Authorization Portal</span>
+            <span>Encrypted Authorization Portal</span>
           </div>
 
           <div>

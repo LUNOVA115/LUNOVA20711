@@ -189,7 +189,7 @@ interface StoreContextType {
   
   // Admin & Auth (Restricted to Authorized Admins only)
   adminUser: AdminUser | null;
-  adminLogin: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
+  adminLogin: (emailOrPass: string, password?: string) => Promise<{ success: boolean; message: string }>;
   adminLogout: () => void;
   updateAdminProfile: (profile: Partial<AdminUser>) => Promise<void>;
   changeAdminCredentials: (params: { currentPassword?: string; newEmail?: string; newPassword?: string; adminName?: string; role?: AdminUser['role'] }) => Promise<{ success: boolean; message: string }>;
@@ -1197,15 +1197,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, []);
 
-  const adminLogin = async (email: string, pass: string): Promise<{ success: boolean; message: string }> => {
-    const cleanEmail = (email || '').trim().toLowerCase();
-    const cleanPass = (pass || '').trim();
-    
-    if (!cleanEmail) {
-      return { success: false, message: 'Please enter your administrator email address.' };
+  const adminLogin = async (emailOrPass: string, optionalPass?: string): Promise<{ success: boolean; message: string }> => {
+    let cleanEmail = '';
+    let cleanPass = '';
+
+    if (optionalPass !== undefined && optionalPass !== '') {
+      cleanEmail = (emailOrPass || '').trim().toLowerCase();
+      cleanPass = (optionalPass || '').trim();
+    } else {
+      cleanPass = (emailOrPass || '').trim();
     }
+    
     if (!cleanPass) {
-      return { success: false, message: 'Please enter your master passkey.' };
+      return { success: false, message: 'Please enter the master administrator passkey.' };
     }
 
     // Direct cloud fetch to guarantee freshest cross-device authentication state
@@ -1234,7 +1238,28 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const defaultInitialHash = await hashAdminPassword('lunova2026');
     const masterHash = authDocData.masterPassHash || defaultInitialHash;
 
-    // Check authorized administrator accounts and aliases
+    // Mode 1: Password-only authentication (No email required)
+    if (!cleanEmail) {
+      const isPassValid = await verifyAdminPassword(cleanPass, masterHash);
+      if (isPassValid) {
+        const primaryAdminEmail = (authDocData.adminEmail || 'admin@lunova.luxury').toLowerCase().trim();
+        const user: AdminUser = {
+          id: `adm-master`,
+          name: authDocData.adminName || 'Julian Thorne',
+          email: primaryAdminEmail,
+          role: authDocData.adminRole || 'Super Admin'
+        };
+        setAdminUser(user);
+        setCustomerUser(null); // Clear customer session when admin logs in
+        localStorage.setItem('lunova_admin_v1', JSON.stringify(user));
+        addToast(`Admin Session Authorized: Welcome to Control Panel.`, 'success');
+        return { success: true, message: 'Administrative authentication successful' };
+      } else {
+        return { success: false, message: 'Invalid administrator password. Access denied.' };
+      }
+    }
+
+    // Mode 2: Email + Password authentication
     const adminsMap = authDocData.admins || {};
     const authorizedList = authDocData.authorizedEmails || Object.keys(adminsMap);
     const primaryAdminEmail = (authDocData.adminEmail || 'admin@lunova.luxury').toLowerCase().trim();

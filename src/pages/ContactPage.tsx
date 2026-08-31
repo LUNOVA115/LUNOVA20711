@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useStore } from '../context/StoreContext';
 import { 
   Mail,
@@ -12,7 +13,8 @@ import {
   MessageCircle,
   ArrowRight,
   Sparkles,
-  HelpCircle
+  HelpCircle,
+  ChevronDown
 } from 'lucide-react';
 
 export const ContactPage: React.FC = () => {
@@ -29,6 +31,7 @@ export const ContactPage: React.FC = () => {
     message: ''
   });
   const [submitted, setSubmitted] = useState(false);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   const email = contactInfo?.email || 'support@lunova.luxury';
   const phone = contactInfo?.phone || '+92 315 0360126';
@@ -49,6 +52,10 @@ export const ContactPage: React.FC = () => {
     }
     setSubmitted(true);
     addToast('Your message has been sent successfully.', 'success');
+  };
+
+  const toggleFaq = (index: number) => {
+    setOpenFaqIndex((prev) => (prev === index ? null : index));
   };
 
   const faqs = [
@@ -320,41 +327,58 @@ export const ContactPage: React.FC = () => {
       {/* 0.5 inch space before FAQ section */}
       <div className="h-[0.5in]" />
 
-      {/* 3. FAQ SECTION: Frameless / Cardless on Textured Background */}
-      <div className="w-full">
-        {/* Section Header */}
-        <div className="mb-8 pb-4 border-b border-zinc-800/80 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
-          <div>
-            <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-amber-400 font-semibold block mb-1">
-              CURATED ANSWERS
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-serif text-white font-light tracking-tight">
-              Frequently Asked Questions
-            </h2>
-          </div>
-          <p className="text-xs text-zinc-400 font-light max-w-md">
-            Everything you need to know about our handcrafted collections, materials, and bespoke commissions.
-          </p>
-        </div>
+      {/* 3. FAQ SECTION: KARIGARII-Style Rounded Accordion Card */}
+      <div className="bg-[#0b0c10] border border-zinc-800/90 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 shadow-2xl relative overflow-hidden">
+        {/* Subtle Ambient Background Glow */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
 
-        {/* FAQs List rendered directly on textured page background without enclosing boxes/cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {faqs.map((faq, index) => (
-            <div 
-              key={index} 
-              className="space-y-2.5 pb-6 border-b border-zinc-800/50 md:border-b-0 md:border-r md:border-zinc-800/40 md:pr-8 last:border-b-0 md:last:border-r-0 md:last:pr-0"
-            >
-              <h3 className="text-base sm:text-lg font-serif text-white font-normal flex items-start space-x-2.5">
-                <span className="text-amber-400/80 font-mono text-xs mt-1 shrink-0">
-                  0{index + 1}.
-                </span>
-                <span className="leading-snug">{faq.question}</span>
-              </h3>
-              <p className="text-xs sm:text-sm text-zinc-300 font-light leading-relaxed pl-6">
-                {faq.answer}
-              </p>
-            </div>
-          ))}
+        <div className="relative z-10">
+          {/* Section Heading */}
+          <h2 className="text-xl sm:text-2xl font-serif text-white font-medium mb-6 sm:mb-8 tracking-tight">
+            Frequently Asked Questions
+          </h2>
+
+          {/* Accordion Questions List */}
+          <div className="divide-y divide-zinc-800/80">
+            {faqs.map((faq, index) => {
+              const isOpen = openFaqIndex === index;
+              return (
+                <div key={index} className="py-4 sm:py-5 first:pt-0 last:pb-0">
+                  <button
+                    type="button"
+                    onClick={() => toggleFaq(index)}
+                    className="w-full flex items-center justify-between text-left group cursor-pointer focus:outline-none"
+                    aria-expanded={isOpen}
+                  >
+                    <span className="text-sm sm:text-base text-zinc-100 group-hover:text-amber-300 font-medium transition-colors pr-4">
+                      {faq.question}
+                    </span>
+                    <ChevronDown
+                      className={`w-4 h-4 text-zinc-400 group-hover:text-amber-300 shrink-0 transition-transform duration-300 ${
+                        isOpen ? 'rotate-180 text-amber-400' : ''
+                      }`}
+                    />
+                  </button>
+
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: 'easeInOut' }}
+                        className="overflow-hidden"
+                      >
+                        <p className="pt-3 text-xs sm:text-sm text-zinc-300 font-light leading-relaxed">
+                          {faq.answer}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 

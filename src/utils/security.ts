@@ -37,28 +37,19 @@ export async function hashAdminPassword(password: string): Promise<string> {
 }
 
 /**
- * Compares a plain password attempt with stored hash (or legacy plaintext fallback during initial migration).
+ * Compares a plain password attempt with stored salted SHA-256 hash in Firebase.
  */
 export async function verifyAdminPassword(
   attemptPassword: string, 
-  storedPassHashOrPlain: string
+  storedPassHash: string
 ): Promise<boolean> {
-  if (!attemptPassword || !storedPassHashOrPlain) return false;
+  if (!attemptPassword || !storedPassHash) return false;
   const trimmedAttempt = attemptPassword.trim();
-  const trimmedStored = storedPassHashOrPlain.trim();
+  const trimmedStored = storedPassHash.trim();
 
-  // 1. Check against salted SHA-256 hash
+  // Strictly check against salted SHA-256 hash
   const computedHash = await hashAdminPassword(trimmedAttempt);
-  if (computedHash === trimmedStored) {
-    return true;
-  }
-
-  // 2. Backward compatibility: check if stored is plaintext (e.g. before initial migration)
-  if (trimmedAttempt === trimmedStored) {
-    return true;
-  }
-
-  return false;
+  return computedHash === trimmedStored;
 }
 
 export interface AuthorizedAdminRecord {
@@ -69,47 +60,32 @@ export interface AuthorizedAdminRecord {
 }
 
 export interface AdminAuthDoc {
-  masterPassHash: string;
-  isPasswordChanged: boolean;
+  masterPassHash?: string;
+  isConfigured: boolean;
   adminName: string;
   adminEmail: string;
   adminRole: 'Super Admin' | 'Store Manager' | 'Editor';
-  authorizedEmails: string[];
-  admins: Record<string, AuthorizedAdminRecord>;
+  authorizedEmails?: string[];
+  admins?: Record<string, AuthorizedAdminRecord>;
   updatedAt: string;
   description?: string;
   lastChangedBy?: string;
 }
 
 /**
- * Generates initial default authorized admin accounts with salted SHA-256 hashed default passkeys.
+ * Generates initial unconfigured Administrator Authentication Document structure for Firestore.
  */
-export async function getDefaultAdminRecords(): Promise<Record<string, AuthorizedAdminRecord>> {
-  const defaultHash = await hashAdminPassword('lunova2026');
+export function getInitialAdminAuthDoc(): AdminAuthDoc {
   return {
-    'admin@lunova.luxury': { name: 'Julian Thorne', role: 'Super Admin', passHash: defaultHash },
-    'julian@lunova.luxury': { name: 'Julian Thorne', role: 'Super Admin', passHash: defaultHash },
-    'operations@lunova.luxury': { name: 'Elena Vance', role: 'Store Manager', passHash: defaultHash },
-    'admin@lunovahome.com': { name: 'Store Master', role: 'Super Admin', passHash: defaultHash },
-    'workp7384@gmail.com': { name: 'Store Principal', role: 'Super Admin', passHash: defaultHash }
-  };
-}
-
-/**
- * Generates the central Administrator Authentication Document for Firestore.
- */
-export async function getInitialAdminAuthDoc(): Promise<AdminAuthDoc> {
-  const defaultHash = await hashAdminPassword('lunova2026');
-  const initialAdmins = await getDefaultAdminRecords();
-  return {
-    masterPassHash: defaultHash,
-    isPasswordChanged: false,
+    masterPassHash: '',
+    isConfigured: false,
     adminName: 'Julian Thorne',
     adminEmail: 'admin@lunova.luxury',
     adminRole: 'Super Admin',
-    authorizedEmails: Object.keys(initialAdmins),
-    admins: initialAdmins,
+    authorizedEmails: ['admin@lunova.luxury', 'workp7384@gmail.com'],
+    admins: {},
     updatedAt: new Date().toISOString(),
     description: 'LUNOVA Central Administrator Authentication Registry'
   };
 }
+

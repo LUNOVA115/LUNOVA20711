@@ -240,7 +240,7 @@ export const AdminProfileModal: React.FC<AdminProfileModalProps> = ({ isOpen, on
                 <div>
                   <label className="block text-[10px] uppercase font-semibold text-zinc-400 mb-1 flex items-center justify-between">
                     <span>Current Password *</span>
-                    <span className="text-[10px] text-zinc-500 font-mono">Initial setup: lunova2026</span>
+                    <span className="text-[10px] text-amber-400/80 font-mono">Stored in Firebase</span>
                   </label>
                   <div className="relative">
                     <input

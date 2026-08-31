@@ -594,7 +594,7 @@ export const AdminSettingsPage: React.FC = () => {
                       {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
-                  <p className="text-[10px] text-zinc-500 mt-1 font-mono">Initial default is <span className="text-amber-400">lunova2026</span> (or your latest saved passkey)</p>
+                  <p className="text-[10px] text-zinc-500 mt-1 font-mono">Enter your current master password configured in Firebase</p>
                 </div>
 
                 {/* 2. New Password */}

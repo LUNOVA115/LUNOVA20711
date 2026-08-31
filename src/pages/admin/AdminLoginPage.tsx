@@ -13,9 +13,19 @@ import {
 } from 'lucide-react';
 
 export const AdminLoginPage: React.FC = () => {
-  const { adminUser, adminLogin, navigate, customerUser, customerLogout } = useStore();
+  const { 
+    adminUser, 
+    isAdminPasswordConfigured, 
+    adminLogin, 
+    setupAdminPassword, 
+    navigate, 
+    customerUser, 
+    customerLogout 
+  } = useStore();
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -37,13 +47,34 @@ export const AdminLoginPage: React.FC = () => {
     }
 
     try {
-      // Authenticate directly with website master password
-      const res = await adminLogin(password);
-      setLoading(false);
-      if (res.success) {
-        navigate('/admin/dashboard');
+      if (!isAdminPasswordConfigured) {
+        // First-time setup: establish master password directly in Firebase
+        if (!password || password.length < 4) {
+          setError('Password must be at least 4 characters long.');
+          setLoading(false);
+          return;
+        }
+        if (password !== confirmPassword) {
+          setError('Password and confirmation password do not match.');
+          setLoading(false);
+          return;
+        }
+        const res = await setupAdminPassword(password, confirmPassword);
+        setLoading(false);
+        if (res.success) {
+          navigate('/admin/dashboard');
+        } else {
+          setError(res.message);
+        }
       } else {
-        setError(res.message);
+        // Authenticate directly with website master password from Firebase
+        const res = await adminLogin(password);
+        setLoading(false);
+        if (res.success) {
+          navigate('/admin/dashboard');
+        } else {
+          setError(res.message);
+        }
       }
     } catch (err) {
       setLoading(false);
@@ -69,13 +100,15 @@ export const AdminLoginPage: React.FC = () => {
           <div>
             <div className="inline-flex items-center space-x-1.5 px-3.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-mono uppercase tracking-wider mb-2 font-bold shadow-sm">
               <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-              <span>Admin Access Portal</span>
+              <span>{!isAdminPasswordConfigured ? 'Initial Admin Setup' : 'Admin Access Portal'}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-serif tracking-wide text-white font-semibold">
               LUNOVA <span className="font-sans font-light text-amber-300">Management</span>
             </h1>
             <p className="text-xs text-zinc-400 mt-1 max-w-sm mx-auto">
-              Enter the master website password to access the administrative control panel.
+              {!isAdminPasswordConfigured 
+                ? 'Create your master administrator password to initialize your Firebase management console.' 
+                : 'Enter the master website password to access the administrative control panel.'}
             </p>
           </div>
         </div>
@@ -108,9 +141,11 @@ export const AdminLoginPage: React.FC = () => {
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="block text-zinc-300 font-semibold uppercase tracking-wider text-[11px]">
-                Website Admin Password
+                {!isAdminPasswordConfigured ? 'Create Master Password' : 'Website Admin Password'}
               </label>
-              <span className="text-[10px] text-amber-400/80 font-mono">Master Passkey</span>
+              <span className="text-[10px] text-amber-400/80 font-mono">
+                {!isAdminPasswordConfigured ? 'Min 4 characters' : 'Master Passkey'}
+              </span>
             </div>
             <div className="relative">
               <KeyRound className="w-4 h-4 text-zinc-500 absolute left-4 top-1/2 -translate-y-1/2" />
@@ -123,7 +158,7 @@ export const AdminLoginPage: React.FC = () => {
                 spellCheck={false}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
+                placeholder={!isAdminPasswordConfigured ? 'Set your administrator password' : 'Enter password'}
                 className="w-full pl-11 pr-12 py-3.5 bg-zinc-900/90 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-amber-400 font-mono tracking-wider transition-colors"
               />
               <button
@@ -136,6 +171,39 @@ export const AdminLoginPage: React.FC = () => {
               </button>
             </div>
           </div>
+
+          {!isAdminPasswordConfigured && (
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-zinc-300 font-semibold uppercase tracking-wider text-[11px]">
+                  Confirm Master Password
+                </label>
+                <span className="text-[10px] text-zinc-400 font-mono">Verification</span>
+              </div>
+              <div className="relative">
+                <KeyRound className="w-4 h-4 text-zinc-500 absolute left-4 top-1/2 -translate-y-1/2" />
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  required
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repeat administrator password"
+                  className="w-full pl-11 pr-12 py-3.5 bg-zinc-900/90 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-amber-400 font-mono tracking-wider transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 p-1.5 transition-colors cursor-pointer"
+                  title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+          )}
 
           {error && (
             <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center space-x-2">
@@ -150,10 +218,10 @@ export const AdminLoginPage: React.FC = () => {
             className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 text-zinc-950 text-xs uppercase tracking-widest font-bold flex items-center justify-center space-x-2 shadow-xl shadow-amber-400/20 hover:scale-[1.01] transition-all disabled:opacity-50 cursor-pointer"
           >
             {loading ? (
-              <span>Verifying Credentials...</span>
+              <span>{!isAdminPasswordConfigured ? 'Establishing Passkey...' : 'Verifying Credentials...'}</span>
             ) : (
               <>
-                <span>Enter Admin Control Panel</span>
+                <span>{!isAdminPasswordConfigured ? 'Set Master Password & Enter' : 'Enter Admin Control Panel'}</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -164,7 +232,7 @@ export const AdminLoginPage: React.FC = () => {
         <div className="pt-4 border-t border-zinc-800/80 text-center space-y-3">
           <div className="flex items-center justify-center space-x-2 text-[11px] text-zinc-400 font-mono">
             <Lock className="w-3.5 h-3.5 text-amber-400" />
-            <span>Encrypted Authorization Portal</span>
+            <span>Central Firebase Encrypted Security</span>
           </div>
 
           <div>

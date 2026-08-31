@@ -8,7 +8,7 @@ import { INITIAL_CUSTOMERS } from '../data/initialCustomers';
 import { INITIAL_INSTAGRAM_SETTINGS } from '../data/initialInstagram';
 import { IMAGE_3_WARM_MOON, IMAGE_1_GOLD_TABLE, IMAGE_8_LIFESTYLE_TABLE, resolveProductImage } from '../data/productImages';
 import { db, collection, doc, setDoc, getDoc, getDocs, deleteDoc, writeBatch, onSnapshot, sanitizeForFirestore } from '../utils/firebase';
-import { hashAdminPassword, verifyAdminPassword, getDefaultAdminRecords, getInitialAdminAuthDoc, AuthorizedAdminRecord, AdminAuthDoc } from '../utils/security';
+import { hashAdminPassword, verifyAdminPassword, getInitialAdminAuthDoc, AuthorizedAdminRecord, AdminAuthDoc } from '../utils/security';
 
 export interface Toast {
   id: string;
@@ -189,7 +189,9 @@ interface StoreContextType {
   
   // Admin & Auth (Restricted to Authorized Admins only)
   adminUser: AdminUser | null;
+  isAdminPasswordConfigured: boolean;
   adminLogin: (emailOrPass: string, password?: string) => Promise<{ success: boolean; message: string }>;
+  setupAdminPassword: (password: string, confirmPassword: string) => Promise<{ success: boolean; message: string }>;
   adminLogout: () => void;
   updateAdminProfile: (profile: Partial<AdminUser>) => Promise<void>;
   changeAdminCredentials: (params: { currentPassword?: string; newEmail?: string; newPassword?: string; adminName?: string; role?: AdminUser['role'] }) => Promise<{ success: boolean; message: string }>;
@@ -1144,31 +1146,36 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return null;
   });
 
+  const isAdminPasswordConfigured = Boolean(adminAuthDoc?.masterPassHash && adminAuthDoc?.isConfigured !== false);
+
   // Real-time Firestore Admin Auth Synchronizer (Syncs admin passkeys & profiles live across all devices)
   useEffect(() => {
     const adminAuthDocRef = doc(db, 'settings', 'admin_auth');
     const unsubscribe = onSnapshot(adminAuthDocRef, async (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data() as Partial<AdminAuthDoc>;
-        if (data && (data.masterPassHash || data.admins)) {
-          setAdminAuthDoc(data as AdminAuthDoc);
+        if (data && data.masterPassHash) {
+          const loadedDoc: AdminAuthDoc = {
+            ...getInitialAdminAuthDoc(),
+            ...data,
+            isConfigured: data.isConfigured !== false && Boolean(data.masterPassHash)
+          };
+          setAdminAuthDoc(loadedDoc);
           try {
-            localStorage.setItem('lunova_admin_auth_v4', JSON.stringify(data));
+            localStorage.setItem('lunova_admin_auth_v4', JSON.stringify(loadedDoc));
           } catch {}
+        } else {
+          setAdminAuthDoc({
+            ...getInitialAdminAuthDoc(),
+            isConfigured: false
+          });
         }
       } else {
-        // Document does not exist in Firestore yet (first time initialization)
-        try {
-          const initialAuthDoc = await getInitialAdminAuthDoc();
-          await setDoc(adminAuthDocRef, sanitizeForFirestore(initialAuthDoc));
-          setAdminAuthDoc(initialAuthDoc);
-          try {
-            localStorage.setItem('lunova_admin_auth_v4', JSON.stringify(initialAuthDoc));
-          } catch {}
-          console.log('[Firestore] Initialized central admin authentication registry.');
-        } catch (err) {
-          console.warn('[Firestore] Error initializing admin auth document:', err);
-        }
+        // Document does not exist in Firestore yet (unconfigured state)
+        setAdminAuthDoc({
+          ...getInitialAdminAuthDoc(),
+          isConfigured: false
+        });
       }
     }, (error) => {
       console.warn('[Firestore] Admin auth real-time listener status:', error?.message || error);
@@ -1197,6 +1204,70 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, []);
 
+  const setupAdminPassword = async (password: string, confirmPassword: string): Promise<{ success: boolean; message: string }> => {
+    const cleanNew = (password || '').trim();
+    const cleanConfirm = (confirmPassword || '').trim();
+
+    if (!cleanNew || cleanNew.length < 4) {
+      return { success: false, message: 'Password must be at least 4 characters long.' };
+    }
+
+    if (cleanNew !== cleanConfirm) {
+      return { success: false, message: 'Password and confirmation password do not match.' };
+    }
+
+    const newPassHash = await hashAdminPassword(cleanNew);
+    const adminEmail = 'admin@lunova.luxury';
+    const adminName = 'Store Administrator';
+    const adminRole = 'Super Admin';
+
+    const newAuthDoc: AdminAuthDoc = {
+      masterPassHash: newPassHash,
+      isConfigured: true,
+      adminName,
+      adminEmail,
+      adminRole,
+      authorizedEmails: [adminEmail, 'workp7384@gmail.com'],
+      admins: {
+        [adminEmail]: {
+          name: adminName,
+          role: adminRole,
+          passHash: newPassHash,
+          updatedAt: new Date().toISOString()
+        }
+      },
+      updatedAt: new Date().toISOString(),
+      description: 'LUNOVA Central Administrator Authentication Registry',
+      lastChangedBy: adminEmail
+    };
+
+    try {
+      await setDoc(doc(db, 'settings', 'admin_auth'), sanitizeForFirestore(newAuthDoc), { merge: true });
+      console.log('[Firestore] Admin password established and saved in Firebase.');
+    } catch (err) {
+      console.error('[Firestore] Error saving initial admin password:', err);
+      return { success: false, message: 'Failed to save administrator password to Firebase. Please check connection.' };
+    }
+
+    setAdminAuthDoc(newAuthDoc);
+    try {
+      localStorage.setItem('lunova_admin_auth_v4', JSON.stringify(newAuthDoc));
+      window.dispatchEvent(new CustomEvent('lunova_admin_auth_updated', { detail: newAuthDoc }));
+    } catch {}
+
+    const user: AdminUser = {
+      id: 'adm-master',
+      name: adminName,
+      email: adminEmail,
+      role: adminRole
+    };
+    setAdminUser(user);
+    setCustomerUser(null);
+    localStorage.setItem('lunova_admin_v1', JSON.stringify(user));
+    addToast('Master Administrator Password established successfully!', 'success');
+    return { success: true, message: 'Master Administrator Password saved securely in Firebase.' };
+  };
+
   const adminLogin = async (emailOrPass: string, optionalPass?: string): Promise<{ success: boolean; message: string }> => {
     let cleanEmail = '';
     let cleanPass = '';
@@ -1212,14 +1283,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return { success: false, message: 'Please enter the master administrator passkey.' };
     }
 
-    // Direct cloud fetch to guarantee freshest cross-device authentication state
-    let authDocData: AdminAuthDoc | null = adminAuthDoc;
+    // Direct cloud fetch to guarantee freshest cross-device authentication state from Firebase
+    let authDocData: AdminAuthDoc | null = null;
     try {
       const adminAuthSnap = await getDoc(doc(db, 'settings', 'admin_auth'));
       if (adminAuthSnap.exists()) {
         const cloudData = adminAuthSnap.data() as Partial<AdminAuthDoc>;
-        if (cloudData && (cloudData.masterPassHash || cloudData.admins)) {
-          authDocData = cloudData as AdminAuthDoc;
+        if (cloudData && cloudData.masterPassHash) {
+          authDocData = {
+            ...getInitialAdminAuthDoc(),
+            ...cloudData,
+            isConfigured: cloudData.isConfigured !== false && Boolean(cloudData.masterPassHash)
+          } as AdminAuthDoc;
           setAdminAuthDoc(authDocData);
           try {
             localStorage.setItem('lunova_admin_auth_v4', JSON.stringify(authDocData));
@@ -1227,16 +1302,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       }
     } catch (err) {
-      console.warn('[Admin Auth] Direct cloud fetch fallback to local cache:', err);
+      console.warn('[Admin Auth] Direct Firebase verification fetch failed:', err);
     }
 
-    // If still empty (e.g. offline first launch), initialize defaults
-    if (!authDocData) {
-      authDocData = await getInitialAdminAuthDoc();
+    // Fallback to active state if available
+    if (!authDocData && adminAuthDoc?.masterPassHash) {
+      authDocData = adminAuthDoc;
     }
 
-    const defaultInitialHash = await hashAdminPassword('lunova2026');
-    const masterHash = authDocData.masterPassHash || defaultInitialHash;
+    // If no password credential exists in Firebase, access is strictly denied (or prompt setup)
+    if (!authDocData || !authDocData.masterPassHash || authDocData.isConfigured === false) {
+      return { 
+        success: false, 
+        message: 'No administrator password has been configured in Firebase yet. Please set up your administrator password.' 
+      };
+    }
+
+    const masterHash = authDocData.masterPassHash;
 
     // Mode 1: Password-only authentication (No email required)
     if (!cleanEmail) {
@@ -1245,7 +1327,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const primaryAdminEmail = (authDocData.adminEmail || 'admin@lunova.luxury').toLowerCase().trim();
         const user: AdminUser = {
           id: `adm-master`,
-          name: authDocData.adminName || 'Julian Thorne',
+          name: authDocData.adminName || 'Store Administrator',
           email: primaryAdminEmail,
           role: authDocData.adminRole || 'Super Admin'
         };
@@ -1271,19 +1353,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     if (isEmailAuthorized) {
       const existingRecord = adminsMap[cleanEmail] || {
-        name: authDocData.adminName || 'Julian Thorne',
+        name: authDocData.adminName || 'Store Administrator',
         role: authDocData.adminRole || 'Super Admin',
         passHash: masterHash
       };
 
-      // Always authenticate against the centralized master password hash or synced account passHash
-      const targetHash = masterHash || existingRecord.passHash;
+      const targetHash = existingRecord.passHash || masterHash;
       const isPassValid = await verifyAdminPassword(cleanPass, targetHash);
 
       if (isPassValid) {
         const user: AdminUser = {
           id: `adm-${cleanEmail.replace(/[^a-z0-9]/g, '')}`,
-          name: existingRecord.name || authDocData.adminName || 'Store Master',
+          name: existingRecord.name || authDocData.adminName || 'Store Administrator',
           email: cleanEmail,
           role: existingRecord.role || authDocData.adminRole || 'Super Admin'
         };
@@ -1337,12 +1418,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const currentAdminUserEmail = (adminUser?.email || 'admin@lunova.luxury').toLowerCase().trim();
     
     // 1. Fetch latest authoritative document from Firestore
-    let currentAuthDoc: AdminAuthDoc | null = adminAuthDoc;
+    let currentAuthDoc: AdminAuthDoc | null = null;
     try {
       const adminAuthSnap = await getDoc(doc(db, 'settings', 'admin_auth'));
       if (adminAuthSnap.exists()) {
         const cloudData = adminAuthSnap.data() as AdminAuthDoc;
-        if (cloudData && (cloudData.masterPassHash || cloudData.admins)) {
+        if (cloudData && cloudData.masterPassHash) {
           currentAuthDoc = cloudData;
         }
       }
@@ -1350,12 +1431,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       console.warn('[Admin Auth] Direct cloud fetch fallback:', err);
     }
 
-    if (!currentAuthDoc) {
-      currentAuthDoc = await getInitialAdminAuthDoc();
+    if (!currentAuthDoc && adminAuthDoc?.masterPassHash) {
+      currentAuthDoc = adminAuthDoc;
     }
 
-    const defaultInitialHash = await hashAdminPassword('lunova2026');
-    const currentMasterHash = currentAuthDoc.masterPassHash || defaultInitialHash;
+    if (!currentAuthDoc || !currentAuthDoc.masterPassHash) {
+      return { success: false, message: 'No administrator password has been configured in Firebase yet.' };
+    }
+
+    const currentMasterHash = currentAuthDoc.masterPassHash;
 
     // Step 1: Verify current password
     if (!currentPassword || !currentPassword.trim()) {
@@ -1392,7 +1476,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Step 4: Compute cryptographically secure salted hash for new password
     const newPassHash = await hashAdminPassword(cleanNew);
 
-    // Update all admin accounts in dictionary with new password hash so NO account can ever be accessed with old passwords or lunova2026
     const updatedAdmins: Record<string, AuthorizedAdminRecord> = { ...(currentAuthDoc.admins || {}) };
     for (const emailKey of Object.keys(updatedAdmins)) {
       updatedAdmins[emailKey] = {
@@ -1403,7 +1486,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     if (!updatedAdmins[currentAdminUserEmail]) {
       updatedAdmins[currentAdminUserEmail] = {
-        name: adminUser?.name || currentAuthDoc.adminName || 'Store Master',
+        name: adminUser?.name || currentAuthDoc.adminName || 'Store Administrator',
         role: adminUser?.role || currentAuthDoc.adminRole || 'Super Admin',
         passHash: newPassHash,
         updatedAt: new Date().toISOString()
@@ -1413,7 +1496,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const nextAuthDoc: AdminAuthDoc = {
       ...currentAuthDoc,
       masterPassHash: newPassHash,
-      isPasswordChanged: true,
+      isConfigured: true,
       admins: updatedAdmins,
       updatedAt: new Date().toISOString(),
       lastChangedBy: currentAdminUserEmail
@@ -1422,9 +1505,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Step 5: Save directly to Firestore Cloud Database (live across all devices)
     try {
       await setDoc(doc(db, 'settings', 'admin_auth'), sanitizeForFirestore(nextAuthDoc), { merge: true });
-      console.log(`[Firestore] Admin master password permanently updated and synced across all accounts.`);
+      console.log(`[Firestore] Admin master password permanently updated and synced across all devices.`);
     } catch (err) {
       console.error('[Firestore] Error saving admin password to cloud:', err);
+      return { success: false, message: 'Failed to update administrator password in Firebase. Please check connection.' };
     }
 
     // Step 6: Update local cache & broadcast event
@@ -1448,12 +1532,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const currentAdminEmail = (adminUser?.email || 'admin@lunova.luxury').toLowerCase().trim();
     
     // Fetch latest authoritative document from Firestore
-    let currentAuthDoc: AdminAuthDoc | null = adminAuthDoc;
+    let currentAuthDoc: AdminAuthDoc | null = null;
     try {
       const adminAuthSnap = await getDoc(doc(db, 'settings', 'admin_auth'));
       if (adminAuthSnap.exists()) {
         const cloudData = adminAuthSnap.data() as AdminAuthDoc;
-        if (cloudData && (cloudData.masterPassHash || cloudData.admins)) {
+        if (cloudData && cloudData.masterPassHash) {
           currentAuthDoc = cloudData;
         }
       }
@@ -1461,16 +1545,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       console.warn('[Admin Auth] Direct cloud fetch fallback:', err);
     }
 
-    if (!currentAuthDoc) {
-      currentAuthDoc = await getInitialAdminAuthDoc();
+    if (!currentAuthDoc && adminAuthDoc?.masterPassHash) {
+      currentAuthDoc = adminAuthDoc;
     }
 
-    const defaultInitialHash = await hashAdminPassword('lunova2026');
-    const currentMasterHash = currentAuthDoc.masterPassHash || defaultInitialHash;
+    if (!currentAuthDoc || !currentAuthDoc.masterPassHash) {
+      return { success: false, message: 'No administrator password has been configured in Firebase yet.' };
+    }
 
-    // Verify current password if changing password or if current password was provided
+    const currentMasterHash = currentAuthDoc.masterPassHash;
+
     let newPassHash = currentMasterHash;
-    let passwordChangedFlag = !!currentAuthDoc.isPasswordChanged;
 
     if (params.newPassword && params.newPassword.trim()) {
       if (!params.currentPassword) {
@@ -1487,7 +1572,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return { success: false, message: 'New password must be at least 4 characters long.' };
       }
       newPassHash = await hashAdminPassword(params.newPassword.trim());
-      passwordChangedFlag = true;
     }
 
     const cleanNewEmail = params.newEmail ? params.newEmail.toLowerCase().trim() : currentAdminEmail;
@@ -1496,7 +1580,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return { success: false, message: 'Please enter a valid email address.' };
     }
 
-    const updatedName = params.adminName ? params.adminName.trim() : (adminUser?.name || currentAuthDoc.adminName || 'Store Master');
+    const updatedName = params.adminName ? params.adminName.trim() : (adminUser?.name || currentAuthDoc.adminName || 'Store Administrator');
     const updatedRole = params.role || adminUser?.role || currentAuthDoc.adminRole || 'Super Admin';
 
     // Update authorized admins dictionary
@@ -1528,7 +1612,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const nextAuthDoc: AdminAuthDoc = {
       ...currentAuthDoc,
       masterPassHash: newPassHash,
-      isPasswordChanged: passwordChangedFlag,
+      isConfigured: true,
       adminName: updatedName,
       adminEmail: cleanNewEmail,
       adminRole: updatedRole,
@@ -1544,6 +1628,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       console.log(`[Firestore] Admin credentials permanently updated in cloud.`);
     } catch (err) {
       console.error('[Firestore] Error saving admin credentials to cloud:', err);
+      return { success: false, message: 'Failed to update credentials in Firebase. Please check connection.' };
     }
 
     // Synchronously update local cache
@@ -1845,7 +1930,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         isCustomerOrdersModalOpen,
         setIsCustomerOrdersModalOpen,
         adminUser,
+        isAdminPasswordConfigured,
         adminLogin,
+        setupAdminPassword,
         adminLogout,
         updateAdminProfile,
         changeAdminCredentials,

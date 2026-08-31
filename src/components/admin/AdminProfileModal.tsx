@@ -41,7 +41,7 @@ export const AdminProfileModal: React.FC<AdminProfileModalProps> = ({ isOpen, on
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     setLoading(true);
@@ -78,25 +78,30 @@ export const AdminProfileModal: React.FC<AdminProfileModalProps> = ({ isOpen, on
     }
 
     // Process credentials update
-    const result = changeAdminCredentials({
-      adminName: name.trim(),
-      newEmail: email.trim(),
-      currentPassword: isChangingPassword && currentPassword ? currentPassword.trim() : undefined,
-      newPassword: isChangingPassword && newPassword ? newPassword.trim() : undefined,
-      role
-    });
+    try {
+      const result = await changeAdminCredentials({
+        adminName: name.trim(),
+        newEmail: email.trim(),
+        currentPassword: isChangingPassword && currentPassword ? currentPassword.trim() : undefined,
+        newPassword: isChangingPassword && newPassword ? newPassword.trim() : undefined,
+        role
+      });
 
-    setLoading(false);
+      setLoading(false);
 
-    if (result.success) {
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      setIsChangingPassword(false);
-      onClose();
-    } else {
-      setErrorMsg(result.message);
-      addToast(result.message, 'error');
+      if (result.success) {
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setIsChangingPassword(false);
+        onClose();
+      } else {
+        setErrorMsg(result.message);
+        addToast(result.message, 'error');
+      }
+    } catch (err) {
+      setLoading(false);
+      setErrorMsg('Failed to update credentials. Please try again.');
     }
   };
 
@@ -235,7 +240,7 @@ export const AdminProfileModal: React.FC<AdminProfileModalProps> = ({ isOpen, on
                 <div>
                   <label className="block text-[10px] uppercase font-semibold text-zinc-400 mb-1 flex items-center justify-between">
                     <span>Current Password *</span>
-                    <span className="text-[10px] text-zinc-500 font-mono">Default: lunova2026</span>
+                    <span className="text-[10px] text-zinc-500 font-mono">Initial setup: lunova2026</span>
                   </label>
                   <div className="relative">
                     <input

@@ -154,7 +154,7 @@ export const AdminSettingsPage: React.FC = () => {
 
   const currentFeaturedProductObj = products.find((p) => p.id === selectedFeaturedProduct) || products[0];
 
-  const handleSaveAdminProfile = (e?: React.FormEvent) => {
+  const handleSaveAdminProfile = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setProfileStatus(null);
     setProfileLoading(true);
@@ -172,21 +172,26 @@ export const AdminSettingsPage: React.FC = () => {
       return;
     }
 
-    const res = changeAdminCredentials({
-      adminName: adminName.trim(),
-      newEmail: adminEmail.trim(),
-      role: adminRole
-    });
+    try {
+      const res = await changeAdminCredentials({
+        adminName: adminName.trim(),
+        newEmail: adminEmail.trim(),
+        role: adminRole
+      });
 
-    setProfileLoading(false);
-    if (res.success) {
-      setProfileStatus({ type: 'success', message: '✓ Administrator profile name and login email updated successfully.' });
-    } else {
-      setProfileStatus({ type: 'error', message: res.message });
+      setProfileLoading(false);
+      if (res.success) {
+        setProfileStatus({ type: 'success', message: '✓ Administrator profile name and login email updated successfully.' });
+      } else {
+        setProfileStatus({ type: 'error', message: res.message });
+      }
+    } catch (err) {
+      setProfileLoading(false);
+      setProfileStatus({ type: 'error', message: 'Failed to update admin profile. Please try again.' });
     }
   };
 
-  const handleUpdatePassword = (e: React.FormEvent) => {
+  const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordStatus(null);
     setPasswordLoading(true);
@@ -209,19 +214,24 @@ export const AdminSettingsPage: React.FC = () => {
       return;
     }
 
-    const res = changeAdminPassword(currentPassword.trim(), newPassword.trim(), confirmPassword.trim());
-    setPasswordLoading(false);
+    try {
+      const res = await changeAdminPassword(currentPassword.trim(), newPassword.trim(), confirmPassword.trim());
+      setPasswordLoading(false);
 
-    if (res.success) {
-      setPasswordStatus({ 
-        type: 'success', 
-        message: '✓ Password changed successfully! You can now use your new password on the Admin Login portal.' 
-      });
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } else {
-      setPasswordStatus({ type: 'error', message: res.message });
+      if (res.success) {
+        setPasswordStatus({ 
+          type: 'success', 
+          message: '✓ Password changed successfully! You can now use your new password on the Admin Login portal.' 
+        });
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        setPasswordStatus({ type: 'error', message: res.message });
+      }
+    } catch (err) {
+      setPasswordLoading(false);
+      setPasswordStatus({ type: 'error', message: 'Failed to update admin password. Please try again.' });
     }
   };
 
@@ -535,7 +545,7 @@ export const AdminSettingsPage: React.FC = () => {
 
               <div className="flex items-center space-x-2">
                 <span className="text-[10px] px-3 py-1 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 font-mono">
-                  Initial Default Passkey: <strong className="text-amber-300">lunova2026</strong>
+                  Initial Setup Default: <strong className="text-amber-300">lunova2026</strong> (Active until changed)
                 </span>
               </div>
             </div>
@@ -584,7 +594,7 @@ export const AdminSettingsPage: React.FC = () => {
                       {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
-                  <p className="text-[10px] text-zinc-500 mt-1 font-mono">Default setup is <span className="text-amber-400">lunova2026</span></p>
+                  <p className="text-[10px] text-zinc-500 mt-1 font-mono">Initial default is <span className="text-amber-400">lunova2026</span> (or your latest saved passkey)</p>
                 </div>
 
                 {/* 2. New Password */}

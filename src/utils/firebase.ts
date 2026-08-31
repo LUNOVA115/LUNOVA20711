@@ -5,6 +5,7 @@ import {
   collection, 
   doc, 
   setDoc, 
+  getDoc,
   getDocs, 
   updateDoc, 
   deleteDoc, 
@@ -46,5 +47,5 @@ export function sanitizeForFirestore<T>(data: T): T {
   return data;
 }
 
-export { db, collection, doc, setDoc, getDocs, updateDoc, deleteDoc, writeBatch, onSnapshot };
+export { db, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, writeBatch, onSnapshot };
 

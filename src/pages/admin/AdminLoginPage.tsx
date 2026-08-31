@@ -27,7 +27,7 @@ export const AdminLoginPage: React.FC = () => {
     }
   }, [adminUser, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
@@ -37,13 +37,18 @@ export const AdminLoginPage: React.FC = () => {
       customerLogout();
     }
 
-    // Authenticate immediately and redirect on success
-    const res = adminLogin(email, password);
-    setLoading(false);
-    if (res.success) {
-      navigate('/admin/dashboard');
-    } else {
-      setError(res.message);
+    try {
+      // Authenticate immediately and redirect on success
+      const res = await adminLogin(email, password);
+      setLoading(false);
+      if (res.success) {
+        navigate('/admin/dashboard');
+      } else {
+        setError(res.message);
+      }
+    } catch (err) {
+      setLoading(false);
+      setError('An unexpected error occurred during administrative verification. Please try again.');
     }
   };
 

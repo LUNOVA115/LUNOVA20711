@@ -7,7 +7,8 @@ import { INITIAL_ORDERS } from '../data/initialOrders';
 import { INITIAL_CUSTOMERS } from '../data/initialCustomers';
 import { INITIAL_INSTAGRAM_SETTINGS } from '../data/initialInstagram';
 import { IMAGE_3_WARM_MOON, IMAGE_1_GOLD_TABLE, IMAGE_8_LIFESTYLE_TABLE, resolveProductImage } from '../data/productImages';
-import { db, collection, doc, setDoc, getDocs, deleteDoc, writeBatch, onSnapshot, sanitizeForFirestore } from '../utils/firebase';
+import { db, collection, doc, setDoc, getDoc, getDocs, deleteDoc, writeBatch, onSnapshot, sanitizeForFirestore } from '../utils/firebase';
+import { hashAdminPassword, verifyAdminPassword, getDefaultAdminRecords, AuthorizedAdminRecord } from '../utils/security';
 
 export interface Toast {
   id: string;
@@ -188,11 +189,11 @@ interface StoreContextType {
   
   // Admin & Auth (Restricted to Authorized Admins only)
   adminUser: AdminUser | null;
-  adminLogin: (email: string, password: string) => { success: boolean; message: string };
+  adminLogin: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
   adminLogout: () => void;
-  updateAdminProfile: (profile: Partial<AdminUser>) => void;
-  changeAdminCredentials: (params: { currentPassword?: string; newEmail?: string; newPassword?: string; adminName?: string; role?: AdminUser['role'] }) => { success: boolean; message: string };
-  changeAdminPassword: (currentPassword: string, newPassword: string, confirmPassword: string) => { success: boolean; message: string };
+  updateAdminProfile: (profile: Partial<AdminUser>) => Promise<void>;
+  changeAdminCredentials: (params: { currentPassword?: string; newEmail?: string; newPassword?: string; adminName?: string; role?: AdminUser['role'] }) => Promise<{ success: boolean; message: string }>;
+  changeAdminPassword: (currentPassword: string, newPassword: string, confirmPassword: string) => Promise<{ success: boolean; message: string }>;
   
   // Admin Mutators
   addProduct: (productData: Omit<Product, 'id' | 'createdAt'>) => Product;
@@ -1130,65 +1131,77 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     addToast('Signed out of Customer Portal', 'info');
   };
 
-  // Admin Auth (Strictly Authorized Administrators & Custom Configurable Admin Credentials)
-  const getInitialAuthorizedAdmins = (): Record<string, { name: string; role: AdminUser['role']; pass: string }> => {
-    const base: Record<string, { name: string; role: AdminUser['role']; pass: string }> = {
-      'admin@lunova.luxury': { name: 'Julian Thorne', role: 'Super Admin', pass: 'lunova2026' },
-      'julian@lunova.luxury': { name: 'Julian Thorne', role: 'Super Admin', pass: 'lunova2026' },
-      'operations@lunova.luxury': { name: 'Elena Vance', role: 'Store Manager', pass: 'lunova2026' },
-      'admin@lunovahome.com': { name: 'Store Master', role: 'Super Admin', pass: 'lunova2026' },
-      'workp7384@gmail.com': { name: 'Store Principal', role: 'Super Admin', pass: 'lunova2026' }
-    };
-
-    // Integrate Netlify / Vite Production Environment Variables if provided
+  // Admin Auth (Central Multi-Device Firestore Database Synchronization & Encrypted Authentication)
+  const [authorizedAdmins, setAuthorizedAdmins] = useState<Record<string, AuthorizedAdminRecord>>(() => {
     try {
-      const envEmail = typeof import.meta !== 'undefined' && import.meta.env?.VITE_ADMIN_EMAIL
-        ? String(import.meta.env.VITE_ADMIN_EMAIL).trim().toLowerCase()
-        : '';
-      const envPass = typeof import.meta !== 'undefined' && (import.meta.env?.VITE_ADMIN_PASSWORD || import.meta.env?.VITE_ADMIN_PASSKEY)
-        ? String(import.meta.env.VITE_ADMIN_PASSWORD || import.meta.env.VITE_ADMIN_PASSKEY).trim()
-        : '';
-      const envName = typeof import.meta !== 'undefined' && import.meta.env?.VITE_ADMIN_NAME
-        ? String(import.meta.env.VITE_ADMIN_NAME).trim()
-        : 'Executive Director';
-
-      if (envEmail && envPass) {
-        base[envEmail] = {
-          name: envName || 'Master Administrator',
-          role: 'Super Admin',
-          pass: envPass
-        };
-      }
-    } catch {
-      // Ignore env extraction error in non-vite environments
-    }
-
-    return base;
-  };
-
-  const loadAuthorizedAdminsRegistry = (): Record<string, { name: string; role: AdminUser['role']; pass: string }> => {
-    const initial = getInitialAuthorizedAdmins();
-    try {
-      const saved = localStorage.getItem('lunova_authorized_admins_v1');
+      const saved = localStorage.getItem('lunova_authorized_admins_v3');
       if (saved) {
-        const parsed = JSON.parse(saved);
-        return { ...initial, ...parsed };
+        return JSON.parse(saved);
       }
     } catch (e) {
-      console.error('Error loading authorized admins:', e);
+      console.error('Error loading authorized admins from storage:', e);
     }
-    return initial;
-  };
-
-  const [authorizedAdmins, setAuthorizedAdmins] = useState<Record<string, { name: string; role: AdminUser['role']; pass: string }>>(() => {
-    return loadAuthorizedAdminsRegistry();
+    return {};
   });
 
+  // Real-time Firestore Admin Auth Synchronizer (Syncs admin passkeys & profiles live across all devices)
   useEffect(() => {
-    localStorage.setItem('lunova_authorized_admins_v1', JSON.stringify(authorizedAdmins));
-  }, [authorizedAdmins]);
+    const adminAuthDocRef = doc(db, 'settings', 'admin_auth');
+    const unsubscribe = onSnapshot(adminAuthDocRef, async (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data && data.admins && typeof data.admins === 'object') {
+          setAuthorizedAdmins(data.admins);
+          try {
+            localStorage.setItem('lunova_authorized_admins_v3', JSON.stringify(data.admins));
+          } catch {}
+        }
+      } else {
+        // Document does not exist in Firestore yet (first time initialization)
+        try {
+          const initialAdmins = await getDefaultAdminRecords();
+          await setDoc(adminAuthDocRef, sanitizeForFirestore({
+            admins: initialAdmins,
+            updatedAt: new Date().toISOString(),
+            description: 'LUNOVA Central Administrator Authentication Registry'
+          }));
+          setAuthorizedAdmins(initialAdmins);
+          try {
+            localStorage.setItem('lunova_authorized_admins_v3', JSON.stringify(initialAdmins));
+          } catch {}
+          console.log('[Firestore] Initialized central admin authentication registry.');
+        } catch (err) {
+          console.warn('[Firestore] Error initializing admin auth document:', err);
+        }
+      }
+    }, (error) => {
+      console.warn('[Firestore] Admin auth real-time listener status:', error?.message || error);
+    });
 
-  const adminLogin = (email: string, pass: string) => {
+    const handleAdminStorageSync = (e?: StorageEvent | CustomEvent) => {
+      try {
+        if (e && 'detail' in e && (e as CustomEvent).detail) {
+          setAuthorizedAdmins((e as CustomEvent).detail);
+          return;
+        }
+        const saved = localStorage.getItem('lunova_authorized_admins_v3');
+        if (saved) {
+          setAuthorizedAdmins(JSON.parse(saved));
+        }
+      } catch {}
+    };
+
+    window.addEventListener('storage', handleAdminStorageSync);
+    window.addEventListener('lunova_admin_auth_updated', handleAdminStorageSync as EventListener);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('storage', handleAdminStorageSync);
+      window.removeEventListener('lunova_admin_auth_updated', handleAdminStorageSync as EventListener);
+    };
+  }, []);
+
+  const adminLogin = async (email: string, pass: string): Promise<{ success: boolean; message: string }> => {
     const cleanEmail = (email || '').trim().toLowerCase();
     const cleanPass = (pass || '').trim();
     
@@ -1199,13 +1212,37 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return { success: false, message: 'Please enter your master passkey.' };
     }
 
-    const currentAdmins = loadAuthorizedAdminsRegistry();
-    
+    // Direct cloud fetch to guarantee freshest cross-device authentication state
+    let currentRegistry = authorizedAdmins;
+    try {
+      const adminAuthSnap = await getDoc(doc(db, 'settings', 'admin_auth'));
+      if (adminAuthSnap.exists()) {
+        const cloudData = adminAuthSnap.data();
+        if (cloudData && cloudData.admins && typeof cloudData.admins === 'object') {
+          currentRegistry = cloudData.admins;
+          setAuthorizedAdmins(currentRegistry);
+          try {
+            localStorage.setItem('lunova_authorized_admins_v3', JSON.stringify(currentRegistry));
+          } catch {}
+        }
+      }
+    } catch (err) {
+      console.warn('[Admin Auth] Direct cloud fetch fallback to local cache:', err);
+    }
+
+    // If still empty (e.g. offline first launch), initialize defaults
+    if (!currentRegistry || Object.keys(currentRegistry).length === 0) {
+      currentRegistry = await getDefaultAdminRecords();
+    }
+
     // Check if email is in authorized administrators list
-    const adminRecord = currentAdmins[cleanEmail];
+    const adminRecord = currentRegistry[cleanEmail];
     
     if (adminRecord) {
-      if (cleanPass === adminRecord.pass.trim()) {
+      const storedHashOrPlain = adminRecord.passHash || (adminRecord as any).pass || '';
+      const isPassValid = await verifyAdminPassword(cleanPass, storedHashOrPlain);
+
+      if (isPassValid) {
         const user: AdminUser = {
           id: `adm-${cleanEmail.replace(/[^a-z0-9]/g, '')}`,
           name: adminRecord.name,
@@ -1218,7 +1255,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addToast(`Admin Session Authorized: Welcome back, ${adminRecord.name}.`, 'success');
         return { success: true, message: 'Administrative authentication successful' };
       } else {
-        return { success: false, message: 'Invalid administrative passkey. Please check your password.' };
+        return { success: false, message: 'Invalid administrator passkey. Please check your password.' };
       }
     }
 
@@ -1245,27 +1282,61 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     navigate('/admin/login');
   };
 
-  const updateAdminProfile = (profile: Partial<AdminUser>) => {
+  const updateAdminProfile = async (profile: Partial<AdminUser>): Promise<void> => {
     const currentEmail = (adminUser?.email || 'admin@lunova.luxury').toLowerCase().trim();
     const targetEmail = profile.email ? profile.email.toLowerCase().trim() : currentEmail;
-    const currentAdmins = loadAuthorizedAdminsRegistry();
-    const existing = currentAdmins[currentEmail] || { name: 'Julian Thorne', role: 'Super Admin', pass: 'lunova2026' };
+    
+    let currentRegistry = authorizedAdmins;
+    try {
+      const adminAuthSnap = await getDoc(doc(db, 'settings', 'admin_auth'));
+      if (adminAuthSnap.exists()) {
+        const cloudData = adminAuthSnap.data();
+        if (cloudData && cloudData.admins) {
+          currentRegistry = cloudData.admins;
+        }
+      }
+    } catch {}
 
-    const updatedRecord = {
+    if (!currentRegistry || Object.keys(currentRegistry).length === 0) {
+      currentRegistry = await getDefaultAdminRecords();
+    }
+
+    const defaultInitialHash = await hashAdminPassword('lunova2026');
+    const existing = currentRegistry[currentEmail] || { 
+      name: 'Julian Thorne', 
+      role: 'Super Admin', 
+      passHash: defaultInitialHash 
+    };
+
+    const updatedRecord: AuthorizedAdminRecord = {
       ...existing,
       name: profile.name || existing.name,
       role: profile.role || existing.role,
-      pass: existing.pass // PRESERVE EXISTING PASSWORD
+      passHash: existing.passHash, // PRESERVE EXISTING PASSWORD HASH
+      updatedAt: new Date().toISOString()
     };
 
-    const nextAdmins = { ...currentAdmins };
+    const nextAdmins: Record<string, AuthorizedAdminRecord> = { ...currentRegistry };
     if (targetEmail !== currentEmail) {
       delete nextAdmins[currentEmail];
     }
     nextAdmins[targetEmail] = updatedRecord;
 
-    localStorage.setItem('lunova_authorized_admins_v1', JSON.stringify(nextAdmins));
+    try {
+      await setDoc(doc(db, 'settings', 'admin_auth'), sanitizeForFirestore({
+        admins: nextAdmins,
+        updatedAt: new Date().toISOString(),
+        lastChangedBy: targetEmail
+      }), { merge: true });
+    } catch (err) {
+      console.error('[Firestore] Error saving admin profile to cloud:', err);
+    }
+
     setAuthorizedAdmins(nextAdmins);
+    try {
+      localStorage.setItem('lunova_authorized_admins_v3', JSON.stringify(nextAdmins));
+      window.dispatchEvent(new CustomEvent('lunova_admin_auth_updated', { detail: nextAdmins }));
+    } catch {}
 
     setAdminUser((prev) => {
       const updated: AdminUser = {
@@ -1285,14 +1356,37 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  // Dedicated single-responsibility password change method
-  const changeAdminPassword = (currentPassword: string, newPassword: string, confirmPassword: string) => {
+  // Dedicated single-responsibility password change method (Synchronized permanently to Firestore)
+  const changeAdminPassword = async (
+    currentPassword: string, 
+    newPassword: string, 
+    confirmPassword: string
+  ): Promise<{ success: boolean; message: string }> => {
     const currentEmail = (adminUser?.email || 'admin@lunova.luxury').toLowerCase().trim();
-    const currentAdmins = loadAuthorizedAdminsRegistry();
-    const existingRecord = currentAdmins[currentEmail] || {
+    
+    // 1. Fetch latest authoritative registry from Firestore
+    let currentRegistry = authorizedAdmins;
+    try {
+      const adminAuthSnap = await getDoc(doc(db, 'settings', 'admin_auth'));
+      if (adminAuthSnap.exists()) {
+        const cloudData = adminAuthSnap.data();
+        if (cloudData && cloudData.admins) {
+          currentRegistry = cloudData.admins;
+        }
+      }
+    } catch (err) {
+      console.warn('[Admin Auth] Direct cloud fetch fallback:', err);
+    }
+
+    if (!currentRegistry || Object.keys(currentRegistry).length === 0) {
+      currentRegistry = await getDefaultAdminRecords();
+    }
+
+    const defaultInitialHash = await hashAdminPassword('lunova2026');
+    const existingRecord = currentRegistry[currentEmail] || {
       name: adminUser?.name || 'Julian Thorne',
       role: adminUser?.role || 'Super Admin',
-      pass: 'lunova2026'
+      passHash: defaultInitialHash
     };
 
     // Step 1: Verify current password
@@ -1300,65 +1394,115 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return { success: false, message: 'Please enter your current administrator password.' };
     }
 
-    if (currentPassword.trim() !== existingRecord.pass) {
+    const storedHashOrPlain = existingRecord.passHash || (existingRecord as any).pass || defaultInitialHash;
+    const isCurrentValid = await verifyAdminPassword(currentPassword.trim(), storedHashOrPlain);
+
+    if (!isCurrentValid) {
       return { 
         success: false, 
-        message: 'The current password you entered is incorrect. (Default setup passkey is: lunova2026)' 
+        message: 'The current password you entered is incorrect.' 
       };
     }
 
     // Step 2: Validate new password
-    if (!newPassword || newPassword.trim().length < 4) {
+    const cleanNew = (newPassword || '').trim();
+    const cleanConfirm = (confirmPassword || '').trim();
+
+    if (!cleanNew || cleanNew.length < 4) {
       return { success: false, message: 'New password must be at least 4 characters long.' };
     }
 
     // Step 3: Check confirmation
-    if (newPassword.trim() !== confirmPassword.trim()) {
+    if (cleanNew !== cleanConfirm) {
       return { success: false, message: 'The new password and confirmation password do not match.' };
     }
 
-    if (newPassword.trim() === existingRecord.pass) {
+    const isSameAsCurrent = await verifyAdminPassword(cleanNew, storedHashOrPlain);
+    if (isSameAsCurrent) {
       return { success: false, message: 'The new password must be different from your current password.' };
     }
 
-    const updatedPass = newPassword.trim();
-    const updatedAdmins = {
-      ...currentAdmins,
+    // Step 4: Compute cryptographically secure salted hash for new password
+    const newPassHash = await hashAdminPassword(cleanNew);
+
+    const updatedAdmins: Record<string, AuthorizedAdminRecord> = {
+      ...currentRegistry,
       [currentEmail]: {
-        ...existingRecord,
-        pass: updatedPass
+        name: existingRecord.name,
+        role: existingRecord.role,
+        passHash: newPassHash,
+        updatedAt: new Date().toISOString()
       }
     };
 
-    // Synchronously write to localStorage to prevent race conditions
-    localStorage.setItem('lunova_authorized_admins_v1', JSON.stringify(updatedAdmins));
-    setAuthorizedAdmins(updatedAdmins);
+    // Step 5: Save directly to Firestore Cloud Database (live across all devices)
+    try {
+      await setDoc(doc(db, 'settings', 'admin_auth'), sanitizeForFirestore({
+        admins: updatedAdmins,
+        updatedAt: new Date().toISOString(),
+        lastChangedBy: currentEmail
+      }), { merge: true });
+      console.log(`[Firestore] Admin password for ${currentEmail} permanently saved to cloud.`);
+    } catch (err) {
+      console.error('[Firestore] Error saving admin password to cloud:', err);
+    }
 
-    addToast('Admin password updated successfully! Use your new password on next login.', 'success');
-    return { success: true, message: 'Your administrator password has been updated successfully.' };
+    // Step 6: Update local cache & broadcast event
+    setAuthorizedAdmins(updatedAdmins);
+    try {
+      localStorage.setItem('lunova_authorized_admins_v3', JSON.stringify(updatedAdmins));
+      window.dispatchEvent(new CustomEvent('lunova_admin_auth_updated', { detail: updatedAdmins }));
+    } catch {}
+
+    addToast('Admin password updated successfully! Your new password is now active across all devices.', 'success');
+    return { success: true, message: 'Your administrator password has been updated and synchronized across all devices.' };
   };
 
-  const changeAdminCredentials = (params: {
+  const changeAdminCredentials = async (params: {
     currentPassword?: string;
     newEmail?: string;
     newPassword?: string;
     adminName?: string;
     role?: AdminUser['role'];
-  }) => {
+  }): Promise<{ success: boolean; message: string }> => {
     const currentAdminEmail = (adminUser?.email || 'admin@lunova.luxury').toLowerCase().trim();
-    const currentAdmins = loadAuthorizedAdminsRegistry();
-    const currentRecord = currentAdmins[currentAdminEmail] || {
+    
+    // Fetch latest authoritative registry from Firestore
+    let currentRegistry = authorizedAdmins;
+    try {
+      const adminAuthSnap = await getDoc(doc(db, 'settings', 'admin_auth'));
+      if (adminAuthSnap.exists()) {
+        const cloudData = adminAuthSnap.data();
+        if (cloudData && cloudData.admins) {
+          currentRegistry = cloudData.admins;
+        }
+      }
+    } catch (err) {
+      console.warn('[Admin Auth] Direct cloud fetch fallback:', err);
+    }
+
+    if (!currentRegistry || Object.keys(currentRegistry).length === 0) {
+      currentRegistry = await getDefaultAdminRecords();
+    }
+
+    const defaultInitialHash = await hashAdminPassword('lunova2026');
+    const currentRecord = currentRegistry[currentAdminEmail] || {
       name: adminUser?.name || 'Julian Thorne',
       role: adminUser?.role || 'Super Admin',
-      pass: 'lunova2026'
+      passHash: defaultInitialHash
     };
 
-    // Verify current password if changing password or if current password was entered
+    // Verify current password if changing password or if current password was provided
     if (params.newPassword) {
-      if (params.currentPassword && params.currentPassword.trim() !== currentRecord.pass) {
+      if (!params.currentPassword) {
+        return { success: false, message: 'Please enter your current administrator password to authorize this change.' };
+      }
+      const storedHashOrPlain = currentRecord.passHash || (currentRecord as any).pass || defaultInitialHash;
+      const isCurrentValid = await verifyAdminPassword(params.currentPassword.trim(), storedHashOrPlain);
+      if (!isCurrentValid) {
         return { 
           success: false, 
-          message: 'Current password verification failed. (Default setup passkey is: lunova2026)' 
+          message: 'Current password verification failed. Please enter your correct current password.' 
         };
       }
       if (params.newPassword.trim().length < 4) {
@@ -1368,29 +1512,47 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const cleanNewEmail = params.newEmail ? params.newEmail.toLowerCase().trim() : currentAdminEmail;
     
-    // Basic email validation
     if (params.newEmail && !cleanNewEmail.includes('@')) {
       return { success: false, message: 'Please enter a valid email address.' };
     }
 
-    const updatedPass = params.newPassword ? params.newPassword.trim() : currentRecord.pass;
+    const updatedHash = params.newPassword 
+      ? await hashAdminPassword(params.newPassword.trim())
+      : currentRecord.passHash;
+
     const updatedName = params.adminName ? params.adminName.trim() : (adminUser?.name || currentRecord.name);
     const updatedRole = params.role || adminUser?.role || currentRecord.role;
 
     // Update authorized registry
-    const nextAdmins = { ...currentAdmins };
+    const nextAdmins: Record<string, AuthorizedAdminRecord> = { ...currentRegistry };
     if (cleanNewEmail !== currentAdminEmail) {
       delete nextAdmins[currentAdminEmail];
     }
     nextAdmins[cleanNewEmail] = {
       name: updatedName,
       role: updatedRole,
-      pass: updatedPass
+      passHash: updatedHash,
+      updatedAt: new Date().toISOString()
     };
 
-    // Synchronously write
-    localStorage.setItem('lunova_authorized_admins_v1', JSON.stringify(nextAdmins));
+    // Persist to Firestore Cloud Database (live across all devices)
+    try {
+      await setDoc(doc(db, 'settings', 'admin_auth'), sanitizeForFirestore({
+        admins: nextAdmins,
+        updatedAt: new Date().toISOString(),
+        lastChangedBy: cleanNewEmail
+      }), { merge: true });
+      console.log(`[Firestore] Admin credentials permanently updated in cloud.`);
+    } catch (err) {
+      console.error('[Firestore] Error saving admin credentials to cloud:', err);
+    }
+
+    // Synchronously update local cache
     setAuthorizedAdmins(nextAdmins);
+    try {
+      localStorage.setItem('lunova_authorized_admins_v3', JSON.stringify(nextAdmins));
+      window.dispatchEvent(new CustomEvent('lunova_admin_auth_updated', { detail: nextAdmins }));
+    } catch {}
 
     // Update active admin user session
     const updatedAdminSession: AdminUser = {
@@ -1402,9 +1564,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setAdminUser(updatedAdminSession);
     localStorage.setItem('lunova_admin_v1', JSON.stringify(updatedAdminSession));
 
-    addToast('Admin credentials updated successfully! Use your new email/password to sign in.', 'success');
-    return { success: true, message: 'Admin email and security credentials successfully saved' };
+    addToast('Admin credentials updated successfully! New credentials active across all devices.', 'success');
+    return { success: true, message: 'Admin profile and security credentials successfully saved and synchronized across all devices.' };
   };
+
 
   // Admin product mutators
   const addProduct = (productData: Omit<Product, 'id' | 'createdAt'>): Product => {

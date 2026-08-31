@@ -124,7 +124,7 @@ export const HomePage: React.FC = () => {
             );
             const uniqueSubs = Array.from(new Set(catProducts.map(p => p.subcategory).filter(Boolean)));
             const subCount = cat.subcategories?.length || uniqueSubs.length || (idx === 0 ? 4 : 3);
-            const catImage = cat.image || (cat.slug === 'moon' ? moonImage : infinityImage);
+            const catImage = catProducts[0]?.images?.[0] || (cat.slug === 'moon' ? moonImage : infinityImage) || cat.image;
             const isEven = idx % 2 === 0;
             const accentColor = isEven ? 'amber' : 'sky';
 

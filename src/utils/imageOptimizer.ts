@@ -6,9 +6,9 @@
 
 export const optimizeImageFile = (
   file: File, 
-  maxWidth = 1400, 
-  maxHeight = 1400, 
-  quality = 0.85
+  maxWidth = 1200, 
+  maxHeight = 1200, 
+  quality = 0.82
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
     if (!file.type.startsWith('image/')) {

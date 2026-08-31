@@ -49,25 +49,38 @@ export const PRODUCT_IMAGE_MAP: Record<string, string> = {
 };
 
 /**
- * Resolves any product image string (whether a dev path, prod hashed path, or base64 data URL)
+ * Resolves any product image string (whether a dev path, prod hashed path, base64 data URL, or external link)
  * to its correct, current runtime representation.
  */
 export const resolveProductImage = (imgSrc: string): string => {
-  if (!imgSrc) return '';
+  if (!imgSrc || typeof imgSrc !== 'string') return '';
   
-  // If it's a base64 string or external URL, return as-is
-  if (imgSrc.startsWith('data:') || imgSrc.startsWith('http://') || imgSrc.startsWith('https://')) {
-    return imgSrc;
+  const trimmed = imgSrc.trim();
+  if (!trimmed) return '';
+
+  // Direct map check
+  if (PRODUCT_IMAGE_MAP[trimmed]) {
+    return PRODUCT_IMAGE_MAP[trimmed];
+  }
+
+  // If it's a base64 string, blob, or external URL, return as-is
+  if (
+    trimmed.startsWith('data:') || 
+    trimmed.startsWith('http://') || 
+    trimmed.startsWith('https://') || 
+    trimmed.startsWith('blob:')
+  ) {
+    return trimmed;
   }
   
-  const lower = imgSrc.toLowerCase();
+  const lower = trimmed.toLowerCase();
 
   if (lower.includes('hero_bg') || lower.includes('lunova_hero') || lower.includes('hero-bg')) {
     return IMAGE_HERO_BG;
   }
   
   // Map keywords or paths to the imported active build-resolved asset variables
-  if (lower.includes('gold_table_3d') || lower.includes('gold-table') || lower.includes('image-1') || lower.includes('image-8')) {
+  if (lower.includes('gold_table_3d') || lower.includes('gold-table') || lower.includes('image-1') || lower.includes('image-8') || lower.includes('lifestyle')) {
     return IMAGE_1_GOLD_TABLE;
   }
   if (lower.includes('blue_table_3d') || lower.includes('blue-table') || lower.includes('image-2')) {
@@ -83,6 +96,6 @@ export const resolveProductImage = (imgSrc: string): string => {
     return IMAGE_7_COOL_WHITE_MOON;
   }
   
-  return imgSrc;
+  return trimmed;
 };
 

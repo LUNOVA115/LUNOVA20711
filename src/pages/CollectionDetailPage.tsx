@@ -45,6 +45,8 @@ export const CollectionDetailPage: React.FC<CollectionDetailPageProps> = ({ slug
     ) && p.status === 'active'
   );
 
+  const bannerImage = collectionProducts[0]?.images?.[0] || category.image;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-12 text-zinc-100">
       
@@ -61,7 +63,7 @@ export const CollectionDetailPage: React.FC<CollectionDetailPageProps> = ({ slug
       <div className="relative rounded-3xl overflow-hidden border border-zinc-800 bg-zinc-950 p-8 sm:p-12 lg:p-16 shadow-2xl">
         <div className="absolute inset-0 z-0">
           <img
-            src={category.image}
+            src={bannerImage}
             alt={category.name}
             referrerPolicy="no-referrer"
             className="w-full h-full object-cover opacity-35 filter brightness-90"

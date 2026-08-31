@@ -20,7 +20,7 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({ category, index 
   );
   const uniqueSubs = Array.from(new Set(catProducts.map(p => p.subcategory).filter(Boolean)));
   const subCount = category.subcategories?.length || uniqueSubs.length || (index === 0 ? 4 : 3);
-  const displayImage = category.image || (category.slug === 'moon' ? 'https://images.unsplash.com/photo-1522030299830-16b8d3d049fe?auto=format&fit=crop&q=80&w=800' : 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=800');
+  const displayImage = catProducts[0]?.images?.[0] || category.image || (category.slug === 'moon' ? 'https://images.unsplash.com/photo-1522030299830-16b8d3d049fe?auto=format&fit=crop&q=80&w=800' : 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=800');
   
   const isEven = index % 2 === 0;
   const accentColor = isEven ? 'amber' : 'sky';

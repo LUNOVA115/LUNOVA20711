@@ -7,7 +7,7 @@ import { INITIAL_ORDERS } from '../data/initialOrders';
 import { INITIAL_CUSTOMERS } from '../data/initialCustomers';
 import { INITIAL_INSTAGRAM_SETTINGS } from '../data/initialInstagram';
 import { IMAGE_3_WARM_MOON, IMAGE_1_GOLD_TABLE, IMAGE_8_LIFESTYLE_TABLE, resolveProductImage } from '../data/productImages';
-import { db, collection, doc, setDoc, getDocs, deleteDoc, writeBatch, onSnapshot } from '../utils/firebase';
+import { db, collection, doc, setDoc, getDocs, deleteDoc, writeBatch, onSnapshot, sanitizeForFirestore } from '../utils/firebase';
 
 export interface Toast {
   id: string;
@@ -299,7 +299,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           const batch = writeBatch(db);
           INITIAL_PRODUCTS.forEach((product) => {
             const prodRef = doc(db, 'products', product.id);
-            batch.set(prodRef, product);
+            const cleaned = sanitizeForFirestore({
+              ...product,
+              images: (product.images || []).map((img) => resolveProductImage(img))
+            });
+            batch.set(prodRef, cleaned);
           });
           await batch.commit();
           console.log('[Firestore] Seeded initial products successfully!');
@@ -310,7 +314,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const fbProducts: Product[] = [];
         snapshot.forEach((docSnap) => {
           const rawProduct = docSnap.data() as Product;
-          // Dynamically resolve product images on load so static paths match current environment (dev vs prod/Netlify)
+          // Dynamically resolve product images on load so paths and base64 match current environment
           const resolvedImages = (rawProduct.images || []).map((img) => resolveProductImage(img));
           fbProducts.push({
             ...rawProduct,
@@ -321,12 +325,41 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         // Sort products by createdAt descending (newest first)
         fbProducts.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
         setProducts(fbProducts);
+        try {
+          localStorage.setItem('lunova_products_v3', JSON.stringify(fbProducts));
+        } catch {}
       }
     }, (error) => {
       console.warn('[Firestore] Real-time listener status:', error?.message || error);
     });
 
-    return () => unsubscribe();
+    // Multi-tab / local event listener for instantaneous zero-latency updates
+    const handleProductsStorageSync = (e?: StorageEvent | CustomEvent) => {
+      try {
+        if (e && 'detail' in e && Array.isArray((e as CustomEvent).detail)) {
+          setProducts((e as CustomEvent).detail);
+          return;
+        }
+        const saved = localStorage.getItem('lunova_products_v3');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setProducts(parsed);
+          }
+        }
+      } catch (err) {
+        console.warn('Error synchronizing products across local tabs:', err);
+      }
+    };
+
+    window.addEventListener('storage', handleProductsStorageSync);
+    window.addEventListener('lunova_products_updated', handleProductsStorageSync as EventListener);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('storage', handleProductsStorageSync);
+      window.removeEventListener('lunova_products_updated', handleProductsStorageSync as EventListener);
+    };
   }, []);
 
   // Firestore Contact Info Real-Time Synchronizer (Syncs Admin changes live to Customer Portal)
@@ -1379,14 +1412,27 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const newProd: Product = {
       ...productData,
       id,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      images: (productData.images || []).map((img) => resolveProductImage(img))
     };
     
     // Immediate local state update for instant UI feedback
-    setProducts((prev) => [newProd, ...prev.filter((p) => p.id !== id)]);
+    setProducts((prev) => {
+      const nextProducts = [newProd, ...prev.filter((p) => p.id !== id)];
+      try {
+        localStorage.setItem('lunova_products_v3', JSON.stringify(nextProducts));
+      } catch {}
+      try {
+        window.dispatchEvent(new CustomEvent('lunova_products_updated', { detail: nextProducts }));
+      } catch {}
+      return nextProducts;
+    });
 
-    // Persist to Firestore Cloud Database (live across deployed devices)
-    setDoc(doc(db, 'products', id), newProd).catch((err) => {
+    // Persist sanitized data to Firestore Cloud Database (live across all customer sessions & devices)
+    const cleanedData = sanitizeForFirestore(newProd);
+    setDoc(doc(db, 'products', id), cleanedData, { merge: true }).then(() => {
+      console.log(`[Firestore] New product "${newProd.name}" (${id}) saved to cloud.`);
+    }).catch((err) => {
       console.error('[Firestore] Error writing product:', err);
     });
 
@@ -1395,19 +1441,29 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const updateProduct = (updated: Product) => {
-    const resolvedProduct = {
+    const resolvedProduct: Product = {
       ...updated,
       images: (updated.images || []).map((img) => resolveProductImage(img))
     };
 
     // Immediate local state update for instant UI feedback
-    setProducts((prev) =>
-      prev.map((p) => (p.id === updated.id ? resolvedProduct : p))
-    );
+    setProducts((prev) => {
+      const nextProducts = prev.map((p) => (p.id === updated.id ? resolvedProduct : p));
+      try {
+        localStorage.setItem('lunova_products_v3', JSON.stringify(nextProducts));
+      } catch {}
+      try {
+        window.dispatchEvent(new CustomEvent('lunova_products_updated', { detail: nextProducts }));
+      } catch {}
+      return nextProducts;
+    });
 
-    // Persist to Firestore Cloud Database (live across deployed devices)
-    setDoc(doc(db, 'products', updated.id), updated).catch((err) => {
-      console.error('[Firestore] Error updating product:', err);
+    // Persist sanitized data to Firestore Cloud Database (live across all customer sessions & devices)
+    const cleanedData = sanitizeForFirestore(resolvedProduct);
+    setDoc(doc(db, 'products', updated.id), cleanedData, { merge: true }).then(() => {
+      console.log(`[Firestore] Product "${updated.name}" (${updated.id}) successfully updated in cloud.`);
+    }).catch((err) => {
+      console.error('[Firestore] Error updating product in cloud:', err);
     });
 
     // Also sync cart if item exists
@@ -1423,10 +1479,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const prod = products.find((p) => p.id === productId);
     
     // Immediate local state update
-    setProducts((prev) => prev.filter((p) => p.id !== productId));
+    setProducts((prev) => {
+      const nextProducts = prev.filter((p) => p.id !== productId);
+      try {
+        localStorage.setItem('lunova_products_v3', JSON.stringify(nextProducts));
+      } catch {}
+      try {
+        window.dispatchEvent(new CustomEvent('lunova_products_updated', { detail: nextProducts }));
+      } catch {}
+      return nextProducts;
+    });
 
     // Delete from Firestore Cloud Database
-    deleteDoc(doc(db, 'products', productId)).catch((err) => {
+    deleteDoc(doc(db, 'products', productId)).then(() => {
+      console.log(`[Firestore] Product "${productId}" deleted from cloud.`);
+    }).catch((err) => {
       console.error('[Firestore] Error deleting product:', err);
     });
 
@@ -1526,7 +1593,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Write default products back into Firestore
       INITIAL_PRODUCTS.forEach((product) => {
         const prodRef = doc(db, 'products', product.id);
-        batch.set(prodRef, product);
+        const cleaned = sanitizeForFirestore({
+          ...product,
+          images: (product.images || []).map((img) => resolveProductImage(img))
+        });
+        batch.set(prodRef, cleaned);
       });
       await batch.commit();
 

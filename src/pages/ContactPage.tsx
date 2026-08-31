@@ -86,14 +86,14 @@ export const ContactPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch mb-10">
         
         {/* 1. FIRST SECTION (Left): Mobile Number / LUNOVA Concierge */}
-        <div className="bg-[#0b0c10] border border-zinc-800/90 rounded-2xl p-7 sm:p-9 shadow-2xl relative overflow-hidden group flex flex-col justify-between min-h-[460px] h-full">
+        <div className="bg-[#0b0c10] border border-zinc-800/90 rounded-2xl p-5 sm:p-6 shadow-2xl relative overflow-hidden group flex flex-col justify-between min-h-[412px] h-full">
           {/* Ambient Glow Accent */}
           <div className="absolute -top-24 -left-24 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute top-0 right-0 w-80 h-80 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative z-10 flex flex-col justify-between h-full space-y-6">
+          <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
             {/* Card Header & WhatsApp Action */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b border-zinc-800/80">
               <div>
                 <span className="text-[9px] font-mono uppercase tracking-[0.25em] text-amber-400/90 font-bold block mb-1">
                   DIRECT CLIENT RELATIONS
@@ -118,12 +118,12 @@ export const ContactPage: React.FC = () => {
             </div>
 
             {/* Directory Details Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs flex-1 content-center">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs flex-1 content-center">
               
               {/* Phone / Mobile Hotline */}
-              <div className="flex items-start space-x-3 p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/70">
-                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-amber-400 shrink-0">
-                  <Phone className="w-4 h-4" />
+              <div className="flex items-start space-x-3 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/70">
+                <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-amber-400 shrink-0">
+                  <Phone className="w-3.5 h-3.5" />
                 </div>
                 <div className="min-w-0">
                   <div className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider">
@@ -131,7 +131,7 @@ export const ContactPage: React.FC = () => {
                   </div>
                   <a 
                     href={`tel:${phone.replace(/[^0-9+]/g, '')}`} 
-                    className="text-zinc-200 hover:text-amber-300 transition-colors text-xs font-mono font-medium mt-1 block truncate"
+                    className="text-zinc-200 hover:text-amber-300 transition-colors text-xs font-mono font-medium mt-0.5 block truncate"
                   >
                     {phone}
                   </a>
@@ -139,9 +139,9 @@ export const ContactPage: React.FC = () => {
               </div>
 
               {/* Instagram */}
-              <div className="flex items-start space-x-3 p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/70">
-                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-pink-400 shrink-0">
-                  <Instagram className="w-4 h-4" />
+              <div className="flex items-start space-x-3 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/70">
+                <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-pink-400 shrink-0">
+                  <Instagram className="w-3.5 h-3.5" />
                 </div>
                 <div className="min-w-0">
                   <div className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider">
@@ -151,7 +151,7 @@ export const ContactPage: React.FC = () => {
                     href={instagramUrl} 
                     target="_blank" 
                     rel="noopener noreferrer" 
-                    className="text-zinc-200 hover:text-pink-300 transition-colors text-xs font-mono font-medium mt-1 inline-flex items-center space-x-1 truncate"
+                    className="text-zinc-200 hover:text-pink-300 transition-colors text-xs font-mono font-medium mt-0.5 inline-flex items-center space-x-1 truncate"
                   >
                     <span className="truncate">@{instagramHandle}</span>
                     <ExternalLink className="w-3 h-3 text-pink-400/80 shrink-0" />
@@ -160,30 +160,30 @@ export const ContactPage: React.FC = () => {
               </div>
 
               {/* Hours */}
-              <div className="flex items-start space-x-3 p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/70">
-                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-amber-400 shrink-0">
-                  <Clock className="w-4 h-4" />
+              <div className="flex items-start space-x-3 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/70">
+                <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-amber-400 shrink-0">
+                  <Clock className="w-3.5 h-3.5" />
                 </div>
                 <div>
                   <div className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider">
                     Concierge Hours
                   </div>
-                  <div className="text-zinc-200 text-xs font-sans mt-1 leading-snug">
+                  <div className="text-zinc-200 text-xs font-sans mt-0.5 leading-snug">
                     {hours}
                   </div>
                 </div>
               </div>
 
               {/* Location */}
-              <div className="flex items-start space-x-3 p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/70">
-                <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-amber-400 shrink-0">
-                  <MapPin className="w-4 h-4" />
+              <div className="flex items-start space-x-3 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/70">
+                <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-amber-400 shrink-0">
+                  <MapPin className="w-3.5 h-3.5" />
                 </div>
                 <div>
                   <div className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider">
                     Atelier & Showroom
                   </div>
-                  <div className="text-zinc-200 text-xs font-sans mt-1 leading-snug">
+                  <div className="text-zinc-200 text-xs font-sans mt-0.5 leading-snug">
                     {address}
                   </div>
                 </div>
@@ -191,9 +191,9 @@ export const ContactPage: React.FC = () => {
 
               {/* Email Address - VISIBLE ONLY ON ADMIN SIDE */}
               {adminUser && (
-                <div className="sm:col-span-2 flex items-start space-x-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
-                  <div className="p-2.5 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-400 shrink-0">
-                    <Mail className="w-4 h-4" />
+                <div className="sm:col-span-2 flex items-start space-x-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30">
+                  <div className="p-2 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-400 shrink-0">
+                    <Mail className="w-3.5 h-3.5" />
                   </div>
                   <div>
                     <div className="flex items-center space-x-2">
@@ -206,7 +206,7 @@ export const ContactPage: React.FC = () => {
                     </div>
                     <a 
                       href={`mailto:${email}`} 
-                      className="text-amber-300 hover:text-amber-200 transition-colors text-xs font-mono break-all font-medium mt-1 block"
+                      className="text-amber-300 hover:text-amber-200 transition-colors text-xs font-mono break-all font-medium mt-0.5 block"
                     >
                       {email}
                     </a>
@@ -219,10 +219,10 @@ export const ContactPage: React.FC = () => {
         </div>
 
         {/* 2. SECOND SECTION (Right): Send a Message */}
-        <div className="bg-[#F5F2EB] text-zinc-900 rounded-2xl p-7 sm:p-9 shadow-2xl border border-stone-200/80 relative flex flex-col justify-between min-h-[460px] h-full">
+        <div className="bg-[#F5F2EB] text-zinc-900 rounded-2xl p-5 sm:p-6 shadow-2xl border border-stone-200/80 relative flex flex-col justify-between min-h-[412px] h-full">
           <div className="w-full flex flex-col justify-between h-full">
             {/* Card Header */}
-            <div className="mb-5 pb-3 border-b border-stone-300/70 text-left">
+            <div className="mb-3.5 pb-3 border-b border-stone-300/70 text-left">
               <span className="text-[9px] font-mono uppercase tracking-[0.25em] text-stone-500 font-bold block mb-1">
                 ELECTRONIC BRIEF
               </span>
@@ -235,7 +235,7 @@ export const ContactPage: React.FC = () => {
             </div>
 
             {submitted ? (
-              <div className="py-12 text-center space-y-3 my-auto">
+              <div className="py-10 text-center space-y-3 my-auto">
                 <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
                 <h3 className="text-xl font-serif text-zinc-900">Thank You</h3>
                 <p className="text-sm text-stone-600 max-w-md mx-auto">
@@ -252,12 +252,12 @@ export const ContactPage: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4 flex flex-col justify-between flex-1">
+              <form onSubmit={handleSubmit} className="space-y-3 flex flex-col justify-between flex-1">
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* Your Name */}
                   <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-wider text-stone-700 font-bold mb-1.5">
+                    <label className="block text-[10px] font-mono uppercase tracking-wider text-stone-700 font-bold mb-1">
                       Your Name
                     </label>
                     <input
@@ -266,13 +266,13 @@ export const ContactPage: React.FC = () => {
                       placeholder="e.g. Eleanor Vance"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-zinc-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 transition-all font-sans text-xs shadow-sm"
+                      className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-zinc-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 transition-all font-sans text-xs shadow-sm"
                     />
                   </div>
 
                   {/* Email Address */}
                   <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-wider text-stone-700 font-bold mb-1.5">
+                    <label className="block text-[10px] font-mono uppercase tracking-wider text-stone-700 font-bold mb-1">
                       Email Address
                     </label>
                     <input
@@ -281,30 +281,30 @@ export const ContactPage: React.FC = () => {
                       placeholder="e.g. eleanor@atelier.com"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-zinc-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 transition-all font-sans text-xs shadow-sm"
+                      className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-zinc-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 transition-all font-sans text-xs shadow-sm"
                     />
                   </div>
                 </div>
 
                 {/* Message */}
                 <div className="flex-1 flex flex-col">
-                  <label className="block text-[10px] font-mono uppercase tracking-wider text-stone-700 font-bold mb-1.5">
+                  <label className="block text-[10px] font-mono uppercase tracking-wider text-stone-700 font-bold mb-1">
                     Message
                   </label>
                   <textarea
-                    rows={4}
+                    rows={3}
                     required
                     placeholder="Specify your inquiry details, custom dimension requests, or installation timelines..."
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    className="w-full flex-1 min-h-[96px] px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-zinc-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 transition-all font-sans text-xs shadow-sm resize-none"
+                    className="w-full flex-1 min-h-[76px] px-3 py-2 bg-white border border-stone-300 rounded-xl text-zinc-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 transition-all font-sans text-xs shadow-sm resize-none"
                   />
                 </div>
 
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-amber-300 font-mono font-bold text-xs uppercase tracking-widest flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer group hover:scale-[1.002] mt-auto"
+                  className="w-full py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-amber-300 font-mono font-bold text-xs uppercase tracking-widest flex items-center justify-center space-x-2 shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer group hover:scale-[1.002] mt-auto"
                 >
                   <span>SEND MESSAGE →</span>
                   <ArrowRight className="w-3.5 h-3.5 text-amber-400 group-hover:translate-x-1 transition-transform" />

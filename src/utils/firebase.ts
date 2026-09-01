@@ -10,7 +10,11 @@ import {
   updateDoc, 
   deleteDoc, 
   writeBatch,
-  onSnapshot
+  onSnapshot,
+  query,
+  where,
+  orderBy,
+  limit
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
@@ -47,5 +51,49 @@ export function sanitizeForFirestore<T>(data: T): T {
   return data;
 }
 
-export { db, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, writeBatch, onSnapshot };
+export enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+export interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  timestamp: string;
+}
+
+export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null): never {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    operationType,
+    path,
+    timestamp: new Date().toISOString()
+  };
+  console.error('[Firestore Error Detail]:', JSON.stringify(errInfo, null, 2));
+  throw new Error(JSON.stringify(errInfo));
+}
+
+export { 
+  app,
+  db, 
+  collection, 
+  doc, 
+  setDoc, 
+  getDoc, 
+  getDocs, 
+  updateDoc, 
+  deleteDoc, 
+  writeBatch, 
+  onSnapshot,
+  query,
+  where,
+  orderBy,
+  limit
+};
+
 

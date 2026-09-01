@@ -13,17 +13,19 @@ export const CustomerOrdersModal: React.FC = () => {
 
   if (!isCustomerOrdersModalOpen) return null;
 
-  // Filter orders for the logged-in customer (by customer email or id or all if general customer)
+  // Filter orders for the logged-in customer (by customer email or customer name)
   const customerOrders = customerUser
     ? orders.filter(
         (o) =>
-          o.customerEmail.toLowerCase() === customerUser.email.toLowerCase() ||
-          o.customerName.toLowerCase() === customerUser.name.toLowerCase()
+          (o.customer?.email && o.customer.email.toLowerCase() === customerUser.email.toLowerCase()) ||
+          (o.customer?.name && o.customer.name.toLowerCase() === customerUser.name.toLowerCase()) ||
+          ((o as any).customerEmail && (o as any).customerEmail.toLowerCase() === customerUser.email.toLowerCase())
       )
     : [];
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
+    const s = (status || '').toLowerCase();
+    switch (s) {
       case 'delivered':
         return (
           <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/40">
@@ -135,26 +137,39 @@ export const CustomerOrdersModal: React.FC = () => {
 
                 {/* Items */}
                 <div className="space-y-2">
-                  {order.items.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2.5">
-                        <img
-                          src={item.product.images[0]}
-                          alt={item.product.name}
-                          className="w-10 h-10 rounded-lg object-cover bg-zinc-950 border border-zinc-800"
-                        />
-                        <div>
-                          <div className="font-semibold text-zinc-200">{item.product.name}</div>
-                          <div className="text-[10px] text-zinc-400">
-                            Qty: {item.quantity} {item.selectedColorTemp && `• ${item.selectedColorTemp}`}
+                  {order.items.map((item: any, idx: number) => {
+                    const itemName = item.productName || item.product?.name || 'Bespoke Lighting';
+                    const itemImg = item.productImage || item.product?.images?.[0] || '';
+                    const itemPrice = item.price || item.product?.price || 0;
+                    const itemQty = item.quantity || 1;
+
+                    return (
+                      <div key={idx} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2.5">
+                          {itemImg ? (
+                            <img
+                              src={itemImg}
+                              alt={itemName}
+                              className="w-10 h-10 rounded-lg object-cover bg-zinc-950 border border-zinc-800"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-600">
+                              <Package className="w-5 h-5" />
+                            </div>
+                          )}
+                          <div>
+                            <div className="font-semibold text-zinc-200">{itemName}</div>
+                            <div className="text-[10px] text-zinc-400">
+                              Qty: {itemQty} {item.selectedColorTemp && `• ${item.selectedColorTemp}`}
+                            </div>
                           </div>
                         </div>
+                        <div className="font-mono font-medium text-zinc-300">
+                          Rs. {(itemPrice * itemQty).toLocaleString()}
+                        </div>
                       </div>
-                      <div className="font-mono font-medium text-zinc-300">
-                        Rs. {(item.product.price * item.quantity).toLocaleString()}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Tracking & Payment Summary */}

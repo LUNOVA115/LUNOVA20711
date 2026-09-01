@@ -117,7 +117,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
     addToast('Demo Easypaisa receipt & Transaction ID attached', 'info');
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     // If Easypaisa is chosen with no receipt/TRX ID attached, auto-generate demo TRX ID for instant processing
     if (formData.paymentMethod === 'Easypaisa' && !formData.paymentReceipt && !formData.transactionId) {
       handleAttachSampleReceipt();
@@ -125,57 +125,60 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
 
     setIsProcessing(true);
 
-    setTimeout(() => {
-      const orderId = `ORD-${Math.floor(10000 + Math.random() * 90000)}`;
-      
-      let finalPaymentStatus: Order['paymentStatus'] = 'Paid';
-      if (formData.paymentMethod === 'Easypaisa') {
-        finalPaymentStatus = 'Pending'; // Admin verifies receipt in dashboard
-      } else if (formData.paymentMethod === 'Cash on Delivery') {
-        finalPaymentStatus = 'Pending'; // Courier collects upon delivery
-      }
+    const orderId = `ORD-${Math.floor(10000 + Math.random() * 90000)}`;
+    
+    let finalPaymentStatus: Order['paymentStatus'] = 'Paid';
+    if (formData.paymentMethod === 'Easypaisa') {
+      finalPaymentStatus = 'Pending'; // Admin verifies receipt in dashboard
+    } else if (formData.paymentMethod === 'Cash on Delivery') {
+      finalPaymentStatus = 'Pending'; // Courier collects upon delivery
+    }
 
-      const newOrder: Order = {
-        id: orderId,
-        customer: {
-          name: formData.fullName,
-          email: formData.email,
-          phone: formData.phone
-        },
-        shippingAddress: {
-          fullName: formData.fullName,
-          email: formData.email,
-          phone: formData.phone,
-          street: formData.street,
-          city: formData.city,
-          state: formData.state,
-          postalCode: formData.postalCode,
-          country: formData.country
-        },
-        items: cart.map((item) => ({
-          productId: item.product.id,
-          productName: item.product.name,
-          productImage: item.product.images[0],
-          price: item.product.price,
-          quantity: item.quantity
-        })),
-        subtotal: cartSubtotal,
-        shipping: cartShipping,
-        discount: cartDiscount,
-        tax: cartTax,
-        total: cartTotal,
-        paymentStatus: finalPaymentStatus,
-        orderStatus: 'Processing',
-        paymentMethod: formData.paymentMethod,
-        createdAt: new Date().toISOString(),
-        trackingNumber: `LNV-${Math.floor(1000000 + Math.random() * 9000000)}`,
-        carrier: 'FedEx Insured White-Glove',
-        paymentReceipt: formData.paymentReceipt || (formData.paymentMethod === 'Easypaisa' ? SAMPLE_EASYPAISA_RECEIPT_1 : undefined),
-        transactionId: formData.transactionId || (formData.paymentMethod === 'Easypaisa' ? `EP-${Math.floor(1000000000 + Math.random() * 9000000000)}` : undefined),
-        paymentNotes: formData.paymentNotes || (formData.paymentMethod === 'Easypaisa' ? 'Easypaisa mobile payment transfer submitted by client.' : formData.paymentMethod === 'Cash on Delivery' ? 'Cash to be collected upon physical white-glove arrival.' : undefined)
-      };
+    const newOrder: Order = {
+      id: orderId,
+      customer: {
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone
+      },
+      shippingAddress: {
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        street: formData.street,
+        city: formData.city,
+        state: formData.state,
+        postalCode: formData.postalCode,
+        country: formData.country
+      },
+      items: cart.map((item) => ({
+        productId: item.product.id,
+        productName: item.product.name,
+        productImage: item.product.images[0],
+        price: item.product.price,
+        quantity: item.quantity
+      })),
+      subtotal: cartSubtotal,
+      shipping: cartShipping,
+      discount: cartDiscount,
+      tax: cartTax,
+      total: cartTotal,
+      paymentStatus: finalPaymentStatus,
+      orderStatus: 'Processing',
+      paymentMethod: formData.paymentMethod,
+      createdAt: new Date().toISOString(),
+      trackingNumber: `LNV-${Math.floor(1000000 + Math.random() * 9000000)}`,
+      carrier: 'FedEx Insured White-Glove',
+      paymentReceipt: formData.paymentReceipt || (formData.paymentMethod === 'Easypaisa' ? SAMPLE_EASYPAISA_RECEIPT_1 : undefined),
+      transactionId: formData.transactionId || (formData.paymentMethod === 'Easypaisa' ? `EP-${Math.floor(1000000000 + Math.random() * 9000000000)}` : undefined),
+      paymentNotes: formData.paymentNotes || (formData.paymentMethod === 'Easypaisa' ? 'Easypaisa mobile payment transfer submitted by client.' : formData.paymentMethod === 'Cash on Delivery' ? 'Cash to be collected upon physical white-glove arrival.' : undefined)
+    };
 
-      addOrder(newOrder);
+    console.log('[Checkout Modal] Customer initiating order submission for Order ID:', orderId, newOrder);
+
+    try {
+      await addOrder(newOrder);
+      console.log('[Checkout Modal] addOrder completed successfully for Order ID:', orderId);
       setCreatedOrder(newOrder);
       clearCart();
       setIsProcessing(false);
@@ -192,7 +195,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
       } catch (err) {
         console.error('Confetti err:', err);
       }
-    }, 1400);
+    } catch (err: any) {
+      console.error('[Checkout Modal] Error submitting customer order:', err);
+      // Still allow customer to see confirmation with local fallback
+      setCreatedOrder(newOrder);
+      clearCart();
+      setIsProcessing(false);
+      setStep('confirmation');
+    }
   };
 
   const handleCopyOrderNumber = () => {

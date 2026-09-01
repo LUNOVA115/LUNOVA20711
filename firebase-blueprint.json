@@ -1,0 +1,87 @@
+{
+  "entities": {
+    "Order": {
+      "title": "Order",
+      "description": "Customer purchase order including items, financial breakdown, customer details and tracking.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "customer": { "type": "object" },
+        "shippingAddress": { "type": "object" },
+        "items": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "shipping": { "type": "number" },
+        "discount": { "type": "number" },
+        "tax": { "type": "number" },
+        "total": { "type": "number" },
+        "paymentStatus": { "type": "string", "enum": ["Paid", "Pending", "Refunded", "Failed"] },
+        "orderStatus": { "type": "string", "enum": ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"] },
+        "paymentMethod": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "trackingNumber": { "type": "string" },
+        "carrier": { "type": "string" },
+        "paymentReceipt": { "type": "string" },
+        "transactionId": { "type": "string" },
+        "paymentNotes": { "type": "string" }
+      },
+      "required": ["id", "customer", "items", "total", "paymentStatus", "orderStatus", "createdAt"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Registered or VIP client patron profile and purchase history metrics.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "totalOrders": { "type": "number" },
+        "totalSpent": { "type": "number" },
+        "lastOrderDate": { "type": "string" },
+        "tier": { "type": "string", "enum": ["VIP", "Gold", "Regular"] },
+        "joinedDate": { "type": "string" },
+        "shippingAddress": { "type": "object" }
+      },
+      "required": ["id", "name", "email", "totalOrders", "totalSpent", "tier"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "LUNOVA bespoke lighting item including images, stock, specs, and price.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "originalPrice": { "type": "number" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "images": { "type": "array" },
+        "stock": { "type": "number" },
+        "featured": { "type": "boolean" },
+        "rating": { "type": "number" },
+        "reviewsCount": { "type": "number" },
+        "isNew": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "price", "category", "stock"]
+    }
+  },
+  "firestore": {
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Collection of all placed customer orders."
+    },
+    "/customers/{customerId}": {
+      "schema": "Customer",
+      "description": "Collection of customer and VIP collector profiles."
+    },
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Storefront product inventory."
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Storefront operational and administrative settings."
+    }
+  }
+}

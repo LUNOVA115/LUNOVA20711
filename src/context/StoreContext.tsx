@@ -202,9 +202,9 @@ interface StoreContextType {
   updateProduct: (product: Product) => void;
   deleteProduct: (productId: string) => void;
   
-  addOrder: (order: Order) => void;
-  updateOrderStatus: (orderId: string, status: Order['orderStatus']) => void;
-  updateOrderPaymentStatus: (orderId: string, status: Order['paymentStatus']) => void;
+  addOrder: (order: Order) => Promise<void>;
+  updateOrderStatus: (orderId: string, status: Order['orderStatus']) => Promise<void>;
+  updateOrderPaymentStatus: (orderId: string, status: Order['paymentStatus']) => Promise<void>;
   
   addCategory: (categoryData: Omit<Category, 'id'>) => Category;
   updateCategory: (category: Category) => void;
@@ -422,7 +422,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('lunova_categories_v2', JSON.stringify(categories));
   }, [categories]);
 
-  // Orders
+  // Orders (Synchronized with Firestore Central Cloud Database)
   const [orders, setOrders] = useState<Order[]>(() => {
     try {
       const saved = localStorage.getItem('lunova_orders_v1');
@@ -432,11 +432,75 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   });
 
+  // Real-time Firestore Subscription for Orders (Syncs customer orders to Admin Panel live)
   useEffect(() => {
-    localStorage.setItem('lunova_orders_v1', JSON.stringify(orders));
-  }, [orders]);
+    console.log('[Firestore Admin Subscription] Initializing real-time listener on collection: "orders"...');
+    const ordersCol = collection(db, 'orders');
+    
+    const unsubscribe = onSnapshot(ordersCol, (snapshot) => {
+      console.log(`[Firestore Admin Subscription] Orders snapshot received: ${snapshot.docs.length} total order document(s) in cloud database.`);
+      
+      if (snapshot.empty) {
+        console.log('[Firestore Admin Order Fetch] Cloud orders collection is currently empty.');
+        setOrders([]);
+        try {
+          localStorage.setItem('lunova_orders_v1', JSON.stringify([]));
+        } catch {}
+      } else {
+        const cloudOrders: Order[] = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data() as Order;
+          cloudOrders.push({
+            ...data,
+            id: docSnap.id || data.id
+          });
+        });
+        
+        // Sort newest first by creation timestamp
+        cloudOrders.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
+        
+        console.log(`[Firestore Admin Order Fetch] Successfully loaded ${cloudOrders.length} order(s) from Firestore cloud database. Order IDs:`, cloudOrders.map(o => o.id));
+        setOrders(cloudOrders);
+        try {
+          localStorage.setItem('lunova_orders_v1', JSON.stringify(cloudOrders));
+        } catch {}
+      }
+    }, (error) => {
+      console.error('[Firestore Admin Subscription FAILURE] Real-time orders listener error:', {
+        message: error?.message || String(error),
+        code: (error as any)?.code,
+        stack: error?.stack,
+        error
+      });
+    });
 
-  // Customers
+    const handleOrdersStorageSync = (e?: StorageEvent | CustomEvent) => {
+      try {
+        if (e && 'detail' in e && Array.isArray((e as CustomEvent).detail)) {
+          setOrders((e as CustomEvent).detail);
+          return;
+        }
+        const saved = localStorage.getItem('lunova_orders_v1');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            setOrders(parsed);
+          }
+        }
+      } catch {}
+    };
+
+    window.addEventListener('storage', handleOrdersStorageSync);
+    window.addEventListener('lunova_orders_updated', handleOrdersStorageSync as EventListener);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('storage', handleOrdersStorageSync);
+      window.removeEventListener('lunova_orders_updated', handleOrdersStorageSync as EventListener);
+    };
+  }, []);
+
+  // Customers (Synchronized with Firestore Central Cloud Database)
   const [customers, setCustomers] = useState<Customer[]>(() => {
     try {
       const saved = localStorage.getItem('lunova_customers_v1');
@@ -446,9 +510,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   });
 
+  // Real-time Firestore Subscription for Customers
   useEffect(() => {
-    localStorage.setItem('lunova_customers_v1', JSON.stringify(customers));
-  }, [customers]);
+    const customersCol = collection(db, 'customers');
+    const unsubscribe = onSnapshot(customersCol, (snapshot) => {
+      if (!snapshot.empty) {
+        const cloudCustomers: Customer[] = [];
+        snapshot.forEach((docSnap) => {
+          cloudCustomers.push(docSnap.data() as Customer);
+        });
+        setCustomers(cloudCustomers);
+        try {
+          localStorage.setItem('lunova_customers_v1', JSON.stringify(cloudCustomers));
+        } catch {}
+      }
+    }, (error) => {
+      console.warn('[Firestore] Customers listener warning:', error?.message || error);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Cart
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -1749,53 +1830,112 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     addToast(`Product "${prod?.name || productId}" deleted`, 'info');
   };
 
-  // Order mutators
-  const addOrder = (order: Order) => {
-    setOrders((prev) => [order, ...prev]);
-    // Also update or add customer
-    setCustomers((prev) => {
-      const existing = prev.find((c) => c.email.toLowerCase() === order.customer.email.toLowerCase());
-      if (existing) {
-        return prev.map((c) =>
-          c.id === existing.id
-            ? {
-                ...c,
-                totalOrders: c.totalOrders + 1,
-                totalSpent: c.totalSpent + order.total,
-                lastOrderDate: new Date().toISOString().split('T')[0],
-                tier: c.totalSpent + order.total > 4000 ? 'VIP' : 'Gold'
-              }
-            : c
-        );
-      }
-      const newCust: Customer = {
-        id: `cust-${Date.now()}`,
-        name: order.customer.name,
-        email: order.customer.email,
-        phone: order.customer.phone,
-        totalOrders: 1,
-        totalSpent: order.total,
-        lastOrderDate: new Date().toISOString().split('T')[0],
-        tier: 'Regular',
-        joinedDate: new Date().toISOString().split('T')[0],
-        shippingAddress: order.shippingAddress
-      };
-      return [newCust, ...prev];
+  // Order mutators (Persisted directly to Firestore Cloud Database)
+  const addOrder = async (order: Order): Promise<void> => {
+    console.log('[Customer Order Submission] Customer placed new order. Order ID:', order.id);
+    console.log('[Firestore Order Write] Preparing Firestore document write to collection "orders", document path:', `orders/${order.id}`, {
+      orderId: order.id,
+      customer: order.customer,
+      itemsCount: order.items?.length || 0,
+      total: order.total,
+      paymentMethod: order.paymentMethod,
+      orderStatus: order.orderStatus,
+      createdAt: order.createdAt
     });
+
+    // 1. Optimistic immediate state update & local event broadcast
+    setOrders((prev) => [order, ...prev.filter((o) => o.id !== order.id)]);
+    try {
+      localStorage.setItem('lunova_orders_v1', JSON.stringify([order, ...orders.filter((o) => o.id !== order.id)]));
+      window.dispatchEvent(new CustomEvent('lunova_orders_updated', { detail: [order, ...orders.filter((o) => o.id !== order.id)] }));
+    } catch {}
+
+    // 2. Perform Firestore Write to central cloud database
+    try {
+      const orderRef = doc(db, 'orders', order.id);
+      const cleanOrder = sanitizeForFirestore(order);
+      await setDoc(orderRef, cleanOrder);
+      console.log(`[Firestore Write SUCCESS] Order #${order.id} was successfully saved to Firestore central database!`);
+    } catch (error: any) {
+      console.error(`[Firestore Write FAILURE] FAILED to save Order #${order.id} to Firestore!`, {
+        name: error?.name,
+        message: error?.message || String(error),
+        code: error?.code,
+        stack: error?.stack,
+        raw: error
+      });
+      // Rethrow so checkout modal can log/handle
+      throw error;
+    }
+
+    // 3. Persist / Update Customer in Firestore
+    try {
+      const custEmail = (order.customer.email || '').toLowerCase().trim();
+      if (custEmail) {
+        const custId = `cust-${custEmail.replace(/[^a-z0-9]/g, '') || Date.now()}`;
+        const existing = customers.find((c) => c.email.toLowerCase() === custEmail);
+        const updatedCustomer: Customer = existing
+          ? {
+              ...existing,
+              totalOrders: existing.totalOrders + 1,
+              totalSpent: existing.totalSpent + order.total,
+              lastOrderDate: new Date().toISOString().split('T')[0],
+              tier: existing.totalSpent + order.total > 4000 ? 'VIP' : 'Gold',
+              shippingAddress: order.shippingAddress || existing.shippingAddress
+            }
+          : {
+              id: custId,
+              name: order.customer.name,
+              email: custEmail,
+              phone: order.customer.phone,
+              totalOrders: 1,
+              totalSpent: order.total,
+              lastOrderDate: new Date().toISOString().split('T')[0],
+              tier: 'Regular',
+              joinedDate: new Date().toISOString().split('T')[0],
+              shippingAddress: order.shippingAddress
+            };
+
+        setCustomers((prev) => [updatedCustomer, ...prev.filter((c) => c.email.toLowerCase() !== custEmail)]);
+        
+        await setDoc(doc(db, 'customers', custId), sanitizeForFirestore(updatedCustomer), { merge: true });
+        console.log(`[Firestore] Customer profile updated in cloud database for: ${custEmail}`);
+      }
+    } catch (custErr) {
+      console.warn('[Firestore] Error saving customer profile to cloud:', custErr);
+    }
   };
 
-  const updateOrderStatus = (orderId: string, status: Order['orderStatus']) => {
+  const updateOrderStatus = async (orderId: string, status: Order['orderStatus']): Promise<void> => {
+    console.log(`[Firestore Admin Action] Updating order #${orderId} fulfillment status to "${status}"...`);
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, orderStatus: status } : o))
     );
-    addToast(`Order ${orderId} status set to ${status}`, 'success');
+    try {
+      const orderRef = doc(db, 'orders', orderId);
+      await setDoc(orderRef, { orderStatus: status }, { merge: true });
+      console.log(`[Firestore] Order #${orderId} fulfillment status updated to "${status}" in Firestore.`);
+      addToast(`Order ${orderId} status set to ${status}`, 'success');
+    } catch (err: any) {
+      console.error(`[Firestore] Error updating order status for #${orderId}:`, err);
+      addToast(`Order status updated locally, but cloud sync encountered an issue`, 'warning');
+    }
   };
 
-  const updateOrderPaymentStatus = (orderId: string, status: Order['paymentStatus']) => {
+  const updateOrderPaymentStatus = async (orderId: string, status: Order['paymentStatus']): Promise<void> => {
+    console.log(`[Firestore Admin Action] Updating order #${orderId} payment status to "${status}"...`);
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, paymentStatus: status } : o))
     );
-    addToast(`Order ${orderId} payment status set to ${status}`, 'info');
+    try {
+      const orderRef = doc(db, 'orders', orderId);
+      await setDoc(orderRef, { paymentStatus: status }, { merge: true });
+      console.log(`[Firestore] Order #${orderId} payment status updated to "${status}" in Firestore.`);
+      addToast(`Order ${orderId} payment status set to ${status}`, 'info');
+    } catch (err: any) {
+      console.error(`[Firestore] Error updating payment status for #${orderId}:`, err);
+      addToast(`Payment status updated locally, but cloud sync encountered an issue`, 'warning');
+    }
   };
 
   // Category mutators

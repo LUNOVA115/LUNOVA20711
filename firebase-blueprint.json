@@ -64,6 +64,19 @@
         "createdAt": { "type": "string" }
       },
       "required": ["id", "name", "price", "category", "stock"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Product collection taxonomy category.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "description": { "type": "string" },
+        "itemCount": { "type": "number" }
+      },
+      "required": ["id", "name", "slug"]
     }
   },
   "firestore": {
@@ -79,9 +92,13 @@
       "schema": "Product",
       "description": "Storefront product inventory."
     },
+    "/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Storefront product categories and collections."
+    },
     "/settings/{settingId}": {
-      "schema": { "$ref": "#/entities/Product" },
-      "description": "Storefront operational and administrative settings."
+      "schema": "object",
+      "description": "Storefront operational, payment, instagram, and administrative settings."
     }
   }
 }

@@ -402,13 +402,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, []);
 
-  // Categories (Moon Collection & Infinity Collection)
+  // Categories (Moon Collection & Infinity Collection - Synchronized with Firestore Cloud Database)
   const [categories, setCategories] = useState<Category[]>(() => {
     try {
       const saved = localStorage.getItem('lunova_categories_v2');
       if (saved) {
         const parsed: Category[] = JSON.parse(saved);
-        // Filter out retired Cosmic Decor and Futuristic Home
         const cleaned = parsed.filter(c => c.slug !== 'cosmic' && c.slug !== 'futuristic-home' && c.name !== 'Cosmic Decor' && c.name !== 'Futuristic Home');
         if (cleaned.length > 0) return cleaned;
       }
@@ -421,6 +420,63 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     localStorage.setItem('lunova_categories_v2', JSON.stringify(categories));
   }, [categories]);
+
+  // Real-time Firestore Subscription for Categories
+  useEffect(() => {
+    const categoriesCol = collection(db, 'categories');
+    const unsubscribe = onSnapshot(categoriesCol, async (snapshot) => {
+      if (snapshot.empty) {
+        console.log('[Firestore] Categories collection is empty. Seeding initial categories...');
+        try {
+          const batch = writeBatch(db);
+          INITIAL_CATEGORIES.forEach((cat) => {
+            const catRef = doc(db, 'categories', cat.id);
+            batch.set(catRef, sanitizeForFirestore(cat));
+          });
+          await batch.commit();
+          console.log('[Firestore] Seeded initial categories successfully!');
+        } catch (err) {
+          console.error('[Firestore] Error seeding initial categories:', err);
+        }
+      } else {
+        const cloudCats: Category[] = [];
+        snapshot.forEach((docSnap) => {
+          cloudCats.push(docSnap.data() as Category);
+        });
+        setCategories(cloudCats);
+        try {
+          localStorage.setItem('lunova_categories_v2', JSON.stringify(cloudCats));
+        } catch {}
+      }
+    }, (error) => {
+      console.warn('[Firestore] Categories listener status:', error?.message || error);
+    });
+
+    const handleCategoriesStorageSync = (e?: StorageEvent | CustomEvent) => {
+      try {
+        if (e && 'detail' in e && Array.isArray((e as CustomEvent).detail)) {
+          setCategories((e as CustomEvent).detail);
+          return;
+        }
+        const saved = localStorage.getItem('lunova_categories_v2');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setCategories(parsed);
+          }
+        }
+      } catch {}
+    };
+
+    window.addEventListener('storage', handleCategoriesStorageSync);
+    window.addEventListener('lunova_categories_updated', handleCategoriesStorageSync as EventListener);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('storage', handleCategoriesStorageSync);
+      window.removeEventListener('lunova_categories_updated', handleCategoriesStorageSync as EventListener);
+    };
+  }, []);
 
   // Orders (Synchronized with Firestore Central Cloud Database)
   const [orders, setOrders] = useState<Order[]>(() => {
@@ -638,6 +694,28 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [customerUser]);
 
+  // Synchronize authenticated customer's cart and wishlist with their cloud profile
+  useEffect(() => {
+    if (!customerUser?.id) return;
+    try {
+      const custDocRef = doc(db, 'customers', customerUser.id);
+      const cleanCart = cart.map(item => ({
+        product: sanitizeForFirestore(item.product),
+        quantity: item.quantity,
+        selectedColorTemp: item.selectedColorTemp || null,
+        customEngraving: item.customEngraving || null
+      }));
+      setDoc(custDocRef, {
+        cart: cleanCart,
+        wishlist: wishlist
+      }, { merge: true }).catch((err) => {
+        console.warn('[Firestore] Notice syncing customer cart/wishlist to cloud:', err?.message || err);
+      });
+    } catch (err) {
+      console.warn('[Firestore] Customer cart sync notice:', err);
+    }
+  }, [customerUser?.id, cart, wishlist]);
+
   // UI state
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -741,13 +819,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     addToast(`Store WhatsApp contact number updated to "${trimmed}"`, 'success');
   };
 
-  // Instagram Integration (Admin Connectable)
+  // Instagram Integration (Admin Connectable - Synchronized with Firestore)
   const [instagramSettings, setInstagramSettings] = useState<InstagramSettings>(() => {
     try {
       const saved = localStorage.getItem('lunova_instagram_settings_v1');
       if (saved) {
         const parsed = JSON.parse(saved);
-        // If previously saved handle was the old default, upgrade to the user's requested account
         if (parsed.handle === 'lunova.atelier' || !parsed.handle) {
           return {
             ...INITIAL_INSTAGRAM_SETTINGS,
@@ -769,14 +846,42 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('lunova_instagram_settings_v1', JSON.stringify(instagramSettings));
   }, [instagramSettings]);
 
+  // Real-time Firestore Subscription for Instagram Settings
+  useEffect(() => {
+    const igDocRef = doc(db, 'settings', 'instagram_settings');
+    const unsubscribe = onSnapshot(igDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const cloudData = docSnap.data() as InstagramSettings;
+        setInstagramSettings(prev => ({ ...prev, ...cloudData }));
+        try {
+          localStorage.setItem('lunova_instagram_settings_v1', JSON.stringify({ ...instagramSettings, ...cloudData }));
+        } catch {}
+      }
+    }, (error) => {
+      console.warn('[Firestore] Instagram settings listener notice:', error?.message || error);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const saveInstagramSettingsToFirestore = async (settingsToSave: InstagramSettings) => {
+    try {
+      const igDocRef = doc(db, 'settings', 'instagram_settings');
+      await setDoc(igDocRef, sanitizeForFirestore(settingsToSave), { merge: true });
+    } catch (err) {
+      console.warn('[Firestore] Could not save Instagram settings to cloud:', err);
+    }
+  };
+
   const updateInstagramSettings = (newSettings: Partial<InstagramSettings>) => {
-    setInstagramSettings((prev) => ({ ...prev, ...newSettings }));
+    const updated = { ...instagramSettings, ...newSettings };
+    setInstagramSettings(updated);
+    saveInstagramSettingsToFirestore(updated);
     addToast('Instagram integration settings updated successfully', 'success');
   };
 
   const updateInstagramPage = (rawInput: string, accountName?: string) => {
     let cleanHandle = rawInput.trim();
-    // Strip URL prefixes if user pasted full link
     cleanHandle = cleanHandle.replace(/^https?:\/\/(www\.)?instagram\.com\//i, '');
     cleanHandle = cleanHandle.replace(/^instagram\.com\//i, '');
     cleanHandle = cleanHandle.split('?')[0].split('/')[0];
@@ -797,6 +902,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     setInstagramSettings(updated);
+    saveInstagramSettingsToFirestore(updated);
 
     // Synchronize to contact info
     setContactInfo((prev) => ({
@@ -827,8 +933,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     setInstagramSettings(updated);
+    saveInstagramSettingsToFirestore(updated);
 
-    // Also sync handle to contact info
     setContactInfo((prev) => ({
       ...prev,
       instagramHandle: `@${cleanHandle}`,
@@ -850,30 +956,37 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       commentsCount: Math.floor(Math.random() * 40) + 8
     };
 
-    setInstagramSettings((prev) => ({
-      ...prev,
-      postsCount: (prev.postsCount || (prev.recentPosts?.length || 0)) + 1,
-      recentPosts: [newPost, ...(prev.recentPosts || [])]
-    }));
+    const updated: InstagramSettings = {
+      ...instagramSettings,
+      postsCount: (instagramSettings.postsCount || (instagramSettings.recentPosts?.length || 0)) + 1,
+      recentPosts: [newPost, ...(instagramSettings.recentPosts || [])]
+    };
+
+    setInstagramSettings(updated);
+    saveInstagramSettingsToFirestore(updated);
 
     addToast('New post added to your Instagram live showcase!', 'success');
   };
 
   const deleteInstagramPost = (postId: string) => {
-    setInstagramSettings((prev) => ({
-      ...prev,
-      recentPosts: (prev.recentPosts || []).filter((p) => p.id !== postId),
-      postsCount: Math.max(0, (prev.postsCount || 1) - 1)
-    }));
+    const updated: InstagramSettings = {
+      ...instagramSettings,
+      recentPosts: (instagramSettings.recentPosts || []).filter((p) => p.id !== postId),
+      postsCount: Math.max(0, (instagramSettings.postsCount || 1) - 1)
+    };
+    setInstagramSettings(updated);
+    saveInstagramSettingsToFirestore(updated);
     addToast('Post removed from showcase feed', 'info');
   };
 
   const disconnectInstagramAccount = () => {
-    setInstagramSettings((prev) => ({
-      ...prev,
+    const updated: InstagramSettings = {
+      ...instagramSettings,
       isConnected: false,
       accessToken: undefined
-    }));
+    };
+    setInstagramSettings(updated);
+    saveInstagramSettingsToFirestore(updated);
     addToast('Instagram account disconnected from store', 'info');
   };
 
@@ -881,7 +994,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     addToast(`Your Instagram feed for @${instagramSettings.handle} is up to date!`, 'success');
   };
 
-  // Payment Settings (Easypaisa, COD, etc. - Admin Configurable)
+  // Payment Settings (Easypaisa, COD, etc. - Synchronized with Firestore)
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings>(() => {
     try {
       const saved = localStorage.getItem('lunova_payment_settings_v1');
@@ -895,22 +1008,53 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('lunova_payment_settings_v1', JSON.stringify(paymentSettings));
   }, [paymentSettings]);
 
+  // Real-time Firestore Subscription for Payment Settings
+  useEffect(() => {
+    const paymentDocRef = doc(db, 'settings', 'payment_settings');
+    const unsubscribe = onSnapshot(paymentDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const cloudData = docSnap.data() as PaymentSettings;
+        setPaymentSettings(prev => ({ ...prev, ...cloudData }));
+        try {
+          localStorage.setItem('lunova_payment_settings_v1', JSON.stringify({ ...paymentSettings, ...cloudData }));
+        } catch {}
+      }
+    }, (error) => {
+      console.warn('[Firestore] Payment settings listener notice:', error?.message || error);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const savePaymentSettingsToFirestore = async (settingsToSave: PaymentSettings) => {
+    try {
+      const paymentDocRef = doc(db, 'settings', 'payment_settings');
+      await setDoc(paymentDocRef, sanitizeForFirestore(settingsToSave), { merge: true });
+    } catch (err) {
+      console.warn('[Firestore] Could not save payment settings to cloud:', err);
+    }
+  };
+
   const updatePaymentSettings = (newSettings: Partial<PaymentSettings>) => {
-    setPaymentSettings((prev) => ({ ...prev, ...newSettings }));
+    const updated = { ...paymentSettings, ...newSettings };
+    setPaymentSettings(updated);
+    savePaymentSettingsToFirestore(updated);
     addToast('Payment gateway configurations updated successfully', 'success');
   };
 
   const updateEasypaisaConfig = (number: string, title?: string, instructions?: string) => {
-    setPaymentSettings((prev) => ({
-      ...prev,
+    const updated = {
+      ...paymentSettings,
       easypaisaNumber: number.trim(),
       ...(title ? { easypaisaAccountTitle: title.trim() } : {}),
       ...(instructions ? { easypaisaInstructions: instructions.trim() } : {})
-    }));
+    };
+    setPaymentSettings(updated);
+    savePaymentSettingsToFirestore(updated);
     addToast(`Easypaisa receiver number updated to "${number.trim()}"`, 'success');
   };
 
-  // Home Page Settings
+  // Home Page Settings (Synchronized with Firestore)
   const [homeSettings, setHomeSettings] = useState<HomeSettings>(() => {
     try {
       const saved = localStorage.getItem('lunova_home_settings_v1');
@@ -950,24 +1094,52 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('lunova_home_settings_v1', JSON.stringify(homeSettings));
   }, [homeSettings]);
 
-  const updateHomeSettings = (newSettings: Partial<HomeSettings>) => {
-    setHomeSettings((prev) => {
-      const updated = { ...prev, ...newSettings };
-      return updated;
+  // Real-time Firestore Subscription for Home Settings
+  useEffect(() => {
+    const homeDocRef = doc(db, 'settings', 'home_settings');
+    const unsubscribe = onSnapshot(homeDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const cloudData = docSnap.data() as HomeSettings;
+        setHomeSettings(prev => ({ ...prev, ...cloudData }));
+        try {
+          localStorage.setItem('lunova_home_settings_v1', JSON.stringify({ ...homeSettings, ...cloudData }));
+        } catch {}
+      }
+    }, (error) => {
+      console.warn('[Firestore] Home settings listener notice:', error?.message || error);
     });
+
+    return () => unsubscribe();
+  }, []);
+
+  const saveHomeSettingsToFirestore = async (settingsToSave: HomeSettings) => {
+    try {
+      const homeDocRef = doc(db, 'settings', 'home_settings');
+      await setDoc(homeDocRef, sanitizeForFirestore(settingsToSave), { merge: true });
+    } catch (err) {
+      console.warn('[Firestore] Could not save home settings to cloud:', err);
+    }
+  };
+
+  const updateHomeSettings = (newSettings: Partial<HomeSettings>) => {
+    const updated = { ...homeSettings, ...newSettings };
+    setHomeSettings(updated);
+    saveHomeSettingsToFirestore(updated);
     addToast('Home page showcase and imagery updated', 'success');
   };
 
   const setProductAsHomeFeatured = (productId: string, customImage?: string) => {
     const prod = products.find((p) => p.id === productId);
     if (!prod) return;
-    setHomeSettings((prev) => ({
-      ...prev,
+    const updated: HomeSettings = {
+      ...homeSettings,
       featuredProductId: productId,
       heroCustomImage: customImage || (prod.images && prod.images[0]) || '',
       heroTitle: prod.name,
       heroSubtitle: prod.shortDescription || prod.description
-    }));
+    };
+    setHomeSettings(updated);
+    saveHomeSettingsToFirestore(updated);
     addToast(`"${prod.name}" is now featured on the Home Page`, 'success');
   };
 
@@ -1145,7 +1317,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setFilters(defaultFilters);
   };
 
-  // Customer Auth (Customer Portal Only)
+  // Customer Auth (Customer Portal Only - Synchronized with Firestore)
   const customerLogin = (email: string, _pass?: string) => {
     const cleanEmail = email.trim().toLowerCase();
     
@@ -1154,6 +1326,35 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (existing) {
       setCustomerUser(existing);
       setAdminUser(null); // Ensure admin is not set
+
+      // Merge existing cloud cart items with guest cart without losing any items
+      if (Array.isArray((existing as any).cart) && (existing as any).cart.length > 0) {
+        setCart((prevGuestCart) => {
+          const cloudCart = (existing as any).cart as CartItem[];
+          const merged = [...cloudCart];
+          prevGuestCart.forEach((guestItem) => {
+            const matchIndex = merged.findIndex(
+              (m) => m.product.id === guestItem.product.id && 
+                     m.selectedColorTemp === guestItem.selectedColorTemp &&
+                     m.customEngraving === guestItem.customEngraving
+            );
+            if (matchIndex >= 0) {
+              merged[matchIndex].quantity = Math.max(merged[matchIndex].quantity, guestItem.quantity);
+            } else {
+              merged.push(guestItem);
+            }
+          });
+          return merged;
+        });
+      }
+
+      if (Array.isArray((existing as any).wishlist) && (existing as any).wishlist.length > 0) {
+        setWishlist((prevWishlist) => {
+          const cloudWishlist = (existing as any).wishlist as string[];
+          return Array.from(new Set([...prevWishlist, ...cloudWishlist]));
+        });
+      }
+
       addToast(`Welcome back, ${existing.name}. Signed into VIP Client Portal.`, 'success');
       return { success: true, message: 'Successfully signed in to customer portal' };
     }
@@ -1175,6 +1376,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setCustomers(prev => [newCustomer, ...prev]);
       setCustomerUser(newCustomer);
       setAdminUser(null);
+
+      // Persist new customer profile to Firestore
+      try {
+        const custRef = doc(db, 'customers', newCustomer.id);
+        setDoc(custRef, sanitizeForFirestore(newCustomer), { merge: true }).catch((err) => {
+          console.warn('[Firestore] Notice saving new customer to cloud:', err);
+        });
+      } catch (err) {
+        console.warn('[Firestore] Error writing customer profile:', err);
+      }
+
       addToast(`Account created. Welcome to LUNOVA, ${newCustomer.name}.`, 'success');
       return { success: true, message: 'Customer account registered successfully' };
     }
@@ -1204,6 +1416,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCustomers(prev => [newCustomer, ...prev.filter(c => c.email.toLowerCase() !== cleanEmail)]);
     setCustomerUser(newCustomer);
     setAdminUser(null);
+
+    // Persist registered customer to Firestore
+    try {
+      const custRef = doc(db, 'customers', newCustomer.id);
+      setDoc(custRef, sanitizeForFirestore(newCustomer), { merge: true }).catch((err) => {
+        console.warn('[Firestore] Notice saving customer registration to cloud:', err);
+      });
+    } catch (err) {
+      console.warn('[Firestore] Error writing customer registration:', err);
+    }
+
     addToast(`Welcome to LUNOVA, ${newCustomer.name}. Your VIP account is active.`, 'success');
     return { success: true, message: 'VIP Client registration successful' };
   };
@@ -1938,11 +2161,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  // Category mutators
+  // Category mutators (Synchronized with Firestore Central Database)
   const addCategory = (categoryData: Omit<Category, 'id'>): Category => {
     const id = `cat-${Date.now().toString(36)}`;
     const newCat: Category = { ...categoryData, id };
     setCategories((prev) => [...prev, newCat]);
+    try {
+      const catRef = doc(db, 'categories', id);
+      setDoc(catRef, sanitizeForFirestore(newCat), { merge: true }).catch((err) => {
+        console.warn('[Firestore] Error saving category to cloud:', err);
+      });
+    } catch (err) {
+      console.warn('[Firestore] Error writing category:', err);
+    }
     addToast(`Category "${newCat.name}" added`, 'success');
     return newCat;
   };
@@ -1951,11 +2182,27 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCategories((prev) =>
       prev.map((c) => (c.id === updated.id ? updated : c))
     );
+    try {
+      const catRef = doc(db, 'categories', updated.id);
+      setDoc(catRef, sanitizeForFirestore(updated), { merge: true }).catch((err) => {
+        console.warn('[Firestore] Error updating category in cloud:', err);
+      });
+    } catch (err) {
+      console.warn('[Firestore] Error writing category update:', err);
+    }
     addToast(`Category "${updated.name}" updated`, 'success');
   };
 
   const deleteCategory = (categoryId: string) => {
     setCategories((prev) => prev.filter((c) => c.id !== categoryId));
+    try {
+      const catRef = doc(db, 'categories', categoryId);
+      deleteDoc(catRef).catch((err) => {
+        console.warn('[Firestore] Error deleting category from cloud:', err);
+      });
+    } catch (err) {
+      console.warn('[Firestore] Error deleting category doc:', err);
+    }
     addToast('Category removed', 'info');
   };
 
@@ -1973,7 +2220,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setCustomers(INITIAL_CUSTOMERS);
       
       localStorage.removeItem('lunova_products_v3');
-      localStorage.removeItem('lunova_categories_v1');
+      localStorage.removeItem('lunova_categories_v2');
       localStorage.removeItem('lunova_orders_v1');
       localStorage.removeItem('lunova_customers_v1');
 
@@ -1986,9 +2233,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
         batch.set(prodRef, cleaned);
       });
+
+      // Write default categories back into Firestore
+      INITIAL_CATEGORIES.forEach((cat) => {
+        const catRef = doc(db, 'categories', cat.id);
+        batch.set(catRef, sanitizeForFirestore(cat));
+      });
+
       await batch.commit();
 
-      addToast('Store reset to initial catalogue and orders', 'info');
+      addToast('Store reset to initial catalogue and categories', 'info');
     } catch (err) {
       console.error('[Firestore] Error resetting to defaults:', err);
       addToast('Failed to reset store to defaults', 'error');

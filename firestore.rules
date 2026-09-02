@@ -1,19 +1,32 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Anyone can read and write products, categories, orders, customers for this public showcase/prototype store
+    // Products storefront inventory (read by customers, managed by store)
     match /products/{productId} {
       allow read, write: if true;
     }
+
+    // Categories and Collections
     match /categories/{categoryId} {
       allow read, write: if true;
     }
+
+    // Orders placed by customers and managed by store admins
     match /orders/{orderId} {
       allow read, write: if true;
     }
+
+    // Customers and VIP collectors
     match /customers/{customerId} {
       allow read, write: if true;
     }
+
+    // Settings (Admin credentials, contact info, payment config, instagram showcase, homepage)
+    match /settings/{settingId} {
+      allow read, write: if true;
+    }
+
+    // Catch-all
     match /{document=**} {
       allow read, write: if true;
     }

@@ -41,15 +41,16 @@ export const AdminOrdersPage: React.FC = () => {
 
   // Filtered Orders
   const filteredOrders = useMemo(() => {
-    return orders.filter((o) => {
+    return (orders || []).filter((o) => {
+      if (!o) return false;
       // Search
       if (searchTerm.trim()) {
         const q = searchTerm.toLowerCase();
         const matches = 
-          o.id.toLowerCase().includes(q) ||
-          o.customer.name.toLowerCase().includes(q) ||
-          o.customer.email.toLowerCase().includes(q) ||
-          (o.customer.phone && o.customer.phone.toLowerCase().includes(q)) ||
+          (o.id || '').toLowerCase().includes(q) ||
+          (o.customer?.name || '').toLowerCase().includes(q) ||
+          (o.customer?.email || '').toLowerCase().includes(q) ||
+          (o.customer?.phone && o.customer.phone.toLowerCase().includes(q)) ||
           (o.transactionId && o.transactionId.toLowerCase().includes(q));
         if (!matches) return false;
       }
@@ -209,7 +210,11 @@ export const AdminOrdersPage: React.FC = () => {
                   </tr>
                 ) : (
                   filteredOrders.map((order) => {
-                    const totalItems = order.items.reduce((s, i) => s + i.quantity, 0);
+                    const orderItems = order.items || [];
+                    const totalItems = orderItems.reduce((s, i) => s + (Number(i.quantity) || 1), 0);
+                    const formattedDate = order.createdAt 
+                      ? new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                      : 'Recent';
 
                     return (
                       <tr key={order.id} className="hover:bg-zinc-900/40 transition-colors">
@@ -221,28 +226,28 @@ export const AdminOrdersPage: React.FC = () => {
 
                         {/* Customer */}
                         <td className="py-4 px-4">
-                          <div className="font-semibold text-white truncate max-w-[150px]">{order.customer.name}</div>
-                          <div className="text-[10px] text-zinc-400 truncate max-w-[150px]">{order.customer.email}</div>
-                          {order.customer.phone && (
+                          <div className="font-semibold text-white truncate max-w-[150px]">{order.customer?.name || 'VIP Client'}</div>
+                          <div className="text-[10px] text-zinc-400 truncate max-w-[150px]">{order.customer?.email || 'N/A'}</div>
+                          {order.customer?.phone && (
                             <div className="text-[10px] text-zinc-500 font-mono">{order.customer.phone}</div>
                           )}
                         </td>
 
                         {/* Date */}
                         <td className="py-4 px-4 font-mono text-zinc-400 text-[11px] whitespace-nowrap">
-                          {new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          {formattedDate}
                         </td>
 
                         {/* Items */}
                         <td className="py-4 px-4 font-mono text-zinc-300">
                           <div className="flex items-center space-x-1.5">
                             <div className="flex -space-x-2 overflow-hidden">
-                              {order.items.slice(0, 3).map((item, idx) => (
+                              {orderItems.slice(0, 3).map((item, idx) => (
                                 <img
                                   key={idx}
-                                  src={item.productImage}
+                                  src={item.productImage || ''}
                                   alt=""
-                                  className="inline-block h-7 w-7 rounded-lg object-cover ring-2 ring-zinc-950"
+                                  className="inline-block h-7 w-7 rounded-lg object-cover ring-2 ring-zinc-950 bg-zinc-800"
                                 />
                               ))}
                             </div>
@@ -325,7 +330,7 @@ export const AdminOrdersPage: React.FC = () => {
             <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 space-y-3">
               <div className="text-[10px] font-mono uppercase text-zinc-400 font-bold">Fulfillment Timeline</div>
               <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-mono">
-                {['Pending', 'Processing', 'Shipped', 'Delivered'].map((step, idx) => {
+                {['Pending', 'Processing', 'Shipped', 'Delivered'].map((step) => {
                   const statusOrder = ['Pending', 'Processing', 'Shipped', 'Delivered'];
                   const currentIndex = statusOrder.indexOf(selectedOrder.orderStatus);
                   const stepIndex = statusOrder.indexOf(step);
@@ -386,6 +391,53 @@ export const AdminOrdersPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Payment Verification & Receipt Preview (For Easypaisa / Manual Transactions) */}
+            {(selectedOrder.paymentReceipt || selectedOrder.transactionId || selectedOrder.paymentNotes) && (
+              <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-[10px] font-mono uppercase text-emerald-400 font-bold flex items-center space-x-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Payment Verification & Transfer Details</span>
+                  </div>
+                  {selectedOrder.paymentStatus !== 'Paid' && (
+                    <button
+                      type="button"
+                      onClick={() => handleUpdatePayment(selectedOrder.id, 'Paid')}
+                      className="px-3 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 rounded-lg text-[11px] font-bold font-mono transition-colors"
+                    >
+                      Approve & Mark Paid
+                    </button>
+                  )}
+                </div>
+
+                {selectedOrder.transactionId && (
+                  <div className="flex items-center justify-between text-xs bg-zinc-950/60 p-2.5 rounded-xl border border-zinc-800 font-mono">
+                    <span className="text-zinc-400">Transaction TRX ID:</span>
+                    <span className="text-amber-400 font-bold">{selectedOrder.transactionId}</span>
+                  </div>
+                )}
+
+                {selectedOrder.paymentNotes && (
+                  <div className="text-[11px] text-zinc-400 italic bg-zinc-950/40 p-2.5 rounded-xl border border-zinc-800/60">
+                    "{selectedOrder.paymentNotes}"
+                  </div>
+                )}
+
+                {selectedOrder.paymentReceipt && (
+                  <div className="space-y-1.5 pt-1">
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase">Attached Payment Screenshot / Receipt:</div>
+                    <div className="rounded-xl overflow-hidden border border-zinc-800 max-h-48 bg-black/40 flex items-center justify-center">
+                      <img
+                        src={selectedOrder.paymentReceipt}
+                        alt="Customer Payment Receipt"
+                        className="max-h-48 w-auto object-contain"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Customer & Shipping Information */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 space-y-2">
@@ -393,12 +445,12 @@ export const AdminOrdersPage: React.FC = () => {
                   <User className="w-3.5 h-3.5" />
                   <span>Client Contact</span>
                 </div>
-                <div className="font-bold text-white">{selectedOrder.customer.name}</div>
+                <div className="font-bold text-white">{selectedOrder.customer?.name || 'VIP Client'}</div>
                 <div className="text-zinc-400 flex items-center space-x-1.5">
                   <Mail className="w-3.5 h-3.5 text-zinc-500" />
-                  <span>{selectedOrder.customer.email}</span>
+                  <span>{selectedOrder.customer?.email || 'N/A'}</span>
                 </div>
-                {selectedOrder.customer.phone && (
+                {selectedOrder.customer?.phone && (
                   <div className="text-zinc-400 flex items-center space-x-1.5 font-mono">
                     <Phone className="w-3.5 h-3.5 text-zinc-500" />
                     <span>{selectedOrder.customer.phone}</span>
@@ -423,10 +475,10 @@ export const AdminOrdersPage: React.FC = () => {
             <div className="space-y-2">
               <div className="text-[10px] font-mono uppercase text-zinc-400 font-bold">Ordered Catalog Pieces</div>
               <div className="divide-y divide-zinc-800 border border-zinc-800 rounded-2xl overflow-hidden bg-zinc-900/40">
-                {selectedOrder.items.map((item, idx) => (
+                {(selectedOrder.items || []).map((item, idx) => (
                   <div key={idx} className="p-3 flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <img src={item.productImage} alt="" className="w-10 h-10 rounded-lg object-cover border border-zinc-800" />
+                      <img src={item.productImage || ''} alt="" className="w-10 h-10 rounded-lg object-cover border border-zinc-800 bg-zinc-800" />
                       <div>
                         <div className="font-semibold text-white">{item.productName}</div>
                         <div className="text-[10px] text-zinc-400 font-mono">

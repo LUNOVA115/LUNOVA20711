@@ -118,11 +118,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
   };
 
   const handlePlaceOrder = async () => {
-    // If Easypaisa is chosen with no receipt/TRX ID attached, auto-generate demo TRX ID for instant processing
-    if (formData.paymentMethod === 'Easypaisa' && !formData.paymentReceipt && !formData.transactionId) {
-      handleAttachSampleReceipt();
-    }
-
     setIsProcessing(true);
 
     const orderId = `ORD-${Math.floor(10000 + Math.random() * 90000)}`;
@@ -134,27 +129,31 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
       finalPaymentStatus = 'Pending'; // Courier collects upon delivery
     }
 
+    const receiptToUse = formData.paymentReceipt || (formData.paymentMethod === 'Easypaisa' ? SAMPLE_EASYPAISA_RECEIPT_1 : '');
+    const trxIdToUse = formData.transactionId || (formData.paymentMethod === 'Easypaisa' ? `EP-${Math.floor(1000000000 + Math.random() * 9000000000)}` : '');
+    const notesToUse = formData.paymentNotes || (formData.paymentMethod === 'Easypaisa' ? 'Easypaisa mobile payment transfer submitted by client.' : formData.paymentMethod === 'Cash on Delivery' ? 'Cash to be collected upon physical white-glove arrival.' : '');
+
     const newOrder: Order = {
       id: orderId,
       customer: {
-        name: formData.fullName,
-        email: formData.email,
-        phone: formData.phone
+        name: formData.fullName || 'VIP Client',
+        email: formData.email || 'client@lunova.com',
+        phone: formData.phone || ''
       },
       shippingAddress: {
-        fullName: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        street: formData.street,
-        city: formData.city,
-        state: formData.state,
-        postalCode: formData.postalCode,
-        country: formData.country
+        fullName: formData.fullName || 'VIP Client',
+        email: formData.email || 'client@lunova.com',
+        phone: formData.phone || '',
+        street: formData.street || 'White-Glove Delivery Destination',
+        city: formData.city || 'Islamabad',
+        state: formData.state || 'Federal Territory',
+        postalCode: formData.postalCode || '44000',
+        country: formData.country || 'Pakistan'
       },
       items: cart.map((item) => ({
         productId: item.product.id,
         productName: item.product.name,
-        productImage: item.product.images[0],
+        productImage: item.product.images?.[0] || '',
         price: item.product.price,
         quantity: item.quantity
       })),
@@ -169,16 +168,16 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
       createdAt: new Date().toISOString(),
       trackingNumber: `LNV-${Math.floor(1000000 + Math.random() * 9000000)}`,
       carrier: 'FedEx Insured White-Glove',
-      paymentReceipt: formData.paymentReceipt || (formData.paymentMethod === 'Easypaisa' ? SAMPLE_EASYPAISA_RECEIPT_1 : undefined),
-      transactionId: formData.transactionId || (formData.paymentMethod === 'Easypaisa' ? `EP-${Math.floor(1000000000 + Math.random() * 9000000000)}` : undefined),
-      paymentNotes: formData.paymentNotes || (formData.paymentMethod === 'Easypaisa' ? 'Easypaisa mobile payment transfer submitted by client.' : formData.paymentMethod === 'Cash on Delivery' ? 'Cash to be collected upon physical white-glove arrival.' : undefined)
+      paymentReceipt: receiptToUse,
+      transactionId: trxIdToUse,
+      paymentNotes: notesToUse
     };
 
-    console.log('[Checkout Modal] Customer initiating order submission for Order ID:', orderId, newOrder);
+    console.log('[Checkout Modal] Submitting customer order:', orderId, newOrder);
 
     try {
       await addOrder(newOrder);
-      console.log('[Checkout Modal] addOrder completed successfully for Order ID:', orderId);
+      console.log('[Checkout Modal] Order saved successfully to Firestore & local state:', orderId);
       setCreatedOrder(newOrder);
       clearCart();
       setIsProcessing(false);
@@ -196,8 +195,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
         console.error('Confetti err:', err);
       }
     } catch (err: any) {
-      console.error('[Checkout Modal] Error submitting customer order:', err);
-      // Still allow customer to see confirmation with local fallback
+      console.error('[Checkout Modal] Error submitting customer order to Firestore:', err);
+      // Fallback to allow customer order flow completion
       setCreatedOrder(newOrder);
       clearCart();
       setIsProcessing(false);

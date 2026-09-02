@@ -500,8 +500,11 @@ export const AdminDashboardPage: React.FC = () => {
                     </tr>
                   ) : (
                     recentOrders.map((order) => {
-                      const totalItemsCount = order.items.reduce((s, i) => s + i.quantity, 0);
+                      const totalItemsCount = (order.items || []).reduce((s, i) => s + (Number(i.quantity) || 1), 0);
                       const isPaid = order.paymentStatus === 'Paid';
+                      const formattedDate = order.createdAt
+                        ? new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                        : 'Recent';
                       
                       return (
                         <tr key={order.id} className="hover:bg-zinc-900/40 transition-colors">
@@ -509,11 +512,11 @@ export const AdminDashboardPage: React.FC = () => {
                             {order.id}
                           </td>
                           <td className="py-3.5 px-3">
-                            <div className="font-semibold text-white truncate max-w-[120px]">{order.customer.name}</div>
-                            <div className="text-[10px] text-zinc-400 truncate max-w-[120px]">{order.customer.email}</div>
+                            <div className="font-semibold text-white truncate max-w-[120px]">{order.customer?.name || 'VIP Client'}</div>
+                            <div className="text-[10px] text-zinc-400 truncate max-w-[120px]">{order.customer?.email || 'N/A'}</div>
                           </td>
                           <td className="py-3.5 px-3 font-mono text-zinc-400 text-[11px] whitespace-nowrap">
-                            {new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            {formattedDate}
                           </td>
                           <td className="py-3.5 px-3 font-mono text-zinc-300">
                             {totalItemsCount} {totalItemsCount === 1 ? 'Item' : 'Items'}

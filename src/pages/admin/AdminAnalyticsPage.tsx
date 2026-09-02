@@ -22,10 +22,10 @@ export const AdminAnalyticsPage: React.FC = () => {
   const [analyticsRange, setAnalyticsRange] = useState<TimeRange>('30d');
 
   // Computed metrics
-  const totalRevenue = orders.reduce((acc, o) => acc + o.total, 0);
-  const completedOrdersCount = orders.filter(o => o.paymentStatus === 'Paid').length;
-  const avgOrderValue = orders.length > 0 ? Math.round(totalRevenue / orders.length) : 0;
-  const totalUnitsSold = orders.reduce((acc, o) => acc + o.items.reduce((s, i) => s + i.quantity, 0), 0) + 184; // Simulated baseline
+  const totalRevenue = (orders || []).reduce((acc, o) => acc + (Number(o?.total) || 0), 0);
+  const completedOrdersCount = (orders || []).filter(o => o?.paymentStatus === 'Paid').length;
+  const avgOrderValue = (orders || []).length > 0 ? Math.round(totalRevenue / orders.length) : 0;
+  const totalUnitsSold = (orders || []).reduce((acc, o) => acc + (o?.items || []).reduce((s, i) => s + (Number(i?.quantity) || 1), 0), 0) + 184; // Simulated baseline
 
   // Category breakdown
   const categoryStats = [

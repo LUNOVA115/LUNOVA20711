@@ -493,22 +493,35 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     console.log('[Firestore Admin Subscription] Initializing real-time listener on collection: "orders"...');
     const ordersCol = collection(db, 'orders');
     
-    const unsubscribe = onSnapshot(ordersCol, (snapshot) => {
+    const unsubscribe = onSnapshot(ordersCol, async (snapshot) => {
       console.log(`[Firestore Admin Subscription] Orders snapshot received: ${snapshot.docs.length} total order document(s) in cloud database.`);
       
       if (snapshot.empty) {
-        console.log('[Firestore Admin Order Fetch] Cloud orders collection is currently empty.');
-        setOrders([]);
+        console.log('[Firestore Admin Order Fetch] Cloud orders collection is empty. Seeding initial baseline orders...');
         try {
-          localStorage.setItem('lunova_orders_v1', JSON.stringify([]));
-        } catch {}
+          const batch = writeBatch(db);
+          INITIAL_ORDERS.forEach((initialOrder) => {
+            const orderRef = doc(db, 'orders', initialOrder.id);
+            batch.set(orderRef, sanitizeForFirestore(initialOrder));
+          });
+          await batch.commit();
+          console.log('[Firestore Admin Order Fetch] Successfully seeded baseline orders to Firestore.');
+          setOrders(INITIAL_ORDERS);
+          try {
+            localStorage.setItem('lunova_orders_v1', JSON.stringify(INITIAL_ORDERS));
+          } catch {}
+        } catch (seedErr) {
+          console.error('[Firestore Admin Order Fetch] Error seeding baseline orders:', seedErr);
+          setOrders(INITIAL_ORDERS);
+        }
       } else {
         const cloudOrders: Order[] = [];
         snapshot.forEach((docSnap) => {
           const data = docSnap.data() as Order;
           cloudOrders.push({
             ...data,
-            id: docSnap.id || data.id
+            id: docSnap.id || data.id,
+            items: data.items || []
           });
         });
         
@@ -2104,16 +2117,30 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
 
     // 1. Optimistic immediate state update & local event broadcast
-    setOrders((prev) => [order, ...prev.filter((o) => o.id !== order.id)]);
-    try {
-      localStorage.setItem('lunova_orders_v1', JSON.stringify([order, ...orders.filter((o) => o.id !== order.id)]));
-      window.dispatchEvent(new CustomEvent('lunova_orders_updated', { detail: [order, ...orders.filter((o) => o.id !== order.id)] }));
-    } catch {}
+    setOrders((prev) => {
+      const updated = [order, ...prev.filter((o) => o.id !== order.id)];
+      try {
+        localStorage.setItem('lunova_orders_v1', JSON.stringify(updated));
+        window.dispatchEvent(new CustomEvent('lunova_orders_updated', { detail: updated }));
+      } catch (storageErr) {
+        console.warn('Could not save order to localStorage:', storageErr);
+      }
+      return updated;
+    });
 
     // 2. Perform Firestore Write to central cloud database
     try {
       const orderRef = doc(db, 'orders', order.id);
-      const cleanOrder = sanitizeForFirestore(order);
+      const cleanOrder = sanitizeForFirestore({
+        ...order,
+        items: (order.items || []).map((item) => ({
+          productId: item.productId || '',
+          productName: item.productName || '',
+          productImage: item.productImage || '',
+          price: Number(item.price) || 0,
+          quantity: Number(item.quantity) || 1
+        }))
+      });
       await setDoc(orderRef, cleanOrder);
       console.log(`[Firestore Write SUCCESS] Order #${order.id} was successfully saved to Firestore central database!`);
     } catch (error: any) {
@@ -2130,24 +2157,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // 3. Persist / Update Customer in Firestore
     try {
-      const custEmail = (order.customer.email || '').toLowerCase().trim();
+      const custEmail = (order.customer?.email || '').toLowerCase().trim();
       if (custEmail) {
         const custId = `cust-${custEmail.replace(/[^a-z0-9]/g, '') || Date.now()}`;
         const existing = customers.find((c) => c.email.toLowerCase() === custEmail);
         const updatedCustomer: Customer = existing
           ? {
               ...existing,
-              totalOrders: existing.totalOrders + 1,
-              totalSpent: existing.totalSpent + order.total,
+              totalOrders: (existing.totalOrders || 0) + 1,
+              totalSpent: (existing.totalSpent || 0) + order.total,
               lastOrderDate: new Date().toISOString().split('T')[0],
-              tier: existing.totalSpent + order.total > 4000 ? 'VIP' : 'Gold',
+              tier: ((existing.totalSpent || 0) + order.total) > 4000 ? 'VIP' : 'Gold',
               shippingAddress: order.shippingAddress || existing.shippingAddress
             }
           : {
               id: custId,
               name: order.customer.name,
               email: custEmail,
-              phone: order.customer.phone,
+              phone: order.customer.phone || '',
               totalOrders: 1,
               totalSpent: order.total,
               lastOrderDate: new Date().toISOString().split('T')[0],

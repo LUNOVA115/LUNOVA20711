@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
-import { CheckoutModal } from '../components/common/CheckoutModal';
 import { 
   ShoppingBag, 
   Trash2, 
@@ -35,7 +34,6 @@ export const CartPage: React.FC = () => {
 
   const [couponCode, setCouponCode] = useState('');
   const [couponError, setCouponError] = useState('');
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   const handleApplyCoupon = (e: React.FormEvent) => {
     e.preventDefault();
@@ -249,8 +247,8 @@ export const CartPage: React.FC = () => {
 
               {/* Checkout Trigger */}
               <button
-                onClick={() => setIsCheckoutOpen(true)}
-                className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 text-zinc-950 text-xs uppercase tracking-[0.2em] font-extrabold flex items-center justify-center space-x-2 shadow-xl shadow-amber-400/20 hover:scale-[1.01] transition-all"
+                onClick={() => navigate('/checkout')}
+                className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 text-zinc-950 text-xs uppercase tracking-[0.2em] font-extrabold flex items-center justify-center space-x-2 shadow-xl shadow-amber-400/20 hover:scale-[1.01] transition-all cursor-pointer"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>Proceed to Secure Checkout</span>
@@ -265,12 +263,6 @@ export const CartPage: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Checkout Modal */}
-      <CheckoutModal
-        isOpen={isCheckoutOpen}
-        onClose={() => setIsCheckoutOpen(false)}
-      />
     </div>
   );
 };

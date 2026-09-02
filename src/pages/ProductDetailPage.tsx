@@ -3,7 +3,6 @@ import { useStore } from '../context/StoreContext';
 import { ProductCard } from '../components/common/ProductCard';
 import { LightingSimulator } from '../components/common/LightingSimulator';
 import { Interactive3DViewer } from '../components/common/Interactive3DViewer';
-import { CheckoutModal } from '../components/common/CheckoutModal';
 import { 
   Star, 
   Heart, 
@@ -87,9 +86,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ productId 
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [newReviewComment, setNewReviewComment] = useState('');
 
-  // Buy now direct modal
-  const [isBuyNowOpen, setIsBuyNowOpen] = useState(false);
-
   // Active simulated light
   const [simulatedLight, setSimulatedLight] = useState('2700K');
   const [simulatedBrightness, setSimulatedBrightness] = useState(90);
@@ -111,7 +107,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ productId 
   const handleBuyNow = () => {
     if (!isOutOfStock) {
       addToCart(product, quantity, selectedColorTemp);
-      setIsBuyNowOpen(true);
+      navigate('/checkout');
     }
   };
 
@@ -755,12 +751,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ productId 
           </div>
         </div>
       )}
-
-      {/* Buy Now Direct Checkout Modal */}
-      <CheckoutModal
-        isOpen={isBuyNowOpen}
-        onClose={() => setIsBuyNowOpen(false)}
-      />
     </div>
   );
 };

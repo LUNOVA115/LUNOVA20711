@@ -24,6 +24,7 @@ import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
 import { CartPage } from './pages/CartPage';
 import { WishlistPage } from './pages/WishlistPage';
+import { CheckoutPage } from './pages/CheckoutPage';
 
 // Admin Pages
 import { AdminLoginPage } from './pages/admin/AdminLoginPage';
@@ -125,6 +126,9 @@ const AppContent: React.FC = () => {
     if (normalizedPath === '/cart') {
       return <CartPage />;
     }
+    if (normalizedPath === '/checkout') {
+      return <CheckoutPage />;
+    }
     if (normalizedPath === '/wishlist') {
       return <WishlistPage />;
     }
@@ -147,7 +151,7 @@ const AppContent: React.FC = () => {
       <CustomerOrdersModal />
 
       {/* Cart Drawer */}
-      <CartDrawer onProceedToCheckout={() => setIsCheckoutOpen(true)} />
+      <CartDrawer onProceedToCheckout={() => navigate('/checkout')} />
 
       {/* Global Checkout Modal */}
       <CheckoutModal

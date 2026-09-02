@@ -48,7 +48,7 @@ export const SAMPLE_EASYPAISA_RECEIPT = `data:image/svg+xml;utf8,${encodeURIComp
 
   <!-- Sent To -->
   <text x="60" y="535" fill="#6B7280" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="500">Receiver Account</text>
-  <text x="540" y="535" text-anchor="end" fill="#047857" font-family="monospace" font-size="15" font-weight="700">0345-8899123</text>
+  <text x="540" y="535" text-anchor="end" fill="#047857" font-family="monospace" font-size="15" font-weight="700">+92 3150360126</text>
 
   <!-- Account Title -->
   <text x="60" y="580" fill="#6B7280" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="500">Receiver Title</text>

@@ -78,9 +78,9 @@ export const DEFAULT_CONTACT_INFO: StoreContactInfo = getInitialContactInfo();
 
 export const DEFAULT_PAYMENT_SETTINGS: PaymentSettings = {
   easypaisaEnabled: true,
-  easypaisaNumber: '',
-  easypaisaAccountTitle: '',
-  easypaisaInstructions: 'Please transfer the exact invoice total to our verified Easypaisa account. After transfer, upload your payment screenshot receipt and enter your Transaction (TRX) ID below for priority verification and white-glove dispatch.',
+  easypaisaNumber: '+92 3150360126',
+  easypaisaAccountTitle: 'LUNOVA Luxury Lighting',
+  easypaisaInstructions: 'Please transfer the exact invoice total to our verified Easypaisa account (+92 3150360126). After transfer, upload your payment screenshot receipt and enter your Transaction (TRX) ID below for priority verification and white-glove dispatch.',
   codEnabled: true,
   codInstructions: 'Pay cash in full upon white-glove delivery arrival and initial inspection.',
   creditCardEnabled: true,
@@ -994,11 +994,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     addToast(`Your Instagram feed for @${instagramSettings.handle} is up to date!`, 'success');
   };
 
-  // Payment Settings (Easypaisa, COD, etc. - Synchronized with Firestore)
+  // Payment Settings (Easypaisa, COD, etc. - Synchronized with Firestore as Single Source of Truth)
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings>(() => {
     try {
       const saved = localStorage.getItem('lunova_payment_settings_v1');
-      return saved ? { ...DEFAULT_PAYMENT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_PAYMENT_SETTINGS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (!parsed.easypaisaNumber || parsed.easypaisaNumber === '0345-8899123' || parsed.easypaisaNumber === '0345-8921470') {
+          parsed.easypaisaNumber = '+92 3150360126';
+        }
+        if (!parsed.easypaisaAccountTitle) {
+          parsed.easypaisaAccountTitle = 'LUNOVA Luxury Lighting';
+        }
+        return { ...DEFAULT_PAYMENT_SETTINGS, ...parsed };
+      }
+      return DEFAULT_PAYMENT_SETTINGS;
     } catch {
       return DEFAULT_PAYMENT_SETTINGS;
     }
@@ -1008,16 +1018,43 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('lunova_payment_settings_v1', JSON.stringify(paymentSettings));
   }, [paymentSettings]);
 
-  // Real-time Firestore Subscription for Payment Settings
+  // Real-time Firestore Subscription for Payment Settings (Single Source of Truth)
   useEffect(() => {
     const paymentDocRef = doc(db, 'settings', 'payment_settings');
-    const unsubscribe = onSnapshot(paymentDocRef, (docSnap) => {
+    const unsubscribe = onSnapshot(paymentDocRef, async (docSnap) => {
       if (docSnap.exists()) {
         const cloudData = docSnap.data() as PaymentSettings;
-        setPaymentSettings(prev => ({ ...prev, ...cloudData }));
+        const validNumber = (cloudData.easypaisaNumber && cloudData.easypaisaNumber !== '0345-8899123' && cloudData.easypaisaNumber !== '0345-8921470')
+          ? cloudData.easypaisaNumber
+          : '+92 3150360126';
+
+        const merged: PaymentSettings = {
+          ...DEFAULT_PAYMENT_SETTINGS,
+          ...cloudData,
+          easypaisaNumber: validNumber,
+          easypaisaAccountTitle: cloudData.easypaisaAccountTitle || 'LUNOVA Luxury Lighting'
+        };
+        setPaymentSettings(merged);
         try {
-          localStorage.setItem('lunova_payment_settings_v1', JSON.stringify({ ...paymentSettings, ...cloudData }));
+          localStorage.setItem('lunova_payment_settings_v1', JSON.stringify(merged));
         } catch {}
+
+        // If cloud document has empty or legacy placeholder numbers, write back the valid number
+        if (!cloudData.easypaisaNumber || cloudData.easypaisaNumber === '0345-8899123' || cloudData.easypaisaNumber === '0345-8921470') {
+          try {
+            await setDoc(paymentDocRef, sanitizeForFirestore(merged), { merge: true });
+          } catch (e) {
+            console.warn('[Firestore] Error writing valid payment settings to cloud:', e);
+          }
+        }
+      } else {
+        // Document does not exist yet in Firestore, seed it immediately with DEFAULT_PAYMENT_SETTINGS
+        try {
+          await setDoc(paymentDocRef, sanitizeForFirestore(DEFAULT_PAYMENT_SETTINGS), { merge: true });
+          setPaymentSettings(DEFAULT_PAYMENT_SETTINGS);
+        } catch (err) {
+          console.warn('[Firestore] Error creating payment settings doc in cloud:', err);
+        }
       }
     }, (error) => {
       console.warn('[Firestore] Payment settings listener notice:', error?.message || error);

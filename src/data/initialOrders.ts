@@ -19,7 +19,7 @@ export const SAMPLE_EASYPAISA_RECEIPT_1 = `data:image/svg+xml;utf8,<svg xmlns="h
   
   <g font-family="sans-serif" font-size="15">
     <text x="70" y="450" fill="%2394a3b8">Receiver Account</text>
-    <text x="530" y="450" text-anchor="end" fill="%23ffffff" font-weight="600">0345-8921470</text>
+    <text x="530" y="450" text-anchor="end" fill="%23ffffff" font-weight="600">+92 3150360126</text>
     
     <text x="70" y="495" fill="%2394a3b8">Account Title</text>
     <text x="530" y="495" text-anchor="end" fill="%23ffffff" font-weight="600">LUNOVA DESIGN STUDIO</text>
@@ -59,7 +59,7 @@ export const SAMPLE_EASYPAISA_RECEIPT_2 = `data:image/svg+xml;utf8,<svg xmlns="h
   
   <g font-family="sans-serif" font-size="15">
     <text x="70" y="450" fill="%2394a3b8">Recipient Mobile</text>
-    <text x="530" y="450" text-anchor="end" fill="%23ffffff" font-weight="600">0345-8921470</text>
+    <text x="530" y="450" text-anchor="end" fill="%23ffffff" font-weight="600">+92 3150360126</text>
     
     <text x="70" y="495" fill="%2394a3b8">Recipient Title</text>
     <text x="530" y="495" text-anchor="end" fill="%23ffffff" font-weight="600">LUNOVA LIGHTING DESIGN</text>

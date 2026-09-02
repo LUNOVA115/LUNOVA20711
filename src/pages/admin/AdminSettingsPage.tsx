@@ -127,11 +127,11 @@ export const AdminSettingsPage: React.FC = () => {
 
   // Payment Gateways Settings Local State
   const [easypaisaEnabled, setEasypaisaEnabled] = useState(paymentSettings?.easypaisaEnabled ?? true);
-  const [easypaisaNumber, setEasypaisaNumber] = useState(paymentSettings?.easypaisaNumber || '');
-  const [easypaisaAccountTitle, setEasypaisaAccountTitle] = useState(paymentSettings?.easypaisaAccountTitle || '');
+  const [easypaisaNumber, setEasypaisaNumber] = useState(paymentSettings?.easypaisaNumber || '+92 3150360126');
+  const [easypaisaAccountTitle, setEasypaisaAccountTitle] = useState(paymentSettings?.easypaisaAccountTitle || 'LUNOVA Luxury Lighting');
   const [easypaisaInstructions, setEasypaisaInstructions] = useState(
     paymentSettings?.easypaisaInstructions || 
-    'Please transfer the exact invoice total to our verified Easypaisa account. After transfer, upload your payment screenshot receipt and enter your Transaction (TRX) ID below for priority verification and white-glove dispatch.'
+    'Please transfer the exact invoice total to our verified Easypaisa account (+92 3150360126). After transfer, upload your payment screenshot receipt and enter your Transaction (TRX) ID below for priority verification and white-glove dispatch.'
   );
 
   const [codEnabled, setCodEnabled] = useState(paymentSettings?.codEnabled ?? true);
@@ -141,6 +141,20 @@ export const AdminSettingsPage: React.FC = () => {
   );
   const [creditCardEnabled, setCreditCardEnabled] = useState(paymentSettings?.creditCardEnabled ?? true);
   const [applePayEnabled, setApplePayEnabled] = useState(paymentSettings?.applePayEnabled ?? true);
+
+  // Synchronize local payment states with Firestore real-time updates
+  useEffect(() => {
+    if (paymentSettings) {
+      if (paymentSettings.easypaisaEnabled !== undefined) setEasypaisaEnabled(paymentSettings.easypaisaEnabled);
+      if (paymentSettings.easypaisaNumber) setEasypaisaNumber(paymentSettings.easypaisaNumber);
+      if (paymentSettings.easypaisaAccountTitle) setEasypaisaAccountTitle(paymentSettings.easypaisaAccountTitle);
+      if (paymentSettings.easypaisaInstructions) setEasypaisaInstructions(paymentSettings.easypaisaInstructions);
+      if (paymentSettings.codEnabled !== undefined) setCodEnabled(paymentSettings.codEnabled);
+      if (paymentSettings.codInstructions) setCodInstructions(paymentSettings.codInstructions);
+      if (paymentSettings.creditCardEnabled !== undefined) setCreditCardEnabled(paymentSettings.creditCardEnabled);
+      if (paymentSettings.applePayEnabled !== undefined) setApplePayEnabled(paymentSettings.applePayEnabled);
+    }
+  }, [paymentSettings]);
 
   // Home Page Customizer Local State
   const [selectedFeaturedProduct, setSelectedFeaturedProduct] = useState(homeSettings.featuredProductId || 'prod-003');
@@ -760,7 +774,7 @@ export const AdminSettingsPage: React.FC = () => {
                       <input
                         type="text"
                         required
-                        placeholder="Enter official Easypaisa account number"
+                        placeholder="e.g. +92 3150360126"
                         value={easypaisaNumber}
                         onChange={(e) => setEasypaisaNumber(e.target.value)}
                         className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700/80 rounded-xl text-emerald-300 font-mono font-bold text-sm focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400"
@@ -776,7 +790,7 @@ export const AdminSettingsPage: React.FC = () => {
                       <input
                         type="text"
                         required
-                        placeholder="Enter registered account title"
+                        placeholder="e.g. LUNOVA Luxury Lighting"
                         value={easypaisaAccountTitle}
                         onChange={(e) => setEasypaisaAccountTitle(e.target.value)}
                         className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700/80 rounded-xl text-white font-semibold text-sm focus:outline-none focus:border-emerald-400"

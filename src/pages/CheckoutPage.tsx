@@ -53,21 +53,21 @@ export const CheckoutPage: React.FC = () => {
   const [couponCode, setCouponCode] = useState('');
   const [couponError, setCouponError] = useState('');
 
-  // Customer Form Data
+  // Customer Form Data - Starts completely empty for new checkout
   const [formData, setFormData] = useState({
-    fullName: 'Hamza Tariq Khan',
-    email: 'hamza.tariq@lahoredesign.com',
-    phone: '+92 300 4821903',
-    street: 'House 42-B, Sector Z, Phase 6 DHA',
-    city: 'Lahore',
-    state: 'Punjab',
-    postalCode: '54792',
-    country: 'Pakistan',
+    fullName: '',
+    email: '',
+    phone: '',
+    street: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: '',
     orderNotes: '',
     paymentMethod: 'Easypaisa' as 'Easypaisa' | 'Cash on Delivery' | 'Credit Card' | 'Apple Pay',
-    cardNumber: '4242 •••• •••• 9821',
-    cardExp: '08/29',
-    cardCvc: '884',
+    cardNumber: '',
+    cardExp: '',
+    cardCvc: '',
     transactionId: '',
     paymentReceipt: '',
     paymentNotes: ''
@@ -165,19 +165,19 @@ export const CheckoutPage: React.FC = () => {
     const newOrder: Order = {
       id: orderId,
       customer: {
-        name: formData.fullName || 'VIP Client',
-        email: formData.email || 'client@lunova.com',
-        phone: formData.phone || ''
+        name: formData.fullName.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim()
       },
       shippingAddress: {
-        fullName: formData.fullName || 'VIP Client',
-        email: formData.email || 'client@lunova.com',
-        phone: formData.phone || '',
-        street: formData.street || 'White-Glove Delivery Destination',
-        city: formData.city || 'Islamabad',
-        state: formData.state || 'Federal Territory',
-        postalCode: formData.postalCode || '44000',
-        country: formData.country || 'Pakistan'
+        fullName: formData.fullName.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        street: formData.street.trim(),
+        city: formData.city.trim(),
+        state: formData.state.trim(),
+        postalCode: formData.postalCode.trim(),
+        country: formData.country.trim() || 'Pakistan'
       },
       items: cart.map((item) => ({
         productId: item.product.id,
@@ -581,9 +581,10 @@ export const CheckoutPage: React.FC = () => {
                   <input
                     type="text"
                     name="country"
+                    placeholder="Pakistan"
                     value={formData.country}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 bg-zinc-900/80 border border-zinc-800 rounded-xl text-sm text-white focus:outline-none focus:border-amber-400 transition-colors"
+                    className="w-full px-4 py-3 bg-zinc-900/80 border border-zinc-800 rounded-xl text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400 transition-colors"
                   />
                 </div>
 

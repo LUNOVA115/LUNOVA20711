@@ -78,8 +78,8 @@ export const DEFAULT_CONTACT_INFO: StoreContactInfo = getInitialContactInfo();
 
 export const DEFAULT_PAYMENT_SETTINGS: PaymentSettings = {
   easypaisaEnabled: true,
-  easypaisaNumber: '0345-8899123',
-  easypaisaAccountTitle: 'LUNOVA Luxury Lighting Ltd',
+  easypaisaNumber: '',
+  easypaisaAccountTitle: '',
   easypaisaInstructions: 'Please transfer the exact invoice total to our verified Easypaisa account. After transfer, upload your payment screenshot receipt and enter your Transaction (TRX) ID below for priority verification and white-glove dispatch.',
   codEnabled: true,
   codInstructions: 'Pay cash in full upon white-glove delivery arrival and initial inspection.',

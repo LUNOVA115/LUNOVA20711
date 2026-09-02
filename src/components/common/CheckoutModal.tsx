@@ -103,7 +103,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
   };
 
   const handleCopyEasypaisaNumber = () => {
-    const numberToCopy = paymentSettings?.easypaisaNumber || '0345-8899123';
+    const numberToCopy = paymentSettings?.easypaisaNumber || '';
+    if (!numberToCopy) {
+      addToast('No Easypaisa number configured', 'info');
+      return;
+    }
     navigator.clipboard?.writeText(numberToCopy);
     addToast(`Copied Easypaisa number: ${numberToCopy}`, 'success');
   };
@@ -484,23 +488,27 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose })
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 border-t border-zinc-900">
                     <div>
                       <div className="text-lg font-mono font-bold text-white tracking-wider">
-                        {paymentSettings?.easypaisaNumber || '0345-8899123'}
+                        {paymentSettings?.easypaisaNumber || 'Official Account Active'}
                       </div>
-                      <div className="text-[11px] text-zinc-400 font-medium">
-                        Title: <strong className="text-emerald-300">{paymentSettings?.easypaisaAccountTitle || 'LUNOVA Luxury Lighting Ltd'}</strong>
-                      </div>
+                      {paymentSettings?.easypaisaAccountTitle && (
+                        <div className="text-[11px] text-zinc-400 font-medium">
+                          Title: <strong className="text-emerald-300">{paymentSettings.easypaisaAccountTitle}</strong>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="flex items-center space-x-2 self-start sm:self-auto">
-                      <button
-                        type="button"
-                        onClick={handleCopyEasypaisaNumber}
-                        className="px-3.5 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 font-mono font-semibold flex items-center justify-center space-x-1.5 transition-colors"
-                      >
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>Copy Number</span>
-                      </button>
-                    </div>
+                    {paymentSettings?.easypaisaNumber && (
+                      <div className="flex items-center space-x-2 self-start sm:self-auto">
+                        <button
+                          type="button"
+                          onClick={handleCopyEasypaisaNumber}
+                          className="px-3.5 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 font-mono font-semibold flex items-center justify-center space-x-1.5 transition-colors"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copy Number</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
 

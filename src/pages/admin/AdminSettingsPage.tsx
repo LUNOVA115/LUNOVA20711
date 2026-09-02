@@ -127,8 +127,8 @@ export const AdminSettingsPage: React.FC = () => {
 
   // Payment Gateways Settings Local State
   const [easypaisaEnabled, setEasypaisaEnabled] = useState(paymentSettings?.easypaisaEnabled ?? true);
-  const [easypaisaNumber, setEasypaisaNumber] = useState(paymentSettings?.easypaisaNumber || '0345-8899123');
-  const [easypaisaAccountTitle, setEasypaisaAccountTitle] = useState(paymentSettings?.easypaisaAccountTitle || 'LUNOVA Luxury Lighting Ltd');
+  const [easypaisaNumber, setEasypaisaNumber] = useState(paymentSettings?.easypaisaNumber || '');
+  const [easypaisaAccountTitle, setEasypaisaAccountTitle] = useState(paymentSettings?.easypaisaAccountTitle || '');
   const [easypaisaInstructions, setEasypaisaInstructions] = useState(
     paymentSettings?.easypaisaInstructions || 
     'Please transfer the exact invoice total to our verified Easypaisa account. After transfer, upload your payment screenshot receipt and enter your Transaction (TRX) ID below for priority verification and white-glove dispatch.'
@@ -748,42 +748,6 @@ export const AdminSettingsPage: React.FC = () => {
 
               {easypaisaEnabled && (
                 <div className="space-y-5">
-                  {/* Presets & Quick Fill */}
-                  <div className="p-3.5 rounded-xl bg-zinc-950/80 border border-emerald-500/20 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-mono text-emerald-400 uppercase font-bold">
-                        Quick Preset Fill / Test Numbers:
-                      </span>
-                      <span className="text-[10px] text-zinc-500 font-mono">Click to autofill</span>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {[
-                        { label: '0345-8899123', title: 'LUNOVA Luxury Lighting Ltd' },
-                        { label: '0300-1234567', title: 'Julian Thorne Atelier' },
-                        { label: '0312-9876543', title: 'LUNOVA Direct Vault' },
-                        { label: '0333-5566778', title: 'LUNOVA Finance Dept' },
-                      ].map((item, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => {
-                            setEasypaisaNumber(item.label);
-                            setEasypaisaAccountTitle(item.title);
-                            addToast(`Populated: ${item.label}`, 'info');
-                          }}
-                          className={`p-2 rounded-lg border text-left font-mono transition-all ${
-                            easypaisaNumber === item.label
-                              ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
-                              : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white'
-                          }`}
-                        >
-                          <div className="font-bold text-[11px]">{item.label}</div>
-                          <div className="text-[9px] truncate opacity-70">{item.title}</div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-zinc-300 font-semibold uppercase tracking-wider mb-1.5 flex items-center justify-between">
@@ -796,7 +760,7 @@ export const AdminSettingsPage: React.FC = () => {
                       <input
                         type="text"
                         required
-                        placeholder="e.g. 0345-8899123 or +92 345 8899123"
+                        placeholder="Enter official Easypaisa account number"
                         value={easypaisaNumber}
                         onChange={(e) => setEasypaisaNumber(e.target.value)}
                         className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700/80 rounded-xl text-emerald-300 font-mono font-bold text-sm focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400"
@@ -812,7 +776,7 @@ export const AdminSettingsPage: React.FC = () => {
                       <input
                         type="text"
                         required
-                        placeholder="e.g. LUNOVA Luxury Lighting or Julian Thorne"
+                        placeholder="Enter registered account title"
                         value={easypaisaAccountTitle}
                         onChange={(e) => setEasypaisaAccountTitle(e.target.value)}
                         className="w-full px-4 py-2.5 bg-zinc-900 border border-zinc-700/80 rounded-xl text-white font-semibold text-sm focus:outline-none focus:border-emerald-400"

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { ProductCard } from '../components/common/ProductCard';
-import { LightingSimulator } from '../components/common/LightingSimulator';
 import { Interactive3DViewer } from '../components/common/Interactive3DViewer';
 import { 
   Star, 
@@ -85,10 +84,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ productId 
   const [newReviewAuthor, setNewReviewAuthor] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [newReviewComment, setNewReviewComment] = useState('');
-
-  // Active simulated light
-  const [simulatedLight, setSimulatedLight] = useState('2700K');
-  const [simulatedBrightness, setSimulatedBrightness] = useState(90);
 
   const isSaved = isInWishlist(product.id);
   const isOutOfStock = product.stock <= 0;
@@ -200,8 +195,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ productId 
           {is3DMode ? (
             <Interactive3DViewer
               product={product}
-              activeLighting={simulatedLight}
-              brightness={simulatedBrightness}
             />
           ) : (
             <>
@@ -210,11 +203,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ productId 
                 
                 {/* Ambient Lighting Backlight Glow */}
                 <div 
-                  className="absolute inset-4 rounded-full blur-3xl transition-all duration-700 pointer-events-none"
-                  style={{
-                    backgroundColor: simulatedLight === 'CYAN' ? '#06b6d4' : simulatedLight === '6000K' ? '#38bdf8' : '#f59e0b',
-                    opacity: (simulatedBrightness / 100) * 0.35
-                  }}
+                  className="absolute inset-4 rounded-full blur-3xl transition-all duration-700 pointer-events-none bg-amber-500/20"
                 />
 
                 {/* Main Image */}
@@ -232,7 +221,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ productId 
                       Bestseller
                     </span>
                   )}
-                  {product.badge && (
+                  {product.badge && !product.badge.toLowerCase().includes('flagship') && (
                     <span className="px-3 py-1 text-xs uppercase font-semibold tracking-wider bg-zinc-900/90 text-zinc-200 border border-zinc-700 rounded-full backdrop-blur-md">
                       {product.badge}
                     </span>
@@ -279,17 +268,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ productId 
               )}
             </>
           )}
-
-          {/* Embedded Lighting Simulator for Moon/Infinity Lamp */}
-          <div className="pt-2">
-            <LightingSimulator
-              activeMode={simulatedLight}
-              onLightChange={(preset, intensity) => {
-                setSimulatedLight(preset);
-                setSimulatedBrightness(intensity);
-              }}
-            />
-          </div>
         </div>
 
         {/* Right Column: Information & Actions (5 Cols) */}

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { AdminLayout } from '../../components/admin/AdminLayout';
-import { AdminRevenueChart } from '../../components/admin/AdminRevenueChart';
 import { 
   TrendingUp, 
   ShoppingBag, 
@@ -12,7 +11,6 @@ import {
   Clock, 
   CheckCircle2, 
   AlertTriangle, 
-  Sparkles, 
   ExternalLink, 
   ChevronRight, 
   Eye, 
@@ -443,16 +441,7 @@ export const AdminDashboardPage: React.FC = () => {
         </div>
 
         {/* =========================================================================
-            REVENUE ANALYTICS AREA CHART
-        ========================================================================= */}
-        <AdminRevenueChart
-          title="Revenue Overview"
-          subtitle="Real-time commercial trajectory across customer orders and incoming settlements."
-          defaultRange="30d"
-        />
-
-        {/* =========================================================================
-            TWO-COLUMN SECTION: RECENT ORDERS & (TOP PRODUCTS + LOW STOCK)
+            TWO-COLUMN SECTION: RECENT ORDERS & LOW STOCK
         ========================================================================= */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           
@@ -563,42 +552,8 @@ export const AdminDashboardPage: React.FC = () => {
             </div>
           </div>
 
-          {/* RIGHT SIDE: TOP SELLING PRODUCTS & LOW STOCK ALERT (1 COLUMN) */}
+          {/* RIGHT SIDE: LOW STOCK ALERT (1 COLUMN) */}
           <div className="space-y-6">
-            
-            {/* Top Selling Products */}
-            <div className="bg-[#121318] border border-zinc-800/80 rounded-3xl p-6 space-y-4 shadow-xl">
-              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-                <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center space-x-2">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Top Selling Products</span>
-                </h3>
-                <span className="text-[10px] font-mono text-zinc-500">Units Sold</span>
-              </div>
-
-              <div className="space-y-3">
-                {products.slice(0, 3).map((p, idx) => {
-                  const sold = 42 - idx * 10;
-                  const rev = sold * p.price;
-                  return (
-                    <div key={p.id} className="flex items-center justify-between p-2.5 rounded-2xl bg-zinc-900/60 border border-zinc-800/60">
-                      <div className="flex items-center space-x-2.5 min-w-0">
-                        <img src={p.images[0]} alt={p.name} className="w-10 h-10 rounded-xl object-cover border border-zinc-800 shrink-0" />
-                        <div className="min-w-0">
-                          <div className="font-semibold text-white truncate max-w-[130px]">{p.name}</div>
-                          <div className="text-[10px] text-zinc-400 truncate">{p.category}</div>
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <div className="font-mono font-bold text-amber-400 text-xs">{formatPrice(rev)}</div>
-                        <div className="text-[10px] text-zinc-400 font-mono">{sold} sold</div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
             {/* Low Stock Alert */}
             <div className="bg-[#121318] border border-amber-500/30 rounded-3xl p-6 space-y-4 shadow-xl ring-1 ring-amber-500/10">
               <div className="flex items-center justify-between border-b border-zinc-800 pb-3">

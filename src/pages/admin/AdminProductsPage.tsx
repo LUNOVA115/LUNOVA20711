@@ -2,7 +2,6 @@ import React, { useState, useMemo, useRef } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { AdminLayout } from '../../components/admin/AdminLayout';
 import { Product, PriceHistoryRecord } from '../../types';
-import { PriceHistoryChart } from '../../components/admin/PriceHistoryChart';
 import { PriceHistoryModal } from '../../components/admin/PriceHistoryModal';
 import { 
   PlusCircle, 
@@ -1942,27 +1941,6 @@ export const AdminProductsPage: React.FC = () => {
                     className="w-full px-3 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-white font-mono focus:outline-none focus:border-amber-400"
                   />
                 </div>
-              </div>
-
-              {/* Embedded Price History Line Graph Preview */}
-              <div className="p-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <TrendingUp className="w-3.5 h-3.5 text-amber-400" />
-                    <span className="font-bold text-white text-xs uppercase tracking-wider font-mono">
-                      Price Adjustment History Graph
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setPriceHistoryProduct(editingProduct)}
-                    className="text-amber-400 hover:text-amber-300 text-[11px] font-mono hover:underline flex items-center space-x-1 cursor-pointer"
-                  >
-                    <span>Full Log & History Modal</span>
-                    <span>→</span>
-                  </button>
-                </div>
-                <PriceHistoryChart product={editingProduct} height={150} showStats={false} />
               </div>
 
               {/* Status & Featured */}

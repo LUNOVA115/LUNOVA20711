@@ -77,6 +77,20 @@
         "itemCount": { "type": "number" }
       },
       "required": ["id", "name", "slug"]
+    },
+    "StoreConfig": {
+      "title": "StoreConfig",
+      "description": "Storefront brand, global currency, free shipping threshold, and taxation configurations.",
+      "type": "object",
+      "properties": {
+        "storeName": { "type": "string" },
+        "tagline": { "type": "string" },
+        "currency": { "type": "string" },
+        "freeShippingThreshold": { "type": "number" },
+        "taxRate": { "type": "number" },
+        "whiteGloveEnabled": { "type": "boolean" }
+      },
+      "required": ["storeName", "currency", "freeShippingThreshold", "taxRate"]
     }
   },
   "firestore": {

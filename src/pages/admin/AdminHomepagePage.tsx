@@ -297,7 +297,7 @@ export const AdminHomepagePage: React.FC = () => {
             <div>
               <label className="block text-zinc-300 font-semibold uppercase tracking-wider mb-1.5 flex items-center justify-between">
                 <span>Featured Centerpiece Piece</span>
-                <span className="text-[10px] text-amber-400 font-mono">Flagship Showcase</span>
+                <span className="text-[10px] text-amber-400 font-mono">Featured Showcase</span>
               </label>
               <select
                 value={featuredProductId}

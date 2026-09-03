@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { Product, Category, CartItem, Order, Customer, AdminUser, FilterOptions, HomeSettings, StoreContactInfo, PaymentSettings, InstagramSettings, InstagramPost, CurrencyCode, SUPPORTED_CURRENCIES, DEFAULT_CURRENCY } from '../types';
+import { Product, Category, CartItem, Order, Customer, AdminUser, FilterOptions, HomeSettings, StoreContactInfo, PaymentSettings, InstagramSettings, InstagramPost, CurrencyCode, SUPPORTED_CURRENCIES, DEFAULT_CURRENCY, StoreConfig } from '../types';
 import { formatPrice as formatPriceUtil, convertFromUSD } from '../utils/currency';
 import { INITIAL_PRODUCTS } from '../data/initialProducts';
 import { INITIAL_CATEGORIES } from '../data/initialCategories';
@@ -87,6 +87,15 @@ export const DEFAULT_PAYMENT_SETTINGS: PaymentSettings = {
   applePayEnabled: true,
 };
 
+export const DEFAULT_STORE_CONFIG: StoreConfig = {
+  storeName: 'LUNOVA',
+  tagline: 'Futuristic Premium Home Decor & Atmospheric Architecture',
+  currency: 'PKR',
+  freeShippingThreshold: 500,
+  taxRate: 8.25,
+  whiteGloveEnabled: true
+};
+
 interface StoreContextType {
   // Routing
   currentPath: string;
@@ -97,6 +106,10 @@ interface StoreContextType {
   categories: Category[];
   orders: Order[];
   customers: Customer[];
+
+  // Global Store Configuration (Admin Configurable & Synced to Firestore)
+  storeConfig: StoreConfig;
+  updateStoreConfig: (config: Partial<StoreConfig>) => Promise<void>;
 
   // Global Currency Configuration (Admin Configurable)
   currency: CurrencyCode;
@@ -203,9 +216,16 @@ interface StoreContextType {
   deleteProduct: (productId: string) => void;
   
   addOrder: (order: Order) => Promise<void>;
+  updateOrder: (orderId: string, updates: Partial<Order>) => Promise<void>;
+  deleteOrder: (orderId: string) => Promise<void>;
   updateOrderStatus: (orderId: string, status: Order['orderStatus']) => Promise<void>;
   updateOrderPaymentStatus: (orderId: string, status: Order['paymentStatus']) => Promise<void>;
   
+  // Customer Mutators
+  addCustomer: (customerData: Omit<Customer, 'id'>) => Promise<Customer>;
+  updateCustomer: (customerId: string, updates: Partial<Customer>) => Promise<void>;
+  deleteCustomer: (customerId: string) => Promise<void>;
+
   addCategory: (categoryData: Omit<Category, 'id'>) => Category;
   updateCategory: (category: Category) => void;
   deleteCategory: (categoryId: string) => void;
@@ -737,9 +757,35 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [filters, setFilters] = useState<FilterOptions>(defaultFilters);
 
-  // Global Store Operating Currency (Admin Configurable)
+  // Global Store Configuration (Admin Configurable & Synced with Firestore)
+  const [storeConfig, setStoreConfig] = useState<StoreConfig>(() => {
+    try {
+      const saved = localStorage.getItem('lunova_store_config_v1');
+      if (saved) {
+        return { ...DEFAULT_STORE_CONFIG, ...JSON.parse(saved) };
+      }
+      return DEFAULT_STORE_CONFIG;
+    } catch {
+      return DEFAULT_STORE_CONFIG;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('lunova_store_config_v1', JSON.stringify(storeConfig));
+    } catch {}
+  }, [storeConfig]);
+
+  // Global Store Operating Currency (Admin Configurable & Synced with Firestore)
   const [currency, setCurrencyState] = useState<CurrencyCode>(() => {
     try {
+      const savedConfig = localStorage.getItem('lunova_store_config_v1');
+      if (savedConfig) {
+        const parsed = JSON.parse(savedConfig);
+        if (parsed.currency && SUPPORTED_CURRENCIES[parsed.currency as CurrencyCode]) {
+          return parsed.currency as CurrencyCode;
+        }
+      }
       const saved = localStorage.getItem('lunova_store_currency_v2');
       if (saved && SUPPORTED_CURRENCIES[saved as CurrencyCode]) {
         return saved as CurrencyCode;
@@ -758,6 +804,55 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [currency]);
 
+  // Real-time Firestore Subscription for Store Configuration (Single Source of Truth)
+  useEffect(() => {
+    const configDocRef = doc(db, 'settings', 'store_config');
+    const unsubscribe = onSnapshot(configDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const cloudData = docSnap.data() as Partial<StoreConfig>;
+        if (cloudData) {
+          const merged: StoreConfig = { ...DEFAULT_STORE_CONFIG, ...cloudData };
+          setStoreConfig(merged);
+          if (merged.currency && SUPPORTED_CURRENCIES[merged.currency] && merged.currency !== currency) {
+            setCurrencyState(merged.currency);
+          }
+          try {
+            localStorage.setItem('lunova_store_config_v1', JSON.stringify(merged));
+          } catch {}
+        }
+      } else {
+        // Document does not exist yet in Firestore, seed it immediately with DEFAULT_STORE_CONFIG
+        setDoc(configDocRef, sanitizeForFirestore(DEFAULT_STORE_CONFIG), { merge: true }).catch((err) => {
+          console.warn('[Firestore] Error seeding store config to cloud:', err);
+        });
+      }
+    }, (error) => {
+      console.warn('[Firestore] Store config listener notice:', error?.message || error);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const updateStoreConfig = async (newConfig: Partial<StoreConfig>): Promise<void> => {
+    const updated: StoreConfig = { ...storeConfig, ...newConfig };
+    setStoreConfig(updated);
+    if (newConfig.currency && SUPPORTED_CURRENCIES[newConfig.currency]) {
+      setCurrencyState(newConfig.currency);
+    }
+    try {
+      localStorage.setItem('lunova_store_config_v1', JSON.stringify(updated));
+    } catch {}
+    try {
+      const configDocRef = doc(db, 'settings', 'store_config');
+      await setDoc(configDocRef, sanitizeForFirestore(updated), { merge: true });
+      console.log('[Firestore] Store configuration permanently updated in cloud:', updated);
+      addToast('Storefront configurations saved permanently to cloud.', 'success');
+    } catch (err) {
+      console.warn('[Firestore] Error saving store configuration:', err);
+      addToast('Error saving settings to cloud', 'error');
+    }
+  };
+
   const currencyConfig = useMemo(() => {
     return SUPPORTED_CURRENCIES[currency] || SUPPORTED_CURRENCIES.PKR;
   }, [currency]);
@@ -765,6 +860,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const setCurrency = (newCode: CurrencyCode) => {
     if (!SUPPORTED_CURRENCIES[newCode]) return;
     setCurrencyState(newCode);
+    updateStoreConfig({ currency: newCode }).catch(() => {});
     addToast(`Store active currency switched to ${SUPPORTED_CURRENCIES[newCode].name}`, 'success');
   };
 
@@ -1345,16 +1441,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return 0;
   }, [cartSubtotal, appliedCoupon]);
 
-  // Free shipping over $500
+  // Free shipping threshold configurable via Admin Settings (Synced with Firestore)
   const cartShipping = useMemo(() => {
     if (cartSubtotal === 0) return 0;
-    if (cartSubtotal >= 500) return 0;
+    const threshold = typeof storeConfig?.freeShippingThreshold === 'number' ? storeConfig.freeShippingThreshold : 500;
+    if (cartSubtotal >= threshold) return 0;
     return 35; // Express insured white-glove packaging
-  }, [cartSubtotal]);
+  }, [cartSubtotal, storeConfig?.freeShippingThreshold]);
 
   const cartTax = useMemo(() => {
-    return (cartSubtotal - cartDiscount) * 0.0825; // 8.25% luxury rate
-  }, [cartSubtotal, cartDiscount]);
+    const rate = typeof storeConfig?.taxRate === 'number' ? storeConfig.taxRate : 8.25;
+    return (cartSubtotal - cartDiscount) * (rate / 100);
+  }, [cartSubtotal, cartDiscount, storeConfig?.taxRate]);
 
   const cartTotal = useMemo(() => {
     if (cartSubtotal === 0) return 0;
@@ -2225,6 +2323,92 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const updateOrder = async (orderId: string, updates: Partial<Order>): Promise<void> => {
+    console.log(`[Firestore Admin Action] Updating order #${orderId} in cloud:`, updates);
+    setOrders((prev) =>
+      prev.map((o) => (o.id === orderId ? { ...o, ...updates } : o))
+    );
+    try {
+      const orderRef = doc(db, 'orders', orderId);
+      await setDoc(orderRef, sanitizeForFirestore(updates), { merge: true });
+      console.log(`[Firestore] Order #${orderId} successfully updated in cloud database.`);
+      addToast(`Order #${orderId} updated successfully`, 'success');
+    } catch (err: any) {
+      console.error(`[Firestore] Error updating order #${orderId}:`, err);
+      addToast(`Failed to update order in cloud`, 'error');
+      throw err;
+    }
+  };
+
+  const deleteOrder = async (orderId: string): Promise<void> => {
+    console.log(`[Firestore Admin Action] Deleting order #${orderId} from cloud...`);
+    setOrders((prev) => prev.filter((o) => o.id !== orderId));
+    try {
+      const orderRef = doc(db, 'orders', orderId);
+      await deleteDoc(orderRef);
+      console.log(`[Firestore] Order #${orderId} deleted from cloud database.`);
+      addToast(`Order #${orderId} removed from records`, 'info');
+    } catch (err: any) {
+      console.error(`[Firestore] Error deleting order #${orderId}:`, err);
+      addToast(`Failed to delete order from cloud`, 'error');
+      throw err;
+    }
+  };
+
+  // Customer mutators (Synchronized with Firestore Central Database)
+  const addCustomer = async (customerData: Omit<Customer, 'id'>): Promise<Customer> => {
+    const custEmail = customerData.email.toLowerCase().trim();
+    const custId = `cust-${custEmail.replace(/[^a-z0-9]/g, '') || Date.now().toString(36)}`;
+    const newCust: Customer = {
+      ...customerData,
+      id: custId
+    };
+    setCustomers((prev) => [newCust, ...prev.filter((c) => c.id !== custId)]);
+    try {
+      const custRef = doc(db, 'customers', custId);
+      await setDoc(custRef, sanitizeForFirestore(newCust), { merge: true });
+      console.log(`[Firestore] Customer profile "${newCust.name}" (${custId}) saved to cloud.`);
+      addToast(`Client profile for "${newCust.name}" saved`, 'success');
+    } catch (err: any) {
+      console.error(`[Firestore] Error writing customer profile:`, err);
+      addToast('Failed to save client profile to cloud', 'error');
+      throw err;
+    }
+    return newCust;
+  };
+
+  const updateCustomer = async (customerId: string, updates: Partial<Customer>): Promise<void> => {
+    console.log(`[Firestore Admin Action] Updating customer #${customerId} in cloud:`, updates);
+    setCustomers((prev) =>
+      prev.map((c) => (c.id === customerId ? { ...c, ...updates } : c))
+    );
+    try {
+      const custRef = doc(db, 'customers', customerId);
+      await setDoc(custRef, sanitizeForFirestore(updates), { merge: true });
+      console.log(`[Firestore] Customer #${customerId} updated in cloud database.`);
+      addToast(`Client profile updated`, 'success');
+    } catch (err: any) {
+      console.error(`[Firestore] Error updating customer #${customerId}:`, err);
+      addToast('Failed to update client profile in cloud', 'error');
+      throw err;
+    }
+  };
+
+  const deleteCustomer = async (customerId: string): Promise<void> => {
+    console.log(`[Firestore Admin Action] Deleting customer #${customerId} from cloud...`);
+    setCustomers((prev) => prev.filter((c) => c.id !== customerId));
+    try {
+      const custRef = doc(db, 'customers', customerId);
+      await deleteDoc(custRef);
+      console.log(`[Firestore] Customer #${customerId} deleted from cloud database.`);
+      addToast('Client profile removed', 'info');
+    } catch (err: any) {
+      console.error(`[Firestore] Error deleting customer #${customerId}:`, err);
+      addToast('Failed to delete client profile from cloud', 'error');
+      throw err;
+    }
+  };
+
   // Category mutators (Synchronized with Firestore Central Database)
   const addCategory = (categoryData: Omit<Category, 'id'>): Category => {
     const id = `cat-${Date.now().toString(36)}`;
@@ -2322,6 +2506,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         categories,
         orders,
         customers,
+        storeConfig,
+        updateStoreConfig,
         currency,
         setCurrency,
         formatPrice,
@@ -2399,8 +2585,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updateProduct,
         deleteProduct,
         addOrder,
+        updateOrder,
+        deleteOrder,
         updateOrderStatus,
         updateOrderPaymentStatus,
+        addCustomer,
+        updateCustomer,
+        deleteCustomer,
         addCategory,
         updateCategory,
         deleteCategory,

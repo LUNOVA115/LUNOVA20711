@@ -199,6 +199,15 @@ export interface HomeSettings {
   lifestyleImage?: string;
 }
 
+export interface StoreConfig {
+  storeName: string;
+  tagline: string;
+  currency: import('./currency').CurrencyCode;
+  freeShippingThreshold: number;
+  taxRate: number;
+  whiteGloveEnabled: boolean;
+}
+
 export interface FilterOptions {
   search: string;
   category: string;

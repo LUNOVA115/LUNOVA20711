@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { useStore } from '../context/StoreContext';
-import { TwinklingStars } from '../components/common/TwinklingStars';
 import { 
   ArrowRight, 
   Sparkles, 
@@ -33,10 +32,7 @@ export const HomePage: React.FC = () => {
   const haloColor = 'rgba(251, 191, 36, 0.4)';
 
   return (
-    <div className="space-y-24 sm:space-y-36 pb-24 overflow-hidden stardust-bg relative">
-      
-      {/* Dynamic Animated Twinkling & Blinking Starfield */}
-      <TwinklingStars count={110} showShootingStars={true} />
+    <div className="space-y-24 sm:space-y-36 pb-24 overflow-hidden relative">
       
       {/* =========================================================================
           HERO SECTION: CINEMATIC ATMOSPHERIC ARCHITECTURE
@@ -54,20 +50,8 @@ export const HomePage: React.FC = () => {
 
         <div className="max-w-4xl mx-auto w-full text-center space-y-8 relative z-10">
           
-          {/* Centered Luxury LUNOVA Header */}
-          <div className="flex flex-col items-center justify-center space-y-2">
-            <span className="text-3xl sm:text-5xl font-serif tracking-[0.3em] text-white uppercase font-bold drop-shadow-md">
-              LU<span className="text-gold-gradient">NOVA</span>
-            </span>
-            <div className="flex items-center space-x-3 text-[9px] sm:text-[11px] tracking-[0.3em] font-mono text-zinc-300 uppercase">
-              <span className="text-amber-400 font-semibold drop-shadow">HANDMADE HOME DECOR</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80" />
-              <span className="text-zinc-200">EST. 2024</span>
-            </div>
-          </div>
-
           {/* Refined Headline */}
-          <h1 className="text-xl sm:text-3xl font-serif tracking-[0.08em] text-zinc-100 font-light max-w-xl mx-auto drop-shadow-lg">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-serif tracking-[0.08em] text-zinc-100 font-light max-w-2xl mx-auto drop-shadow-lg">
             Illuminate Your <span className="text-gold-gradient font-medium">Imagination.</span>
           </h1>
 

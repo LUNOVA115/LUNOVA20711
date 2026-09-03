@@ -1,8 +1,7 @@
 import React from 'react';
 import { useStore } from '../context/StoreContext';
 import { ProductGrid } from '../components/common/ProductGrid';
-import { LightingSimulator } from '../components/common/LightingSimulator';
-import { Moon, Layers, Sparkles, ArrowLeft } from 'lucide-react';
+import { Moon, Layers, ArrowLeft } from 'lucide-react';
 
 interface CollectionDetailPageProps {
   slug: string; // 'moon' | 'infinity' | 'cosmic' | 'futuristic-home'
@@ -92,13 +91,6 @@ export const CollectionDetailPage: React.FC<CollectionDetailPageProps> = ({ slug
           </div>
         </div>
       </div>
-
-      {/* Interactive Feature for Moon or Infinity */}
-      {slug === 'moon' && (
-        <div className="max-w-3xl mx-auto">
-          <LightingSimulator />
-        </div>
-      )}
 
       {/* Product Grid */}
       <div className="space-y-6">

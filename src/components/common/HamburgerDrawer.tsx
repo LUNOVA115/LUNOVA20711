@@ -483,10 +483,6 @@ export const HamburgerDrawer: React.FC<HamburgerDrawerProps> = ({ isOpen, onClos
 
           {/* Drawer Footer Banner */}
           <div className="p-6 border-t border-zinc-800/80 bg-zinc-950/90 text-center space-y-2.5">
-            <div className="flex items-center justify-center space-x-2 text-[10px] font-mono text-zinc-400 uppercase tracking-widest">
-              <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
-              <span>HANDMADE HOME DECOR • MADE IN PAKISTAN</span>
-            </div>
             <p className="text-[10px] font-mono text-zinc-400">
               © {new Date().getFullYear()} LUNOVA Luxury Atelier. All rights reserved.
             </p>

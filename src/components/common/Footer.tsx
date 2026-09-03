@@ -1,14 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useStore } from '../../context/StoreContext';
 import { 
   Lock,
   MessageCircle,
   ShieldCheck,
   User,
-  ArrowRight,
-  Instagram,
-  Facebook,
-  Twitter
+  ArrowRight
 } from 'lucide-react';
 
 export const Footer: React.FC = () => {
@@ -22,8 +19,6 @@ export const Footer: React.FC = () => {
     instagramSettings,
     addToast
   } = useStore();
-
-  const [subscribeEmail, setSubscribeEmail] = React.useState('');
 
   const displayWhatsapp = contactInfo?.whatsappNumber || contactInfo?.phone || '+92 315 0360126';
   const whatsappDigits = displayWhatsapp.replace(/[^0-9]/g, '') || '923150360126';
@@ -66,94 +61,12 @@ export const Footer: React.FC = () => {
                     </svg>
                   </span>
                 </div>
-                <div className="flex items-center space-x-2 mt-2 font-mono text-[8px] tracking-[0.25em] uppercase leading-tight font-medium">
-                  <span className="text-amber-200/90 font-semibold">HANDMADE HOME DÉCOR</span>
-                  <span className="text-zinc-600">•</span>
-                  <span className="text-zinc-400">PAKISTAN</span>
-                  <span className="text-zinc-600">•</span>
-                  <span className="text-amber-400 font-bold">EST. 2024</span>
-                </div>
               </div>
             </div>
 
             <p className="text-xs text-zinc-300/90 leading-relaxed font-light pt-1 pr-2 max-w-sm">
               LUNOVA is a modern luxury home décor atelier where timeless craftsmanship meets contemporary design. Rooted in Pakistan’s rich artisan heritage, each piece is thoughtfully handcrafted to bring sculptural elegance to modern spaces worldwide.
             </p>
-
-            {/* VIP Subscription */}
-            <div className="pt-2 space-y-3">
-              {/* Refined Subscription Header */}
-              <div className="text-xs font-serif tracking-[0.14em] uppercase text-amber-200/95 font-semibold flex items-center space-x-2">
-                <span>Private Catalog & VIP Access</span>
-              </div>
-              <p className="text-[11px] text-zinc-400 font-light">
-                Receive private invitations to collector drops and 10% off your order.
-              </p>
-
-              {/* Email Subscription Box */}
-              <form 
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (!subscribeEmail || !subscribeEmail.includes('@')) {
-                    addToast('Please provide a valid email address.', 'warning');
-                    return;
-                  }
-                  addToast('VIP Access Confirmed! Use code LUNOVA15 for your VIP discount.', 'success');
-                  setSubscribeEmail('');
-                }}
-                className="flex items-center max-w-xs sm:max-w-sm group focus-within:ring-1 focus-within:ring-amber-400/40 rounded-xl"
-              >
-                <input
-                  type="email"
-                  value={subscribeEmail}
-                  onChange={(e) => setSubscribeEmail(e.target.value)}
-                  placeholder="Enter email for 10% off..."
-                  className="w-full px-3.5 py-2.5 text-xs bg-zinc-950/80 border border-zinc-800 rounded-l-xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-400/60 font-mono transition-all"
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2.5 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 hover:from-amber-300 hover:to-amber-200 text-zinc-950 font-mono font-bold text-xs rounded-r-xl transition-all shrink-0 cursor-pointer shadow-md shadow-amber-400/20 hover:shadow-amber-400/40"
-                >
-                  Join VIP
-                </button>
-              </form>
-
-              {/* Social Media Pages / Icons */}
-              <div className="pt-2 flex items-center space-x-3">
-                <a
-                  href={instagramUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`LUNOVA Instagram @${instagramHandle}`}
-                  className="w-8 h-8 rounded-lg bg-zinc-900/80 border border-zinc-800 hover:border-pink-400/60 flex items-center justify-center text-zinc-400 hover:text-pink-400 hover:bg-zinc-800/80 transition-all group shadow-sm hover:shadow-pink-500/20"
-                  title={`Follow LUNOVA on Instagram (@${instagramHandle})`}
-                >
-                  <Instagram className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                </a>
-
-                <a
-                  href="https://facebook.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="LUNOVA Facebook"
-                  className="w-8 h-8 rounded-lg bg-zinc-900/80 border border-zinc-800 hover:border-amber-400/60 flex items-center justify-center text-zinc-400 hover:text-amber-300 hover:bg-zinc-800/80 transition-all group shadow-sm hover:shadow-amber-400/20"
-                  title="Follow LUNOVA on Facebook"
-                >
-                  <Facebook className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                </a>
-
-                <a
-                  href="https://twitter.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="LUNOVA Twitter"
-                  className="w-8 h-8 rounded-lg bg-zinc-900/80 border border-zinc-800 hover:border-amber-400/60 flex items-center justify-center text-zinc-400 hover:text-amber-300 hover:bg-zinc-800/80 transition-all group shadow-sm hover:shadow-amber-400/20"
-                  title="Follow LUNOVA on Twitter"
-                >
-                  <Twitter className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                </a>
-              </div>
-            </div>
           </div>
 
           {/* 3 NAVIGATION SECTIONS IN ONE HORIZONTAL ROW (Spans 8 cols on desktop, grid-cols-3) */}
@@ -310,15 +223,6 @@ export const Footer: React.FC = () => {
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-zinc-600 group-hover:bg-amber-400 transition-colors" />
                     <span className="group-hover:translate-x-0.5 transition-transform">FAQs & Live Concierge</span>
-                  </button>
-                </li>
-                <li className="pt-2 border-t border-zinc-800/60">
-                  <button 
-                    onClick={() => navigate(adminUser ? '/admin/dashboard' : '/admin/login')} 
-                    className="hover:text-amber-300 transition-colors text-left flex items-center space-x-2 group cursor-pointer text-amber-400/90 font-mono text-xs"
-                  >
-                    <ShieldCheck className="w-3.5 h-3.5 text-amber-400 shrink-0 group-hover:scale-110 transition-transform" />
-                    <span className="group-hover:underline font-semibold">{adminUser ? 'Admin Control Panel' : 'Admin Login'}</span>
                   </button>
                 </li>
               </ul>

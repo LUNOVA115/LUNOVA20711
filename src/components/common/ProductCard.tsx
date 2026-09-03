@@ -1,7 +1,7 @@
 import React from 'react';
 import { Product } from '../../types';
 import { useStore } from '../../context/StoreContext';
-import { Star, Heart, ShoppingBag, Eye, Zap, Sparkles, Box } from 'lucide-react';
+import { Star, Heart, ShoppingBag, Eye, Zap, Box } from 'lucide-react';
 
 
 interface ProductCardProps {
@@ -55,13 +55,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, featuredLayou
       {/* Top Badges & Wishlist / Compare Triggers */}
       <div className="relative z-10 flex items-start justify-between gap-2 mb-3">
         <div className="flex flex-wrap gap-1.5 items-center">
-          {product.bestseller && (
-            <span className="px-2.5 py-0.5 text-[10px] uppercase font-bold tracking-widest bg-gradient-to-r from-amber-400/20 to-amber-500/20 text-amber-300 border border-amber-400/40 rounded-full backdrop-blur-md flex items-center space-x-1">
-              <Sparkles className="w-2.5 h-2.5 text-amber-400" />
-              <span>Flagship</span>
-            </span>
-          )}
-          {product.badge && !product.bestseller && (
+          {product.badge && !product.badge.toLowerCase().includes('flagship') && (
             <span className="px-2.5 py-0.5 text-[10px] uppercase font-mono font-semibold tracking-wider bg-zinc-900 text-zinc-300 border border-zinc-800 rounded-full backdrop-blur-md">
               {product.badge}
             </span>

@@ -39,7 +39,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     powerSource: 'Concealed Magnetic 24V Power Bus / 110-240V AC',
     lightingType: 'Multi-Tiered Architectural LED Array (2700K Warm Tungsten)',
     colorTemperature: 'Warm Amber (2200K – 3000K Adjustable)',
-    badge: 'Flagship Edition',
+    badge: 'Signature Edition',
     specifications: [
       { label: 'Optical Depth', value: 'Perceived 2.4-meter infinite depth chamber' },
       { label: 'Glass Rating', value: '10mm Toughened Scratch-Resistant Safety Glass' },

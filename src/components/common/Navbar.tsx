@@ -130,11 +130,6 @@ export const Navbar: React.FC = () => {
                     </svg>
                   </span>
                 </div>
-                <div className="flex flex-col space-y-0.5 mt-1 font-mono text-[7px] sm:text-[7.5px] tracking-[0.24em] text-zinc-400 uppercase leading-tight font-medium select-none">
-                  <span className="text-zinc-300 font-semibold tracking-[0.22em]">HANDMADE HOME DECOR</span>
-                  <span className="text-zinc-400">MADE IN PAKISTAN</span>
-                  <span className="text-amber-400/90 font-bold tracking-[0.28em]">EST. 2024</span>
-                </div>
               </div>
             </div>
 

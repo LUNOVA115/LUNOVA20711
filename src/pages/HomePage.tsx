@@ -50,10 +50,24 @@ export const HomePage: React.FC = () => {
 
         <div className="max-w-4xl mx-auto w-full text-center space-y-8 relative z-10">
           
-          {/* Refined Headline */}
-          <h1 className="text-2xl sm:text-4xl md:text-5xl font-serif tracking-[0.08em] text-zinc-100 font-light max-w-2xl mx-auto drop-shadow-lg">
-            Illuminate Your <span className="text-gold-gradient font-medium">Imagination.</span>
-          </h1>
+          {/* Prominent LUNOVA Master Branding & Refined Headline */}
+          <div className="space-y-4 sm:space-y-5">
+            {/* Atelier Luxury Badge */}
+            <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-300 text-[10px] sm:text-xs font-mono uppercase tracking-[0.25em] shadow-lg shadow-amber-400/10 backdrop-blur-md">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+              <span>Bespoke Futuristic Lighting Atelier</span>
+            </div>
+
+            {/* Grand LUNOVA Wordmark (Refined Scale Yellow & White Aesthetic) */}
+            <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-serif tracking-[0.16em] sm:tracking-[0.22em] uppercase font-bold text-white drop-shadow-2xl select-none leading-none max-w-3xl mx-auto px-4 sm:px-8 pl-3 sm:pl-5">
+              LU<span className="text-gold-gradient font-extrabold text-amber-400 drop-shadow-[0_0_35px_rgba(251,191,36,0.45)]">NOVA</span>
+            </h1>
+
+            {/* Refined Headline Underneath */}
+            <div className="text-xl sm:text-3xl md:text-4xl font-serif tracking-[0.08em] text-zinc-100 font-light max-w-2xl mx-auto drop-shadow-lg pt-1">
+              Illuminate Your <span className="text-gold-gradient font-medium">Imagination.</span>
+            </div>
+          </div>
 
           {/* Architectural Sub-copy */}
           <p className="text-base sm:text-lg text-zinc-200 max-w-2xl mx-auto font-light leading-relaxed drop-shadow">
@@ -130,7 +144,7 @@ export const HomePage: React.FC = () => {
                     </h3>
                   </div>
                   <div className={`p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-${accentColor}-400 group-hover:bg-${accentColor}-400 group-hover:text-zinc-950 transition-colors`}>
-                    {idx === 0 ? <Moon className="w-5 h-5" /> : <Layers className="w-5 h-5" />}
+                    {cat.slug === 'moon' ? <Moon className="w-5 h-5" /> : <Layers className="w-5 h-5" />}
                   </div>
                 </div>
 

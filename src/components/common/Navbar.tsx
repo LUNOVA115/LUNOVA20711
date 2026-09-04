@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   LogOut,
   Package,
+  Truck,
   Settings,
   ChevronDown,
   ArrowRight,
@@ -36,9 +37,6 @@ export const Navbar: React.FC = () => {
     setIsSearchOpen,
     adminUser,
     adminLogout,
-    customerUser,
-    customerLogout,
-    setIsCustomerAuthModalOpen,
     setIsCustomerOrdersModalOpen,
     contactInfo,
     instagramSettings,
@@ -307,6 +305,18 @@ export const Navbar: React.FC = () => {
                         </button>
                       </div>
 
+                      {/* Track Order link also accessible to Admin */}
+                      <button
+                        onClick={() => {
+                          setIsAccountOpen(false);
+                          setIsCustomerOrdersModalOpen(true);
+                        }}
+                        className="w-full flex items-center space-x-3 p-2 rounded-xl hover:bg-zinc-800/80 text-zinc-300 hover:text-amber-200 text-left transition-all cursor-pointer"
+                      >
+                        <Truck className="w-4 h-4 text-zinc-400" />
+                        <span>Track an Order</span>
+                      </button>
+
                       {/* Admin Sign Out */}
                       <button
                         onClick={() => {
@@ -319,99 +329,26 @@ export const Navbar: React.FC = () => {
                         <span>Sign Out of Admin</span>
                       </button>
                     </div>
-                  ) : customerUser ? (
-                    /* 2. AUTHENTICATED CUSTOMER (Zero admin links or buttons) */
+                  ) : (
+                    /* 2. GUEST / CLIENT USER (Zero Customer Login/Password Needed) */
                     <div className="space-y-1.5">
-                      <div className="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between">
-                        <div className="truncate">
-                          <div className="font-semibold text-zinc-100 truncate">{customerUser.name}</div>
-                          <div className="text-[10px] text-zinc-400 truncate font-mono">{customerUser.email}</div>
-                        </div>
-                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-amber-400/15 text-amber-300 font-bold border border-amber-400/30 shrink-0">
-                          {customerUser.tier || 'VIP'}
-                        </span>
-                      </div>
-
                       <button
                         onClick={() => {
                           setIsAccountOpen(false);
                           setIsCustomerOrdersModalOpen(true);
-                        }}
-                        className="w-full flex items-center space-x-3 p-2.5 rounded-xl hover:bg-zinc-800/80 border border-transparent hover:border-zinc-700/80 text-left transition-all text-zinc-200 hover:text-white group cursor-pointer"
-                      >
-                        <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 group-hover:border-amber-400/40 group-hover:bg-amber-400/10 transition-all shrink-0">
-                          <Package className="w-4 h-4 text-zinc-400 group-hover:text-amber-400 transition-colors" />
-                        </div>
-                        <div>
-                          <div className="font-semibold text-zinc-100 group-hover:text-amber-300 transition-colors">My Orders & Tracking</div>
-                          <div className="text-[10px] text-zinc-400">View active deliveries and receipts</div>
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setIsAccountOpen(false);
-                          customerLogout();
-                        }}
-                        className="w-full flex items-center space-x-3 p-2 rounded-xl hover:bg-rose-500/10 text-zinc-400 hover:text-rose-300 text-left transition-all cursor-pointer"
-                      >
-                        <LogOut className="w-4 h-4 text-zinc-500 hover:text-rose-400" />
-                        <span>Sign Out</span>
-                      </button>
-
-                      {/* Admin Login link for customer session */}
-                      <button
-                        onClick={() => {
-                          setIsAccountOpen(false);
-                          handleNav('/admin/login');
-                        }}
-                        className="w-full flex items-center space-x-3 p-2.5 rounded-xl hover:bg-zinc-800/80 border border-transparent hover:border-zinc-700/80 text-left transition-all text-zinc-200 hover:text-white group cursor-pointer mt-1"
-                      >
-                        <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 group-hover:border-amber-400/40 group-hover:bg-amber-400/10 transition-all shrink-0">
-                          <ShieldCheck className="w-4 h-4 text-zinc-400 group-hover:text-amber-400 transition-colors" />
-                        </div>
-                        <div>
-                          <div className="font-semibold text-zinc-100 group-hover:text-amber-300 transition-colors">Admin Login</div>
-                          <div className="text-[10px] text-zinc-400">Access control & management portal</div>
-                        </div>
-                      </button>
-                    </div>
-                  ) : (
-                    /* 3. GUEST / UNREGISTERED USER */
-                    <div className="space-y-1.5">
-                      <button
-                        onClick={() => {
-                          setIsAccountOpen(false);
-                          setIsCustomerAuthModalOpen(true);
                         }}
                         className="w-full flex items-center space-x-3 p-2.5 rounded-xl bg-gradient-to-r from-amber-400/10 to-amber-500/15 hover:from-amber-400/20 hover:to-amber-500/25 border border-amber-400/30 text-left transition-all text-zinc-100 hover:text-amber-200 group cursor-pointer"
                       >
                         <div className="p-2 rounded-lg bg-amber-400/20 border border-amber-400/40 text-amber-300 transition-all shrink-0">
-                          <User className="w-4 h-4" />
+                          <Package className="w-4 h-4" />
                         </div>
                         <div>
-                          <div className="font-semibold text-white group-hover:text-amber-300 transition-colors">Customer Sign In</div>
-                          <div className="text-[10px] text-zinc-400">Access orders, tracking & VIP perks</div>
+                          <div className="font-semibold text-white group-hover:text-amber-300 transition-colors">Track Your Order</div>
+                          <div className="text-[10px] text-zinc-400">Live courier & delivery lookup</div>
                         </div>
                       </button>
 
-                      <button
-                        onClick={() => {
-                          setIsAccountOpen(false);
-                          setIsCustomerOrdersModalOpen(true);
-                        }}
-                        className="w-full flex items-center space-x-3 p-2.5 rounded-xl hover:bg-zinc-800/80 border border-transparent hover:border-zinc-700/80 text-left transition-all text-zinc-200 hover:text-white group cursor-pointer"
-                      >
-                        <div className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 group-hover:border-amber-400/40 group-hover:bg-amber-400/10 transition-all shrink-0">
-                          <Package className="w-4 h-4 text-zinc-400 group-hover:text-amber-400 transition-colors" />
-                        </div>
-                        <div>
-                          <div className="font-semibold text-zinc-100 group-hover:text-amber-300 transition-colors">Track an Order</div>
-                          <div className="text-[10px] text-zinc-400">Check courier delivery status</div>
-                        </div>
-                      </button>
-
-                      {/* Admin Login Option directly below Track an Order */}
+                      {/* Admin Login Option */}
                       <button
                         onClick={() => {
                           setIsAccountOpen(false);
@@ -543,51 +480,25 @@ export const Navbar: React.FC = () => {
                 </button>
               </div>
 
-              {/* Account / Login section in mobile menu */}
+              {/* Order Tracking & Admin Access in mobile menu */}
               <div className="pt-3 border-t border-zinc-800/80 space-y-2">
-                {customerUser ? (
-                  <div className="space-y-2">
-                    <div className="py-2 px-3 rounded-xl bg-zinc-900 text-zinc-300 text-xs flex items-center justify-between">
-                      <span className="truncate">{customerUser.name}</span>
-                      <span className="text-amber-400 text-[10px]">{customerUser.tier}</span>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setIsCustomerOrdersModalOpen(true);
-                        setMobileMenuOpen(false);
-                      }}
-                      className="w-full text-left py-2 px-3 rounded-xl bg-amber-400/10 text-amber-300 flex items-center space-x-2"
-                    >
-                      <Package className="w-3.5 h-3.5" />
-                      <span>My Orders & Tracking</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        customerLogout();
-                        setMobileMenuOpen(false);
-                      }}
-                      className="w-full text-left py-2 px-3 text-zinc-400 hover:text-rose-300 flex items-center space-x-2"
-                    >
-                      <LogOut className="w-3.5 h-3.5" />
-                      <span>Sign Out</span>
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setIsCustomerAuthModalOpen(true);
-                      setMobileMenuOpen(false);
-                    }}
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 text-zinc-950 font-bold uppercase tracking-wider text-xs flex items-center justify-center space-x-2 shadow-lg shadow-amber-400/20 cursor-pointer"
-                  >
-                    <User className="w-4 h-4" />
-                    <span>Customer Sign In / VIP</span>
-                  </button>
-                )}
+                <button
+                  onClick={() => {
+                    setIsCustomerOrdersModalOpen(true);
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full py-2.5 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-200 text-xs flex items-center justify-between transition-colors cursor-pointer"
+                >
+                  <span className="flex items-center space-x-2">
+                    <Package className="w-4 h-4 text-amber-400" />
+                    <span>Track Your Order</span>
+                  </span>
+                  <span className="text-[10px] text-zinc-400">Live Status</span>
+                </button>
 
-                {/* Admin Dashboard access section on Mobile - ONLY VISIBLE WHEN LOGGED IN AS ADMIN */}
-                {adminUser && (
-                  <div className="pt-2 border-t border-zinc-800/50">
+                {/* Admin section on Mobile */}
+                {adminUser ? (
+                  <div className="pt-1 space-y-1.5">
                     <button
                       onClick={() => {
                         handleNav('/admin/dashboard');
@@ -601,7 +512,31 @@ export const Navbar: React.FC = () => {
                       </span>
                       <span className="text-[10px] bg-amber-400 text-zinc-950 px-1.5 py-0.5 rounded font-bold">CONSOLE</span>
                     </button>
+                    <button
+                      onClick={() => {
+                        adminLogout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full text-left py-2 px-3 text-zinc-400 hover:text-rose-300 text-xs flex items-center space-x-2"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span>Sign Out of Admin</span>
+                    </button>
                   </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      handleNav('/admin/login');
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full py-2.5 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs flex items-center justify-between transition-colors cursor-pointer"
+                  >
+                    <span className="flex items-center space-x-2">
+                      <ShieldCheck className="w-4 h-4 text-zinc-400" />
+                      <span>Admin Login</span>
+                    </span>
+                    <span className="text-[10px] text-zinc-500">Authorized Only</span>
+                  </button>
                 )}
               </div>
 

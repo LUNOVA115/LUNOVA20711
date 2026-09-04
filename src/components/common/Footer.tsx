@@ -4,7 +4,6 @@ import {
   Lock,
   MessageCircle,
   ShieldCheck,
-  User,
   ArrowRight
 } from 'lucide-react';
 
@@ -12,8 +11,6 @@ export const Footer: React.FC = () => {
   const { 
     navigate, 
     setIsCustomerOrdersModalOpen, 
-    setIsCustomerAuthModalOpen, 
-    customerUser, 
     adminUser,
     contactInfo,
     instagramSettings,

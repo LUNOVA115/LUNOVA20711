@@ -7,7 +7,6 @@ import { ToastContainer } from './components/common/ToastContainer';
 import { CartDrawer } from './components/common/CartDrawer';
 import { SearchBarModal } from './components/common/SearchBarModal';
 import { CheckoutModal } from './components/common/CheckoutModal';
-import { CustomerAuthModal } from './components/common/CustomerAuthModal';
 import { CustomerOrdersModal } from './components/common/CustomerOrdersModal';
 import { CustomerFloatingContactWidget } from './components/common/CustomerFloatingContactWidget';
 import { ComparePanel } from './components/common/ComparePanel';
@@ -146,8 +145,7 @@ const AppContent: React.FC = () => {
       {/* Search Bar Modal */}
       <SearchBarModal />
 
-      {/* Customer VIP Auth & Portal Modals */}
-      <CustomerAuthModal />
+      {/* Order Tracking Modal (Guest & Customer) */}
       <CustomerOrdersModal />
 
       {/* Cart Drawer */}

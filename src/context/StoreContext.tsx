@@ -190,13 +190,7 @@ interface StoreContextType {
   updateHomeSettings: (newSettings: Partial<HomeSettings>) => void;
   setProductAsHomeFeatured: (productId: string, customImage?: string) => void;
   
-  // Customer & Client Auth (Customer section only)
-  customerUser: Customer | null;
-  customerLogin: (email: string, password?: string) => { success: boolean; message: string };
-  customerRegister: (name: string, email: string, phone: string, address?: any) => { success: boolean; message: string };
-  customerLogout: () => void;
-  isCustomerAuthModalOpen: boolean;
-  setIsCustomerAuthModalOpen: (open: boolean) => void;
+  // Order Tracking Modal State (Guest and Customer lookup)
   isCustomerOrdersModalOpen: boolean;
   setIsCustomerOrdersModalOpen: (open: boolean) => void;
   
@@ -709,50 +703,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [adminUser]);
 
-  // Customer / Client Auth (Customer section only)
-  const [customerUser, setCustomerUser] = useState<Customer | null>(() => {
-    try {
-      const saved = localStorage.getItem('lunova_customer_v1');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
-
-  useEffect(() => {
-    if (customerUser) {
-      localStorage.setItem('lunova_customer_v1', JSON.stringify(customerUser));
-    } else {
-      localStorage.removeItem('lunova_customer_v1');
-    }
-  }, [customerUser]);
-
-  // Synchronize authenticated customer's cart and wishlist with their cloud profile
-  useEffect(() => {
-    if (!customerUser?.id) return;
-    try {
-      const custDocRef = doc(db, 'customers', customerUser.id);
-      const cleanCart = cart.map(item => ({
-        product: sanitizeForFirestore(item.product),
-        quantity: item.quantity,
-        selectedColorTemp: item.selectedColorTemp || null,
-        customEngraving: item.customEngraving || null
-      }));
-      setDoc(custDocRef, {
-        cart: cleanCart,
-        wishlist: wishlist
-      }, { merge: true }).catch((err) => {
-        console.warn('[Firestore] Notice syncing customer cart/wishlist to cloud:', err?.message || err);
-      });
-    } catch (err) {
-      console.warn('[Firestore] Customer cart sync notice:', err);
-    }
-  }, [customerUser?.id, cart, wishlist]);
-
   // UI state
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isCustomerAuthModalOpen, setIsCustomerAuthModalOpen] = useState(false);
   const [isCustomerOrdersModalOpen, setIsCustomerOrdersModalOpen] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [filters, setFilters] = useState<FilterOptions>(defaultFilters);
@@ -1465,126 +1418,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setFilters(defaultFilters);
   };
 
-  // Customer Auth (Customer Portal Only - Synchronized with Firestore)
-  const customerLogin = (email: string, _pass?: string) => {
-    const cleanEmail = email.trim().toLowerCase();
-    
-    // Check if this is an existing customer in our database
-    const existing = customers.find(c => c.email.toLowerCase() === cleanEmail);
-    if (existing) {
-      setCustomerUser(existing);
-      setAdminUser(null); // Ensure admin is not set
-
-      // Merge existing cloud cart items with guest cart without losing any items
-      if (Array.isArray((existing as any).cart) && (existing as any).cart.length > 0) {
-        setCart((prevGuestCart) => {
-          const cloudCart = (existing as any).cart as CartItem[];
-          const merged = [...cloudCart];
-          prevGuestCart.forEach((guestItem) => {
-            const matchIndex = merged.findIndex(
-              (m) => m.product.id === guestItem.product.id && 
-                     m.selectedColorTemp === guestItem.selectedColorTemp &&
-                     m.customEngraving === guestItem.customEngraving
-            );
-            if (matchIndex >= 0) {
-              merged[matchIndex].quantity = Math.max(merged[matchIndex].quantity, guestItem.quantity);
-            } else {
-              merged.push(guestItem);
-            }
-          });
-          return merged;
-        });
-      }
-
-      if (Array.isArray((existing as any).wishlist) && (existing as any).wishlist.length > 0) {
-        setWishlist((prevWishlist) => {
-          const cloudWishlist = (existing as any).wishlist as string[];
-          return Array.from(new Set([...prevWishlist, ...cloudWishlist]));
-        });
-      }
-
-      addToast(`Welcome back, ${existing.name}. Signed into VIP Client Portal.`, 'success');
-      return { success: true, message: 'Successfully signed in to customer portal' };
-    }
-
-    // If new customer signing in with valid email, create a new VIP client profile
-    if (cleanEmail.includes('@')) {
-      const nameParts = cleanEmail.split('@')[0].split('.');
-      const formattedName = nameParts.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
-      const newCustomer: Customer = {
-        id: `cust-${Date.now().toString(36)}`,
-        name: formattedName || 'VIP Client',
-        email: cleanEmail,
-        totalOrders: 0,
-        totalSpent: 0,
-        lastOrderDate: 'Just Joined',
-        tier: 'VIP',
-        joinedDate: new Date().toISOString().split('T')[0]
-      };
-      setCustomers(prev => [newCustomer, ...prev]);
-      setCustomerUser(newCustomer);
-      setAdminUser(null);
-
-      // Persist new customer profile to Firestore
-      try {
-        const custRef = doc(db, 'customers', newCustomer.id);
-        setDoc(custRef, sanitizeForFirestore(newCustomer), { merge: true }).catch((err) => {
-          console.warn('[Firestore] Notice saving new customer to cloud:', err);
-        });
-      } catch (err) {
-        console.warn('[Firestore] Error writing customer profile:', err);
-      }
-
-      addToast(`Account created. Welcome to LUNOVA, ${newCustomer.name}.`, 'success');
-      return { success: true, message: 'Customer account registered successfully' };
-    }
-
-    return { success: false, message: 'Please enter a valid customer email address.' };
-  };
-
-  const customerRegister = (name: string, email: string, phone: string, address?: any) => {
-    const cleanEmail = email.trim().toLowerCase();
-    if (!name.trim() || !cleanEmail.includes('@')) {
-      return { success: false, message: 'Please provide a valid name and email address.' };
-    }
-
-    const newCustomer: Customer = {
-      id: `cust-${Date.now().toString(36)}`,
-      name: name.trim(),
-      email: cleanEmail,
-      phone: phone.trim() || undefined,
-      totalOrders: 0,
-      totalSpent: 0,
-      lastOrderDate: 'Just Joined',
-      tier: 'VIP',
-      joinedDate: new Date().toISOString().split('T')[0],
-      shippingAddress: address
-    };
-
-    setCustomers(prev => [newCustomer, ...prev.filter(c => c.email.toLowerCase() !== cleanEmail)]);
-    setCustomerUser(newCustomer);
-    setAdminUser(null);
-
-    // Persist registered customer to Firestore
-    try {
-      const custRef = doc(db, 'customers', newCustomer.id);
-      setDoc(custRef, sanitizeForFirestore(newCustomer), { merge: true }).catch((err) => {
-        console.warn('[Firestore] Notice saving customer registration to cloud:', err);
-      });
-    } catch (err) {
-      console.warn('[Firestore] Error writing customer registration:', err);
-    }
-
-    addToast(`Welcome to LUNOVA, ${newCustomer.name}. Your VIP account is active.`, 'success');
-    return { success: true, message: 'VIP Client registration successful' };
-  };
-
-  const customerLogout = () => {
-    setCustomerUser(null);
-    localStorage.removeItem('lunova_customer_v1');
-    addToast('Signed out of Customer Portal', 'info');
-  };
-
   // Admin Auth (Central Multi-Device Firestore Database Synchronization & Encrypted Authentication)
   const [adminAuthDoc, setAdminAuthDoc] = useState<AdminAuthDoc | null>(() => {
     try {
@@ -1714,7 +1547,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       role: adminRole
     };
     setAdminUser(user);
-    setCustomerUser(null);
     localStorage.setItem('lunova_admin_v1', JSON.stringify(user));
     addToast('Master Administrator Password established successfully!', 'success');
     return { success: true, message: 'Master Administrator Password saved securely in Firebase.' };
@@ -1784,7 +1616,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           role: authDocData.adminRole || 'Super Admin'
         };
         setAdminUser(user);
-        setCustomerUser(null); // Clear customer session when admin logs in
         localStorage.setItem('lunova_admin_v1', JSON.stringify(user));
         addToast(`Admin Session Authorized: Welcome to Control Panel.`, 'success');
         return { success: true, message: 'Administrative authentication successful' };
@@ -1821,22 +1652,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           role: existingRecord.role || authDocData.adminRole || 'Super Admin'
         };
         setAdminUser(user);
-        setCustomerUser(null); // Clear customer session when admin logs in
         localStorage.setItem('lunova_admin_v1', JSON.stringify(user));
         addToast(`Admin Session Authorized: Welcome back, ${user.name}.`, 'success');
         return { success: true, message: 'Administrative authentication successful' };
       } else {
         return { success: false, message: 'Invalid administrator passkey. Please check your password.' };
       }
-    }
-
-    // Check if this is a registered customer attempting to log into admin
-    const isCustomer = customers.some(c => c.email.toLowerCase() === cleanEmail);
-    if (isCustomer) {
-      return { 
-        success: false, 
-        message: 'Access Denied: This account is registered as a customer/client and does not have administrative privileges. Customers must use the Customer Account login.' 
-      };
     }
 
     // General unauthorized rejection
@@ -2565,12 +2386,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         homeSettings,
         updateHomeSettings,
         setProductAsHomeFeatured,
-        customerUser,
-        customerLogin,
-        customerRegister,
-        customerLogout,
-        isCustomerAuthModalOpen,
-        setIsCustomerAuthModalOpen,
         isCustomerOrdersModalOpen,
         setIsCustomerOrdersModalOpen,
         adminUser,

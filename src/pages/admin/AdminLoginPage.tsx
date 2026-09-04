@@ -18,9 +18,7 @@ export const AdminLoginPage: React.FC = () => {
     isAdminPasswordConfigured, 
     adminLogin, 
     setupAdminPassword, 
-    navigate, 
-    customerUser, 
-    customerLogout 
+    navigate
   } = useStore();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -40,11 +38,6 @@ export const AdminLoginPage: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
-    // If customer was logged in, log them out cleanly
-    if (customerUser) {
-      customerLogout();
-    }
 
     try {
       if (!isAdminPasswordConfigured) {
@@ -112,29 +105,6 @@ export const AdminLoginPage: React.FC = () => {
             </p>
           </div>
         </div>
-
-        {/* CUSTOMER ACCOUNT RESTRICTION NOTICE (If a customer is currently logged in on this device) */}
-        {customerUser && (
-          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/40 space-y-2.5 text-xs">
-            <div className="flex items-center space-x-2 text-rose-300 font-semibold">
-              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-              <span>Customer Session Active on Device</span>
-            </div>
-            <p className="text-zinc-300 text-[11px] leading-relaxed">
-              Signed in as client <strong className="text-white">{customerUser.name}</strong>. Signing in with the administrator password will automatically activate the master management console.
-            </p>
-            <div className="flex items-center space-x-2 pt-1">
-              <button
-                type="button"
-                onClick={() => customerLogout()}
-                className="py-2 px-3 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-medium text-[11px] border border-rose-500/30 transition-colors flex items-center space-x-1 cursor-pointer"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>Switch to Administrator</span>
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
